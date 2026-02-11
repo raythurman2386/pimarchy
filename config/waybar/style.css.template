@@ -1,0 +1,121 @@
+/* Pimarchy Waybar Theme - Full-width Top Bar */
+
+* {
+    font-family: "{{FONT_FAMILY}}", "FontAwesome", sans-serif;
+    font-size: {{FONT_SIZE_PX}}px;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+}
+
+window#waybar {
+    background-color: {{BAR_BG_COLOR}};
+    border-radius: 0;
+    color: {{BAR_FG_COLOR}};
+    border: none;
+    border-bottom: 1px solid {{BAR_BORDER_COLOR}};
+}
+
+/* Module containers */
+#modules-left, #modules-center, #modules-right {
+    background-color: transparent;
+}
+
+/* All modules base style */
+#clock,
+#cpu,
+#memory,
+#network,
+#pulseaudio,
+#custom-launcher,
+#custom-power,
+#custom-workspaces,
+#tray {
+    padding: 0 14px;
+    margin: 4px 2px;
+    background-color: {{MODULE_BG_COLOR}};
+    border-radius: 10px;
+    color: {{MODULE_FG_COLOR}};
+}
+
+#custom-launcher {
+    font-size: 16px;
+    color: {{COLOR_PRIMARY}};
+    background-color: {{LAUNCHER_BG_COLOR}};
+    padding: 0 12px;
+}
+
+#custom-launcher:hover {
+    background-color: {{LAUNCHER_HOVER_BG_COLOR}};
+}
+
+/* Workspace indicator (custom script) */
+#custom-workspaces {
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Clock (center) */
+#clock {
+    font-weight: bold;
+    color: {{CLOCK_FG_COLOR}};
+    background-color: {{CLOCK_BG_COLOR}};
+}
+
+#cpu {
+    color: {{COLOR_CPU}};
+}
+
+#memory {
+    color: {{COLOR_MEMORY}};
+}
+
+#network {
+    color: {{COLOR_NETWORK}};
+}
+
+#network.disconnected {
+    color: {{COLOR_DISCONNECTED}};
+}
+
+#pulseaudio {
+    color: {{COLOR_VOLUME}};
+}
+
+#pulseaudio.muted {
+    color: {{COLOR_MUTED}};
+}
+
+#tray {
+    padding: 0 8px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: {{TRAY_ATTENTION_BG_COLOR}};
+}
+
+#custom-power {
+    font-size: 15px;
+    color: {{COLOR_POWER}};
+    background-color: {{POWER_BG_COLOR}};
+    padding: 0 10px;
+}
+
+#custom-power:hover {
+    background-color: {{POWER_HOVER_BG_COLOR}};
+}
+
+#cpu:hover,
+#memory:hover,
+#network:hover,
+#pulseaudio:hover,
+#clock:hover {
+    background-color: {{MODULE_HOVER_BG_COLOR}};
+}

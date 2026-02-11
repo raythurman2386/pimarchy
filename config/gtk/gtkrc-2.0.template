@@ -1,0 +1,16 @@
+# Pimarchy GTK2 Theme
+gtk-theme-name="{{GTK_THEME}}"
+gtk-icon-theme-name="{{ICON_THEME}}"
+gtk-cursor-theme-name="{{CURSOR_THEME}}"
+gtk-cursor-theme-size={{CURSOR_SIZE}}
+gtk-font-name="{{FONT_NAME}} {{FONT_SIZE}}"
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle="hintslight"
+gtk-xft-rgba="rgb"
+
+style "scrollbar"
+{
+	GtkRange::slider-width = 13
+	GtkRange::stepper-size = 13
+}

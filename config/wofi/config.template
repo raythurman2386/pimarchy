@@ -1,0 +1,16 @@
+width={{WOFI_WIDTH}}
+height={{WOFI_HEIGHT}}
+location={{WOFI_LOCATION}}
+show=drun
+prompt={{WOFI_PROMPT}}
+filter_rate=100
+allow_markup=true
+no_actions=true
+halign=fill
+orientation=vertical
+content_halign=fill
+insensitive=true
+allow_images=true
+image_size={{WOFI_IMAGE_SIZE}}
+gtk_dark={{DARK_THEME}}
+layer=overlay

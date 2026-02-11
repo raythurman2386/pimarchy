@@ -1,0 +1,7 @@
+# Pimarchy theming
+XCURSOR_THEME={{CURSOR_THEME}}
+XCURSOR_SIZE={{CURSOR_SIZE}}
+
+# Keyboard layout (us = US/ANSI, gb = UK/ISO)
+# Change to 'gb' if you have a UK keyboard
+XKB_DEFAULT_LAYOUT=us

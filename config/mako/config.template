@@ -1,0 +1,14 @@
+# Pimarchy Mako Notification Theme
+font={{FONT_FAMILY}} {{FONT_SIZE}}
+background-color={{MAKO_BG_COLOR}}
+text-color={{MAKO_FG_COLOR}}
+border-color={{MAKO_BORDER_COLOR}}
+border-size={{MAKO_BORDER_SIZE}}
+border-radius={{MAKO_BORDER_RADIUS}}
+padding={{MAKO_PADDING}}
+margin={{MAKO_MARGIN}}
+width={{MAKO_WIDTH}}
+max-visible={{MAKO_MAX_VISIBLE}}
+default-timeout={{MAKO_DEFAULT_TIMEOUT}}
+layer=overlay
+anchor={{MAKO_ANCHOR}}

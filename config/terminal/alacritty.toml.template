@@ -1,0 +1,58 @@
+# Pimarchy Alacritty Configuration
+# Catppuccin Mocha theme matching the desktop
+
+[window]
+padding = { x = 6, y = 6 }
+decorations = "none"
+startup_mode = "Windowed"
+dynamic_title = true
+
+[font]
+normal = { family = "{{FONT_FAMILY}}", style = "Regular" }
+bold = { family = "{{FONT_FAMILY}}", style = "Bold" }
+italic = { family = "{{FONT_FAMILY}}", style = "Italic" }
+bold_italic = { family = "{{FONT_FAMILY}}", style = "Bold Italic" }
+size = {{FONT_SIZE}}
+
+[colors.primary]
+background = "{{TERM_BG_COLOR}}"
+foreground = "{{TERM_FG_COLOR}}"
+
+[colors.cursor]
+text = "{{TERM_BG_COLOR}}"
+cursor = "{{TERM_FG_COLOR}}"
+
+[colors.normal]
+black = "{{TERM_PALETTE_0}}"
+red = "{{TERM_PALETTE_1}}"
+green = "{{TERM_PALETTE_2}}"
+yellow = "{{TERM_PALETTE_3}}"
+blue = "{{TERM_PALETTE_4}}"
+magenta = "{{TERM_PALETTE_5}}"
+cyan = "{{TERM_PALETTE_6}}"
+white = "{{TERM_PALETTE_7}}"
+
+[colors.bright]
+black = "{{TERM_PALETTE_8}}"
+red = "{{TERM_PALETTE_9}}"
+green = "{{TERM_PALETTE_10}}"
+yellow = "{{TERM_PALETTE_11}}"
+blue = "{{TERM_PALETTE_12}}"
+magenta = "{{TERM_PALETTE_13}}"
+cyan = "{{TERM_PALETTE_14}}"
+white = "{{TERM_PALETTE_15}}"
+
+[cursor]
+style = { shape = "Block", blinking = "Off" }
+
+[mouse]
+hide_when_typing = true
+
+[keyboard]
+bindings = [
+    { key = "C", mods = "Control|Shift", action = "Copy" },
+    { key = "V", mods = "Control|Shift", action = "Paste" },
+    { key = "Plus", mods = "Control", action = "IncreaseFontSize" },
+    { key = "Minus", mods = "Control", action = "DecreaseFontSize" },
+    { key = "0", mods = "Control", action = "ResetFontSize" },
+]

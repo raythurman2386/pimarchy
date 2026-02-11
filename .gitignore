@@ -1,0 +1,40 @@
+# Pimarchy Git Ignore
+
+# Backup files and directories
+*.bak
+*~
+*.backup
+Pimarchy-backup/
+
+# User-specific configuration (don't commit user's personal settings)
+user-configs/
+
+# Generated/temporary files
+*.tmp
+*.log
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test outputs
+test-output/
+coverage/
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS files
+Thumbs.db
+.directory
+
+# Package files
+*.deb
+*.rpm
+*.pkg
+
+# Don't ignore the example configs
+!config/**/*.conf
+!config/**/*.template

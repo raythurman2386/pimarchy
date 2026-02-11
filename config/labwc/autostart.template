@@ -1,0 +1,37 @@
+#!/bin/sh
+# Pimarchy Autostart for Raspberry Pi
+# This replaces the system autostart to use our custom bar/notifications
+
+# Initialize workspace state file
+echo "1" > /tmp/pimarchy-workspace
+
+# Kill the default Raspberry Pi panel and its respawner in the background
+# This runs asynchronously so it doesn't delay waybar startup
+(
+    for i in 1 2 3; do
+        pkill -9 -f wf-panel-pi 2>/dev/null
+        pkill -9 -f "lwrespawn.*wf-panel-pi" 2>/dev/null
+        sleep 0.3
+    done
+) &
+
+# Start Pimarchy services immediately - no need to wait for panel kill
+waybar &
+mako &
+
+# Apply GTK theme settings for Wayland apps (can run in background)
+(
+    gsettings set org.gnome.desktop.interface gtk-theme '{{GTK_THEME}}' 2>/dev/null
+    gsettings set org.gnome.desktop.interface icon-theme '{{ICON_THEME}}' 2>/dev/null
+    gsettings set org.gnome.desktop.interface cursor-theme '{{CURSOR_THEME}}' 2>/dev/null
+    gsettings set org.gnome.desktop.interface cursor-size {{CURSOR_SIZE}} 2>/dev/null
+    gsettings set org.gnome.desktop.interface font-name '{{FONT_NAME}} {{FONT_SIZE}}' 2>/dev/null
+    gsettings set org.gnome.desktop.interface color-scheme '{{COLOR_SCHEME}}' 2>/dev/null
+) &
+
+# Note: pcmanfm, kanshi, and lxsession-xdg-autostart are started by
+# /etc/xdg/labwc/autostart (system autostart). Labwc runs both system
+# and user autostarts, so we don't need to duplicate them here.
+
+# Wallpaper (uncomment and set your wallpaper path)
+# swaybg -i ~/Pictures/wallpaper.jpg -m fill &

@@ -1,0 +1,24 @@
+#!/bin/sh
+# Pimarchy Workspace Display for Waybar
+# Reads current workspace from state file and outputs Pango markup
+STATEFILE="/tmp/pimarchy-workspace"
+TOTAL={{WORKSPACE_COUNT}}
+
+# Initialize state file if missing
+if [ ! -f "$STATEFILE" ]; then
+    echo "1" > "$STATEFILE"
+fi
+
+CURRENT=$(cat "$STATEFILE" 2>/dev/null || echo "1")
+
+OUTPUT=""
+for i in $(seq 1 $TOTAL); do
+    if [ "$i" = "$CURRENT" ]; then
+        OUTPUT="${OUTPUT}<span foreground='{{COLOR_ACTIVE}}' font_weight='bold'> ${i} </span>"
+    else
+        OUTPUT="${OUTPUT}<span foreground='{{COLOR_INACTIVE}}'> ${i} </span>"
+    fi
+done
+
+# Escape for JSON
+printf '{"text": "%s", "class": "ws-%s"}\n' "$OUTPUT" "$CURRENT"
