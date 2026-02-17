@@ -1,5 +1,5 @@
 # Pimarchy Alacritty Configuration
-# Catppuccin Mocha theme matching the desktop
+# Ravenwood theme matching the desktop
 
 [window]
 padding = { x = 6, y = 6 }
