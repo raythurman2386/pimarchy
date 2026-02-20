@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Pimarchy Uninstaller for Raspberry Pi 500
-# Reverts the system back to the default Arch Linux ARM state.
+# Reverts the system back to the default Pi OS/Debian state.
 #
 # Usage: bash uninstall.sh
 #

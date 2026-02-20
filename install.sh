@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Pimarchy Installer for Raspberry Pi 500 (Arch Linux ARM + Hyprland)
+# Pimarchy Installer for Raspberry Pi 500 (Pi OS/Debian + Hyprland)
 # A lightweight, aesthetic Omarchy-inspired desktop transformation.
 #
 # This modular installer reads configuration from config/ directory
@@ -208,7 +208,7 @@ vt = 1
 command = "tuigreet --cmd Hyprland"
 user = "greeter"
 GREETD
-    sudo systemctl enable greetd.service 2>/dev/null || true
+    sudo systemctl enable greetd 2>/dev/null || true
     log_success "greetd configured and enabled"
 else
     log_info "Would configure greetd and enable service"

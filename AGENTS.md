@@ -4,7 +4,7 @@ This document provides guidelines for AI agents working on the Pimarchy codebase
 
 ## Project Overview
 
-Pimarchy is a Raspberry Pi 5/500 Arch Linux ARM provisioning tool. It transforms a barebones Arch installation into a modern, aesthetic "Omarchy-inspired" environment using Hyprland (compositor), Waybar (status bar), Rofi (launcher), and related tools.
+Pimarchy is a Raspberry Pi 5/500 Debian/Pi OS provisioning tool. It transforms a barebones Pi OS Lite installation into a modern, aesthetic "Omarchy-inspired" environment using Hyprland (compositor), Waybar (status bar), Rofi (launcher), and related tools.
 
 ## Build/Test Commands
 
@@ -141,10 +141,10 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 
 ## Platform Notes
 
-- Target: Raspberry Pi 5 with Arch Linux ARM
+- Target: Raspberry Pi 5 with Pi OS Lite (Debian Bookworm)
 - Window Manager: Hyprland (Wayland)
 - Status Bar: Waybar
-- App Launcher: Rofi-Wayland
+- App Launcher: Rofi
 - Shell: Bash + Pimarchy Aliases + Starship
 - Notifications: Mako
 - Terminal: Alacritty

@@ -192,67 +192,53 @@ process_template() {
 }
 
 # ============================================================================
-# Package Management
+# Package Management (Debian/Ubuntu/Pi OS)
 # ============================================================================
-
-install_yay() {
-    if ! command -v yay &> /dev/null; then
-        log_info "Installing yay (AUR helper)..."
-        
-        if ! command -v git &> /dev/null; then
-            log_info "Installing git..."
-            sudo pacman -S --needed --noconfirm git
-        fi
-        
-        if ! command -v makepkg &> /dev/null; then
-            log_info "Installing base-devel..."
-            sudo pacman -S --needed --noconfirm base-devel
-        fi
-        
-        local yay_dir="/tmp/yay-bin"
-        git clone https://aur.archlinux.org/yay-bin.git "$yay_dir"
-        
-        if [ $? -ne 0 ]; then
-            log_error "Failed to clone yay repository"
-            return 1
-        fi
-        
-        cd "$yay_dir"
-        makepkg -si --noconfirm
-        
-        if [ $? -ne 0 ]; then
-            log_error "Failed to build yay"
-            cd - > /dev/null
-            rm -rf "$yay_dir"
-            return 1
-        fi
-        
-        cd - > /dev/null
-        rm -rf "$yay_dir"
-        log_success "yay installed"
-    else
-        log_info "yay is already installed"
-    fi
-}
 
 install_packages() {
     log_info "Updating system and installing packages..."
     
-    sudo pacman -Syu --noconfirm
+    sudo apt update
+    sudo apt upgrade -y
 
-    install_yay
+    # Add Debian bookworm repository for Hyprland (if not already present)
+    if ! grep -q "bookworm" /etc/apt/sources.list 2>/dev/null; then
+        log_info "Adding Debian Bookworm repository for Hyprland..."
+        echo "deb http://deb.debian.org/debian bookworm main" | sudo tee /etc/apt/sources.list.d/bookworm.list
+        sudo apt update
+    fi
 
+    # Install packages
     local packages=(
-        hyprland waybar mako swaybg grim slurp
-        wl-clipboard ttf-font-awesome ttf-jetbrains-mono-nerd xdg-desktop-portal-hyprland
-        pavucontrol network-manager-applet
-        arc-gtk-theme papirus-icon-theme
-        alacritty rofi-wayland greetd greetd-tuigreet nwg-look
-        polkit-gnome starship thunar
-        linux-firmware bluez bluez-utils alsa-utils
+        hyprland
+        waybar
+        mako-notifier
+        swaybg
+        grim
+        slurp
+        wl-clipboard
+        fonts-font-awesome
+        fonts-jetbrains-mono
+        xdg-desktop-portal-hyprland
+        pavucontrol
+        network-manager-gnome
+        arc-theme
+        papirus-icon-theme
+        alacritty
+        rofi
+        greetd
+        tuigreet
+        starship
+        thunar
+        gsettings-desktop-schemas
+        polkit-gnome-1
+        bluez
+        bluez-tools
+        alsa-utils
+        firmware-linux
     )
 
-    yay -S --needed --noconfirm "${packages[@]}"
+    sudo apt install -y "${packages[@]}"
 
     log_success "Packages installed"
 }
@@ -261,16 +247,35 @@ remove_packages() {
     log_info "Removing packages..."
 
     local packages=(
-        hyprland waybar mako swaybg grim slurp
-        wl-clipboard ttf-font-awesome ttf-jetbrains-mono-nerd xdg-desktop-portal-hyprland
-        pavucontrol network-manager-applet
-        arc-gtk-theme papirus-icon-theme
-        alacritty rofi-wayland greetd greetd-tuigreet nwg-look
-        polkit-gnome starship thunar
-        linux-firmware bluez bluez-utils alsa-utils
+        hyprland
+        waybar
+        mako-notifier
+        swaybg
+        grim
+        slurp
+        wl-clipboard
+        fonts-font-awesome
+        fonts-jetbrains-mono
+        xdg-desktop-portal-hyprland
+        pavucontrol
+        network-manager-gnome
+        arc-theme
+        papirus-icon-theme
+        alacritty
+        rofi
+        greetd
+        tuigreet
+        starship
+        thunar
+        gsettings-desktop-schemas
+        polkit-gnome-1
+        bluez
+        bluez-tools
+        alsa-utils
     )
     
-    yay -Rns --noconfirm "${packages[@]}" 2>/dev/null || true
+    sudo apt remove --purge -y "${packages[@]}" 2>/dev/null || true
+    sudo apt autoremove -y
     
     log_success "Packages removed"
 }
@@ -399,6 +404,9 @@ remove_pimarchy_files() {
     
     # Chromium dark mode flags
     rm -f "$HOME/.config/chromium-flags.conf"
+    
+    # Debian-specific
+    rm -f /etc/apt/sources.list.d/bookworm.list
     
     log_success "Pimarchy files removed"
 }
