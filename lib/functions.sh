@@ -102,7 +102,7 @@ restore_configs() {
     
     if [ ! -d "$BACKUP_DIR" ]; then
         log_warn "No backup directory found at $BACKUP_DIR"
-        return 1
+        return 0
     fi
     
     # Check if we have original backups
@@ -201,25 +201,30 @@ install_packages() {
     sudo apt update
     sudo apt upgrade -y
 
-    # Add Debian bookworm repository for Hyprland (if not already present)
-    if ! grep -q "bookworm" /etc/apt/sources.list 2>/dev/null; then
-        log_info "Adding Debian Bookworm repository for Hyprland..."
-        echo "deb http://deb.debian.org/debian bookworm main" | sudo tee /etc/apt/sources.list.d/bookworm.list
+    # Set up Debian sid (unstable) repository for Hyprland
+    if [ ! -s /etc/apt/sources.list.d/sid.list ]; then
+        log_info "Adding Debian Sid (unstable) repository for Hyprland..."
+        echo "deb http://deb.debian.org/debian/ sid main contrib non-free" | sudo tee /etc/apt/sources.list.d/sid.list
+        
+        log_info "Configuring APT pinning to prefer current release but allow sid..."
+        cat <<EOF | sudo tee /etc/apt/preferences.d/sid-pin
+Package: *
+Pin: release n=sid
+Pin-Priority: 100
+EOF
         sudo apt update
     fi
 
-    # Install packages
-    local packages=(
-        hyprland
-        waybar
-        mako-notifier
-        swaybg
-        grim
-        slurp
-        wl-clipboard
+    # Remove conflicting bookworm list if it was added previously
+    if [ -f /etc/apt/sources.list.d/bookworm.list ]; then
+        sudo rm -f /etc/apt/sources.list.d/bookworm.list
+        sudo apt update
+    fi
+
+    # Base packages from the stable/testing repository
+    local base_packages=(
         fonts-font-awesome
         fonts-jetbrains-mono
-        xdg-desktop-portal-hyprland
         pavucontrol
         network-manager-gnome
         arc-theme
@@ -231,14 +236,39 @@ install_packages() {
         starship
         thunar
         gsettings-desktop-schemas
-        polkit-gnome-1
+        lxpolkit
         bluez
         bluez-tools
         alsa-utils
-        firmware-linux
+        unzip
+        wget
+        fontconfig
     )
 
-    sudo apt install -y "${packages[@]}"
+    sudo apt install -y "${base_packages[@]}"
+
+    # Wayland/Hyprland specific packages from sid
+    local hypr_packages=(
+        hyprland
+        waybar
+        mako-notifier
+        swaybg
+        grim
+        slurp
+        wl-clipboard
+        xdg-desktop-portal-hyprland
+    )
+
+    sudo apt install -t sid -y "${hypr_packages[@]}"
+
+    if ! fc-list | grep -iq "CaskaydiaCove Nerd Font"; then
+        log_info "Installing CaskaydiaCove Nerd Font..."
+        mkdir -p "$HOME/.local/share/fonts"
+        wget -qO /tmp/CascadiaCode.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/CascadiaCode.zip
+        unzip -qo /tmp/CascadiaCode.zip -d "$HOME/.local/share/fonts/" || true
+        fc-cache -fv "$HOME/.local/share/fonts" > /dev/null
+        rm -f /tmp/CascadiaCode.zip
+    fi
 
     log_success "Packages installed"
 }
@@ -268,7 +298,7 @@ remove_packages() {
         starship
         thunar
         gsettings-desktop-schemas
-        polkit-gnome-1
+        lxpolkit
         bluez
         bluez-tools
         alsa-utils
@@ -406,7 +436,9 @@ remove_pimarchy_files() {
     rm -f "$HOME/.config/chromium-flags.conf"
     
     # Debian-specific
-    rm -f /etc/apt/sources.list.d/bookworm.list
+    sudo rm -f /etc/apt/sources.list.d/bookworm.list
+    sudo rm -f /etc/apt/sources.list.d/sid.list
+    sudo rm -f /etc/apt/preferences.d/sid-pin
     
     log_success "Pimarchy files removed"
 }

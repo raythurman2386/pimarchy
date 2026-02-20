@@ -213,6 +213,7 @@ command = "tuigreet --cmd Hyprland"
 user = "_greetd"
 GREETD
     sudo systemctl enable greetd 2>/dev/null || true
+    sudo systemctl set-default graphical.target 2>/dev/null || true
     log_success "greetd configured and enabled"
 else
     log_info "Would configure greetd and disable getty@tty1"
