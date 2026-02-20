@@ -1,0 +1,71 @@
+#
+# Pimarchy Starship Configuration
+#
+
+format = """
+[░▒▓]({{COLOR_PRIMARY}})\
+$os\
+$username\
+[](bg:{{COLOR_SURFACE}} fg:{{COLOR_PRIMARY}})\
+$directory\
+[](fg:{{COLOR_SURFACE}} bg:{{COLOR_OVERLAY}})\
+$git_branch\
+$git_status\
+[](fg:{{COLOR_OVERLAY}} bg:{{COLOR_BASE}})\
+$nodejs\
+$rust\
+$python\
+$docker_context\
+$lua\
+[ ](fg:{{COLOR_BASE}})\
+"""
+
+[os]
+disabled = false
+style = "bg:{{COLOR_PRIMARY}} fg:{{COLOR_BASE}}"
+
+[username]
+show_always = true
+style_user = "bg:{{COLOR_PRIMARY}} fg:{{COLOR_BASE}}"
+style_root = "bg:{{COLOR_PRIMARY}} fg:{{COLOR_BASE}}"
+format = '[$user]($style)'
+
+[directory]
+style = "bg:{{COLOR_SURFACE}} fg:{{COLOR_TEXT}}"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = ""
+style = "bg:{{COLOR_OVERLAY}} fg:{{COLOR_PRIMARY}}"
+format = '[[ $symbol $branch ]($style)]($style)'
+
+[git_status]
+style = "bg:{{COLOR_OVERLAY}} fg:{{COLOR_PRIMARY}}"
+format = '[[($all_status$ahead_behind )]($style)]($style)'
+
+[nodejs]
+symbol = ""
+style = "bg:{{COLOR_BASE}} fg:{{COLOR_PRIMARY}}"
+format = '[[ $symbol ($version) ]($style)]($style)'
+
+[rust]
+symbol = ""
+style = "bg:{{COLOR_BASE}} fg:{{COLOR_PRIMARY}}"
+format = '[[ $symbol ($version) ]($style)]($style)'
+
+[python]
+symbol = ""
+style = "bg:{{COLOR_BASE}} fg:{{COLOR_PRIMARY}}"
+format = '[[ $symbol ($version) ]($style)]($style)'
+
+[docker_context]
+symbol = ""
+style = "bg:{{COLOR_BASE}} fg:{{COLOR_PRIMARY}}"
+format = '[[ $symbol $context ]($style)]($style)'
+
+[lua]
+symbol = ""
+style = "bg:{{COLOR_BASE}} fg:{{COLOR_PRIMARY}}"
+format = '[[ $symbol ($version) ]($style)]($style)'

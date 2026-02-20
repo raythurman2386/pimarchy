@@ -6,24 +6,29 @@
     "margin-right": 0,
     "height": 36,
     "spacing": 6,
-    "modules-left": ["custom/launcher", "custom/workspaces"],
+    "modules-left": ["custom/launcher", "hyprland/workspaces"],
     "modules-center": ["clock"],
     "modules-right": ["cpu", "memory", "network", "pulseaudio", "tray", "custom/power"],
 
     "custom/launcher": {
         "format": "{{ICON_LAUNCHER}}",
-        "on-click": "{{LAUNCHER_CMD}}",
+        "on-click": "rofi -show drun",
         "tooltip": false
     },
 
-    "custom/workspaces": {
-        "exec": "{{SCRIPT_DIR}}/workspace-display.sh",
-        "return-type": "json",
-        "interval": 1,
-        "format": "{}",
-        "tooltip": false,
-        "on-click": "{{SCRIPT_DIR}}/workspace-click.sh next",
-        "on-click-right": "{{SCRIPT_DIR}}/workspace-click.sh prev"
+    "hyprland/workspaces": {
+        "format": "{icon}",
+        "on-click": "activate",
+        "format-icons": {
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "active": "󰮯",
+            "default": "󰊠"
+        },
+        "sort-by-number": true
     },
 
     "clock": {
@@ -70,7 +75,7 @@
 
     "custom/power": {
         "format": "{{ICON_POWER}}",
-        "on-click": "{{SCRIPT_DIR}}/power-menu.sh",
+        "on-click": "~/.config/rofi/power-menu.sh",
         "tooltip": false
     }
 }

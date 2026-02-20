@@ -35,6 +35,11 @@ Thumbs.db
 *.rpm
 *.pkg
 
+# Large binary files (Arch Linux ARM rootfs)
+img/
+*.tar.gz
+*.img
+
 # Don't ignore the example configs
 !config/**/*.conf
 !config/**/*.template

@@ -21,8 +21,8 @@ A clear and concise description of what you expected to happen.
 
 **System Information:**
  - Raspberry Pi Model: [e.g., Pi 5]
- - OS: [e.g., Debian Bookworm 64-bit]
- - Desktop Environment: [e.g., labwc]
+ - OS: [e.g., Arch Linux ARM]
+ - Desktop Environment: [e.g., Hyprland]
 
 **Additional context**
 Add any other context about the problem here.

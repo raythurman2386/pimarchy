@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Pimarchy Installer for Raspberry Pi 5 (Labwc + Waybar)
+# Pimarchy Installer for Raspberry Pi 500 (Arch Linux ARM + Hyprland)
 # A lightweight, aesthetic Omarchy-inspired desktop transformation.
 #
 # This modular installer reads configuration from config/ directory
@@ -39,16 +39,23 @@ done
 
 # Get script directory
 PIMARCHY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PIMARCHY_ROOT
 
 # Source library functions
 source "$PIMARCHY_ROOT/lib/functions.sh"
 
 # Load configurations
 load_config "$PIMARCHY_ROOT/config/theme.conf"
-load_config "$PIMARCHY_ROOT/config/keybinds/keybinds.conf"
 
 # Set derived variables
-SCRIPT_DIR="$HOME/.config/labwc"
+SCRIPT_DIR="$HOME/.config/hypr"
+export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
+export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
+export COLOR_BASE_HEX="${COLOR_BASE#\#}"
+
+# Detect keyboard layout
+export KEYBOARD_LAYOUT=$(detect_keyboard_layout)
+log_info "Detected keyboard layout: $KEYBOARD_LAYOUT"
 
 if [ "$DRY_RUN" = true ]; then
     echo "=== Pimarchy Installer (DRY RUN) ==="
@@ -65,9 +72,6 @@ else
     fi
 fi
 
-# -------------------------------------------------------------
-# 1. Backup existing configs
-# -------------------------------------------------------------
 echo "[1/6] Backing up current configuration..."
 if [ "$DRY_RUN" = false ]; then
     backup_configs
@@ -82,7 +86,7 @@ echo "[2/6] Installing packages..."
 if [ "$DRY_RUN" = false ]; then
     install_packages
 else
-    log_info "Would install: waybar, wofi, mako-notifier, and other packages"
+    log_info "Would install: waybar, rofi-wayland, mako, and other packages"
 fi
 
 # -------------------------------------------------------------
@@ -144,23 +148,70 @@ done 3< "$PIMARCHY_ROOT/config/modules.conf"
 echo "[5/6] Installing additional components..."
 
 if [ "$DRY_RUN" = false ]; then
-    # Initialize workspace state file
+    # Initialize workspace state file (not used by hyprland but keep for compatibility)
     echo "1" > /tmp/pimarchy-workspace
     
     # Apply gsettings
     apply_gsettings
     
-    # Hide desktop trash icon
-    hide_trash_icon
-    
     # Ensure Pictures directory exists for screenshots
     mkdir -p ~/Pictures
     
     # Chromium dark mode flags
-    echo 'export CHROMIUM_FLAGS="$CHROMIUM_FLAGS --force-dark-mode --enable-features=WebUIDarkMode"' | \
-        sudo tee /etc/chromium.d/pimarchy-dark > /dev/null
+    mkdir -p "$HOME/.config"
+    echo '--force-dark-mode' > "$HOME/.config/chromium-flags.conf"
+    echo '--enable-features=WebUIDarkMode' >> "$HOME/.config/chromium-flags.conf"
+
+    # Configure Shell (source pimarchy aliases and start starship)
+    if ! grep -q "bashrc.pimarchy" "$HOME/.bashrc"; then
+        echo "" >> "$HOME/.bashrc"
+        echo "# Pimarchy configuration" >> "$HOME/.bashrc"
+        echo "[[ -f ~/.bashrc.pimarchy ]] && . ~/.bashrc.pimarchy" >> "$HOME/.bashrc"
+        echo 'eval "$(starship init bash)"' >> "$HOME/.bashrc"
+    fi
+    
+    # Set console keyboard layout
+    if command -v localectl &> /dev/null; then
+        sudo localectl set-keymap "$KEYBOARD_LAYOUT" 2>/dev/null || true
+    fi
+    
+    # Create X11 keyboard configuration
+    sudo mkdir -p /etc/X11/xorg.conf.d
+    sudo tee /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null << EOF
+Section "InputClass"
+    Identifier "system-keyboard"
+    MatchIsKeyboard "on"
+    Option "XkbLayout" "$KEYBOARD_LAYOUT"
+EndSection
+EOF
+    
+    # Enable essential services
+    sudo systemctl enable NetworkManager.service 2>/dev/null || true
+    sudo systemctl enable bluetooth.service 2>/dev/null || true
 else
-    log_info "Would initialize workspace state, apply gsettings, etc."
+    log_info "Would initialize workspace state, apply gsettings, and configure .bashrc"
+fi
+
+
+# -------------------------------------------------------------
+# 5.5 Greetd Configuration
+# -------------------------------------------------------------
+echo "[5.5/6] Configuring greetd..."
+
+if [ "$DRY_RUN" = false ]; then
+    sudo mkdir -p /etc/greetd
+    cat << 'GREETD' | sudo tee /etc/greetd/config.toml > /dev/null
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --cmd Hyprland"
+user = "greeter"
+GREETD
+    sudo systemctl enable greetd.service 2>/dev/null || true
+    log_success "greetd configured and enabled"
+else
+    log_info "Would configure greetd and enable service"
 fi
 
 # -------------------------------------------------------------
@@ -175,36 +226,29 @@ if [ "$DRY_RUN" = false ]; then
     echo "Log out and log back in to activate."
     echo ""
     echo "Keyboard shortcuts:"
-    echo "  $KEYBIND_LAUNCHER        App launcher (Wofi)"
-    echo "  $KEYBIND_TERMINAL        Terminal"
-    echo "  $KEYBIND_BROWSER         Browser (chromium)"
-    echo "  $KEYBIND_CLOSE_1/$KEYBIND_CLOSE_2      Close window"
-    echo "  $KEYBIND_FULLSCREEN        Toggle fullscreen"
-    echo "  $KEYBIND_NEXT_WINDOW      Switch to next window"
-    echo "  $KEYBIND_PREV_WINDOW      Switch to previous window"
-    echo "  $KEYBIND_ALL_WINDOW      Switch windows (all desktops)"
-    echo "  $KEYBIND_MINIMIZE        Minimize window"
-    echo "  $KEYBIND_MAXIMIZE        Maximize window"
-    echo "  W-Down       Minimize window"
-    echo "  $KEYBIND_SNAP_LEFT       Snap window left (tile)"
-    echo "  $KEYBIND_SNAP_RIGHT      Snap window right (tile)"
-    echo "  $KEYBIND_CENTER        Center window"
-    echo "  W-1-6        Switch to workspace 1-6"
-    echo "  W-S-1-6      Move window to workspace 1-6"
-    echo "  $KEYBIND_SCREENSHOT_FULL        Screenshot (full screen)"
-    echo "  $KEYBIND_SCREENSHOT_REGION      Screenshot (select region)"
+    echo "  SUPER+D        App launcher (Rofi)"
+    echo "  SUPER+Return   Terminal"
+    echo "  SUPER+E        File Manager"
+    echo "  SUPER+Q        Close window"
+    echo "  SUPER+F        Toggle fullscreen"
+    echo "  SUPER+V        Toggle floating window"
+    echo "  SUPER+Arrows   Move focus"
+    echo "  SUPER+1-0      Switch to workspace 1-10"
+    echo "  SUPER+SHIFT+1-0 Move window to workspace 1-10"
+    echo "  Print          Screenshot (Select region)"
+    echo "  SHIFT+Print    Screenshot (Full screen)"
     echo ""
     echo "Bar actions:"
     echo "  Click clock          Toggle date/time format"
     echo "  Click workspaces     Cycle to next workspace"
     echo "  Right-click workspaces Cycle to previous workspace"
     echo "  Right-click WiFi     Open network settings"
-    echo "  Click volume         Open PulseAudio mixer"
-    echo "  Scroll on volume     Adjust volume"
+    echo "  Click volume         Open audio mixer"
+    echo "  Scroll on volume    Adjust volume"
     echo "  Click power icon     Power menu (shutdown/reboot/logout)"
     echo ""
-    echo "To customize keybinds:   Edit config/keybinds/keybinds.conf"
-    echo "To customize theme:      Edit config/theme.conf"
+    echo "To customize keybinds:   Edit ~/.config/hypr/hyprland.conf"
+    echo "To customize theme:      Edit config/theme.conf and run install.sh"
     echo "To uninstall:            bash uninstall.sh"
     echo ""
 else
@@ -214,3 +258,5 @@ else
     echo "No changes were made. Run without --dry-run to install."
     echo ""
 fi
+
+

@@ -29,7 +29,7 @@ window#waybar {
 #pulseaudio,
 #custom-launcher,
 #custom-power,
-#custom-workspaces,
+#workspaces,
 #tray {
     padding: 0 14px;
     margin: 4px 2px;
@@ -49,12 +49,16 @@ window#waybar {
     background-color: {{LAUNCHER_HOVER_BG_COLOR}};
 }
 
-/* Workspace indicator (custom script) */
-#custom-workspaces {
+/* Workspace indicator */
+#workspaces button {
     padding: 0 6px;
     font-size: 12px;
     font-weight: bold;
-    letter-spacing: 1px;
+    color: {{COLOR_INACTIVE}};
+}
+
+#workspaces button.active {
+    color: {{COLOR_ACTIVE}};
 }
 
 /* Clock (center) */

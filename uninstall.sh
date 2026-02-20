@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Pimarchy Uninstaller for Raspberry Pi 5
-# Reverts the system back to the default Raspberry Pi desktop.
+# Pimarchy Uninstaller for Raspberry Pi 500
+# Reverts the system back to the default Arch Linux ARM state.
 #
 # Usage: bash uninstall.sh
 #
@@ -16,7 +16,7 @@ source "$PIMARCHY_ROOT/lib/functions.sh"
 
 echo "=== Pimarchy Uninstaller ==="
 echo ""
-echo "This will revert your desktop to the default Raspberry Pi configuration."
+echo "This will revert your desktop to the pre-Pimarchy configuration."
 echo ""
 read -p "Continue? [y/N] " confirm
 if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
@@ -36,35 +36,28 @@ stop_services
 echo "[2/5] Removing Pimarchy configuration..."
 remove_pimarchy_files
 
+# Clean up .bashrc
+if grep -q "bashrc.pimarchy" "$HOME/.bashrc"; then
+    # Create a temporary file without the Pimarchy lines
+    sed -i '/# Pimarchy configuration/,/starship init bash/d' "$HOME/.bashrc"
+    # Remove trailing empty lines that might have been left
+    sed -i '${/^$/d;}' "$HOME/.bashrc"
+fi
+
 # -------------------------------------------------------------
 # 3. Restore backups
 # -------------------------------------------------------------
 echo "[3/5] Restoring original configuration..."
-if ! restore_configs; then
-    log_warn "Restoring default system behavior..."
-    # Remove the autostart override so system autostart takes effect
-    rm -f ~/.config/labwc/autostart
-fi
-
-# Additional cleanup: ensure no duplicate autostart
-if [ -f ~/.config/labwc/autostart ] && [ -f /etc/xdg/labwc/autostart ]; then
-    if diff -q ~/.config/labwc/autostart /etc/xdg/labwc/autostart > /dev/null 2>&1; then
-        log_info "Removing duplicate user autostart (identical to system)"
-        rm -f ~/.config/labwc/autostart
-    fi
-fi
+restore_configs
 
 # Reset gsettings
 reset_gsettings
-
-# Restore trash icon
-show_trash_icon
 
 # -------------------------------------------------------------
 # 4. Optionally remove packages
 # -------------------------------------------------------------
 echo ""
-read -p "Remove packages installed by Pimarchy? (waybar, wofi, mako, arc-theme, etc.) [y/N] " remove_pkgs
+read -p "Remove packages installed by Pimarchy? (hyprland, waybar, rofi, mako, etc.) [y/N] " remove_pkgs
 if [ "$remove_pkgs" = "y" ] || [ "$remove_pkgs" = "Y" ]; then
     echo "[4/5] Removing packages..."
     remove_packages
@@ -88,10 +81,5 @@ fi
 echo ""
 echo "=== Pimarchy has been uninstalled ==="
 echo ""
-echo "Log out and log back in to restore the default Raspberry Pi desktop."
-echo "The default wf-panel-pi bottom bar will return on next login."
+echo "Reboot to boot into your standard Arch Linux CLI environment."
 echo ""
-echo "Note: If you see duplicate panels after logging back in, run:"
-echo "  rm ~/.config/labwc/autostart"
-echo "  pkill -f wf-panel-pi"
-echo "Then log out and back in again."

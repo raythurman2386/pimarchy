@@ -19,21 +19,16 @@ jobs:
         bash -n uninstall.sh
         bash -n lib/functions.sh
         bash -n validate.sh
-        bash -n migrate.sh
-        bash -n diagnose.sh
     
     - name: Check executable permissions
       run: |
         test -x install.sh || (echo "install.sh not executable" && exit 1)
         test -x uninstall.sh || (echo "uninstall.sh not executable" && exit 1)
         test -x validate.sh || (echo "validate.sh not executable" && exit 1)
-        test -x diagnose.sh || (echo "diagnose.sh not executable" && exit 1)
-        test -x migrate.sh || (echo "migrate.sh not executable" && exit 1)
     
     - name: Validate config files exist
       run: |
         test -f config/theme.conf || (echo "theme.conf missing" && exit 1)
-        test -f config/keybinds/keybinds.conf || (echo "keybinds.conf missing" && exit 1)
         test -f config/modules.conf || (echo "modules.conf missing" && exit 1)
     
     - name: Check for template syntax errors

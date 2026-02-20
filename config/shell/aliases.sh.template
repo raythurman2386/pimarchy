@@ -1,0 +1,51 @@
+#
+# Pimarchy Shell Aliases
+#
+
+# System
+alias update='sudo pacman -Syu'
+alias install='yay -S'
+alias remove='yay -Rns'
+alias search='yay -Ss'
+alias orphans='pacman -Qtdq | xargs -r sudo pacman -Rs'
+
+# Pimarchy
+alias pimarchy-edit='cd {{PIMARCHY_ROOT}}'
+alias pimarchy-update='cd {{PIMARCHY_ROOT}} && git pull && bash install.sh'
+
+# Raspberry Pi Utilities
+alias pi-temp='/usr/bin/vcgencmd measure_temp'
+alias pi-clock='/usr/bin/vcgencmd measure_clock arm'
+alias pi-volts='/usr/bin/vcgencmd measure_volts'
+alias pi-throttled='/usr/bin/vcgencmd get_throttled'
+
+# Navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias .3='cd ../../../'
+alias .4='cd ../../../../'
+alias .5='cd ../../../../../'
+
+# Standard overrides
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+alias diff='diff --color=auto'
+alias ip='ip -color=auto'
+
+# Modern replacements
+if command -v lsd &> /dev/null; then
+    alias ls='lsd'
+    alias ll='lsd -l'
+    alias la='lsd -a'
+    alias lt='lsd --tree'
+fi
+
+if command -v bat &> /dev/null; then
+    alias cat='bat'
+fi
+
+# Handy shortcuts
+alias h='history'
+alias j='jobs -l'
+alias q='exit'
+alias c='clear'

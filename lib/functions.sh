@@ -14,9 +14,9 @@ LIB_DIR="$PIMARCHY_DIR/lib"
 BACKUP_DIR="$HOME/.config/Pimarchy-backup"
 
 # System paths
-LABWC_DIR="$HOME/.config/labwc"
+HYPRLAND_DIR="$HOME/.config/hypr"
 WAYBAR_DIR="$HOME/.config/waybar"
-WOFI_DIR="$HOME/.config/wofi"
+ROFI_DIR="$HOME/.config/rofi"
 MAKO_DIR="$HOME/.config/mako"
 GTK3_DIR="$HOME/.config/gtk-3.0"
 TERMINAL_DIR="$HOME/.config/alacritty"
@@ -58,7 +58,7 @@ backup_configs() {
         mkdir -p "$new_backup_dir"
         
         # Move current configs to timestamped backup
-        local items=("labwc" "waybar" "wofi" "mako" "gtk-3.0" "alacritty" "pcmanfm")
+        local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "alacritty")
         
         for item in "${items[@]}"; do
             if [ -d "$HOME/.config/$item" ]; then
@@ -75,7 +75,7 @@ backup_configs() {
     else
         # First time install - backup original configs
         log_info "Creating original backup of system configs..."
-        local items=("labwc" "waybar" "wofi" "mako" "gtk-3.0" "alacritty" "pcmanfm")
+        local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "alacritty")
         
         for item in "${items[@]}"; do
             if [ -d "$HOME/.config/$item" ]; then
@@ -110,34 +110,13 @@ restore_configs() {
         log_warn "No original backup marker found - backup may not contain original configs"
     fi
     
-    local items=("labwc" "waybar" "wofi" "mako" "pcmanfm" "gtk-3.0" "alacritty")
+    local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "alacritty")
 
     for item in "${items[@]}"; do
         if [ -d "$BACKUP_DIR/${item}.bak" ]; then
             log_info "Restoring ~/.config/$item"
-
-            if [ "$item" = "labwc" ]; then
-                # For labwc, merge back individual files
-                for f in "$BACKUP_DIR/${item}.bak"/*; do
-                    if [ -e "$f" ]; then
-                        base=$(basename "$f")
-                        # Special handling for autostart - don't restore if it's identical to system
-                        if [ "$base" = "autostart" ]; then
-                            if [ -f "/etc/xdg/labwc/autostart" ]; then
-                                if diff -q "$f" "/etc/xdg/labwc/autostart" > /dev/null 2>&1; then
-                                    log_info "Skipping autostart (identical to system default)"
-                                    rm -f "$HOME/.config/labwc/autostart"
-                                    continue
-                                fi
-                            fi
-                        fi
-                        cp -r "$f" "$HOME/.config/labwc/$base"
-                    fi
-                done
-            else
-                rm -rf "$HOME/.config/$item"
-                cp -r "$BACKUP_DIR/${item}.bak" "$HOME/.config/$item"
-            fi
+            rm -rf "$HOME/.config/$item"
+            cp -r "$BACKUP_DIR/${item}.bak" "$HOME/.config/$item"
         fi
     done
     
@@ -216,19 +195,64 @@ process_template() {
 # Package Management
 # ============================================================================
 
+install_yay() {
+    if ! command -v yay &> /dev/null; then
+        log_info "Installing yay (AUR helper)..."
+        
+        if ! command -v git &> /dev/null; then
+            log_info "Installing git..."
+            sudo pacman -S --needed --noconfirm git
+        fi
+        
+        if ! command -v makepkg &> /dev/null; then
+            log_info "Installing base-devel..."
+            sudo pacman -S --needed --noconfirm base-devel
+        fi
+        
+        local yay_dir="/tmp/yay-bin"
+        git clone https://aur.archlinux.org/yay-bin.git "$yay_dir"
+        
+        if [ $? -ne 0 ]; then
+            log_error "Failed to clone yay repository"
+            return 1
+        fi
+        
+        cd "$yay_dir"
+        makepkg -si --noconfirm
+        
+        if [ $? -ne 0 ]; then
+            log_error "Failed to build yay"
+            cd - > /dev/null
+            rm -rf "$yay_dir"
+            return 1
+        fi
+        
+        cd - > /dev/null
+        rm -rf "$yay_dir"
+        log_success "yay installed"
+    else
+        log_info "yay is already installed"
+    fi
+}
+
 install_packages() {
-    log_info "Installing packages..."
+    log_info "Updating system and installing packages..."
     
+    sudo pacman -Syu --noconfirm
+
+    install_yay
+
     local packages=(
-        waybar wofi mako-notifier swaybg grim slurp
-        wl-clipboard fonts-font-awesome xdg-desktop-portal-wlr
-        pavucontrol network-manager-gnome wtype
-        arc-theme papirus-icon-theme gtk2-engines-murrine
-        alacritty
+        hyprland waybar mako swaybg grim slurp
+        wl-clipboard ttf-font-awesome ttf-jetbrains-mono-nerd xdg-desktop-portal-hyprland
+        pavucontrol network-manager-applet
+        arc-gtk-theme papirus-icon-theme
+        alacritty rofi-wayland greetd greetd-tuigreet nwg-look
+        polkit-gnome starship thunar
+        linux-firmware bluez bluez-utils alsa-utils
     )
 
-    sudo apt-get update -qq
-    sudo apt-get install -y -qq "${packages[@]}"
+    yay -S --needed --noconfirm "${packages[@]}"
 
     log_success "Packages installed"
 }
@@ -237,14 +261,16 @@ remove_packages() {
     log_info "Removing packages..."
 
     local packages=(
-        waybar wofi mako-notifier swaybg grim slurp
-        wl-clipboard pavucontrol network-manager-gnome wtype
-        arc-theme papirus-icon-theme gtk2-engines-murrine
-        alacritty
+        hyprland waybar mako swaybg grim slurp
+        wl-clipboard ttf-font-awesome ttf-jetbrains-mono-nerd xdg-desktop-portal-hyprland
+        pavucontrol network-manager-applet
+        arc-gtk-theme papirus-icon-theme
+        alacritty rofi-wayland greetd greetd-tuigreet nwg-look
+        polkit-gnome starship thunar
+        linux-firmware bluez bluez-utils alsa-utils
     )
     
-    sudo apt-get remove -y "${packages[@]}" 2>/dev/null || true
-    sudo apt-get autoremove -y 2>/dev/null || true
+    yay -Rns --noconfirm "${packages[@]}" 2>/dev/null || true
     
     log_success "Packages removed"
 }
@@ -256,9 +282,9 @@ remove_packages() {
 create_config_dirs() {
     log_info "Creating config directories..."
     
-    mkdir -p "$LABWC_DIR"
+    mkdir -p "$HYPRLAND_DIR"
     mkdir -p "$WAYBAR_DIR"
-    mkdir -p "$WOFI_DIR"
+    mkdir -p "$ROFI_DIR"
     mkdir -p "$MAKO_DIR"
     mkdir -p "$GTK3_DIR"
     mkdir -p "$TERMINAL_DIR"
@@ -269,6 +295,41 @@ create_config_dirs() {
 # ============================================================================
 # Service Management
 # ============================================================================
+
+detect_keyboard_layout() {
+    local layout=""
+    
+    if command -v localectl &> /dev/null; then
+        layout=$(localectl status --no-pager 2>/dev/null | grep "X11 Layout" | awk '{print $3}')
+        if [ -n "$layout" ]; then
+            echo "$layout"
+            return 0
+        fi
+    fi
+    
+    if [ -f /etc/vconsole.conf ]; then
+        layout=$(grep -E "^KEYMAP=" /etc/vconsole.conf | cut -d= -f2)
+        if [ -n "$layout" ]; then
+            echo "$layout"
+            return 0
+        fi
+    fi
+    
+    if [ -d /usr/share/X11/xkb/symbols ]; then
+        for layout_file in /etc/X11/xorg.conf.d/*; do
+            if [ -f "$layout_file" ]; then
+                layout=$(grep -E "XkbLayout" "$layout_file" | head -1 | awk '{print $2}' | tr -d '"')
+                if [ -n "$layout" ]; then
+                    echo "$layout"
+                    return 0
+                fi
+            fi
+        done
+    fi
+    
+    echo "us"
+    return 0
+}
 
 stop_services() {
     log_info "Stopping Pimarchy services..."
@@ -317,17 +378,12 @@ reset_gsettings() {
 remove_pimarchy_files() {
     log_info "Removing Pimarchy configuration files..."
     
-    # Labwc files
-    rm -f "$LABWC_DIR/rc.xml"
-    rm -f "$LABWC_DIR/autostart"
-    rm -f "$LABWC_DIR/power-menu.sh"
-    rm -f "$LABWC_DIR/workspace-display.sh"
-    rm -f "$LABWC_DIR/workspace-click.sh"
-    rm -f /tmp/pimarchy-workspace
+    # Hyprland files
+    rm -rf "$HYPRLAND_DIR"
     
-    # Waybar, wofi, mako
+    # Waybar, rofi, mako
     rm -rf "$WAYBAR_DIR"
-    rm -rf "$WOFI_DIR"
+    rm -rf "$ROFI_DIR"
     rm -rf "$MAKO_DIR"
     
     # GTK configs
@@ -335,45 +391,15 @@ remove_pimarchy_files() {
     rm -f "$HOME/.gtkrc-2.0"
     
     # Terminal config
-    rm -f "$TERMINAL_DIR/alacritty.toml"
+    rm -rf "$TERMINAL_DIR"
     
-    # Environment (clean up pimarchy lines or remove if we created it)
-    if [ -f "$LABWC_DIR/environment" ]; then
-        sed -i '/^# Pimarchy theming$/d' "$LABWC_DIR/environment"
-        sed -i '/^XCURSOR_THEME=/d' "$LABWC_DIR/environment"
-        sed -i '/^XCURSOR_SIZE=/d' "$LABWC_DIR/environment"
-        # Remove file if it's now empty (Pimarchy created it)
-        if [ ! -s "$LABWC_DIR/environment" ] || ! grep -q '[^[:space:]]' "$LABWC_DIR/environment" 2>/dev/null; then
-            rm -f "$LABWC_DIR/environment"
-        fi
-    fi
+    # Shell & Starship
+    rm -f "$HOME/.bashrc.pimarchy"
+    rm -f "$HOME/.config/starship.toml"
     
     # Chromium dark mode flags
-    sudo rm -f /etc/chromium.d/pimarchy-dark
+    rm -f "$HOME/.config/chromium-flags.conf"
     
     log_success "Pimarchy files removed"
 }
 
-# ============================================================================
-# Desktop Settings
-# ============================================================================
-
-hide_trash_icon() {
-    log_info "Hiding desktop trash icon..."
-    
-    for conf in "$HOME/.config/pcmanfm/LXDE-pi"/desktop-items-*.conf; do
-        if [ -f "$conf" ]; then
-            sed -i 's/show_trash=1/show_trash=0/g' "$conf"
-        fi
-    done
-}
-
-show_trash_icon() {
-    log_info "Restoring desktop trash icon..."
-    
-    for conf in "$HOME/.config/pcmanfm/LXDE-pi"/desktop-items-*.conf; do
-        if [ -f "$conf" ]; then
-            sed -i 's/show_trash=0/show_trash=1/g' "$conf"
-        fi
-    done
-}

@@ -12,7 +12,7 @@ Be respectful and constructive in all interactions.
 
 When reporting issues, please include:
 - Raspberry Pi model (e.g., Pi 5)
-- OS version (e.g., Debian Bookworm)
+- OS version (e.g., Arch Linux ARM)
 - What you were trying to do
 - What actually happened
 - Steps to reproduce

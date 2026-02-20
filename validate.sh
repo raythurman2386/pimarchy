@@ -16,9 +16,14 @@ source "$PIMARCHY_ROOT/lib/functions.sh"
 
 echo "[1/4] Loading configurations..."
 load_config "$PIMARCHY_ROOT/config/theme.conf"
-load_config "$PIMARCHY_ROOT/config/keybinds/keybinds.conf"
 # Set SCRIPT_DIR as install.sh does (needed for waybar config template)
-SCRIPT_DIR="$HOME/.config/labwc"
+SCRIPT_DIR="$HOME/.config/hypr"
+export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
+export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
+export COLOR_BASE_HEX="${COLOR_BASE#\#}"
+
+# Detect keyboard layout (same as install.sh)
+export KEYBOARD_LAYOUT=$(detect_keyboard_layout)
 
 echo "[2/4] Checking template files..."
 
@@ -61,11 +66,6 @@ required_vars=(
     "ICON_THEME"
     "CURSOR_THEME"
     "COLOR_SCHEME"
-    "WORKSPACE_COUNT"
-    "KEYBIND_LAUNCHER"
-    "LAUNCHER_CMD"
-    "KEYBIND_TERMINAL"
-    "TERMINAL_CMD"
 )
 
 for var in "${required_vars[@]}"; do

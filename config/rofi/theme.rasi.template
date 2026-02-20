@@ -1,0 +1,75 @@
+* {
+    font: "{{FONT_NAME}} {{FONT_SIZE}}";
+    bg-col: {{ROFI_BG_COLOR}};
+    bg-col-light: {{COLOR_SURFACE}};
+    border-col: {{ROFI_BORDER_COLOR}};
+    selected-col: {{COLOR_PRIMARY}};
+    fg-col: {{ROFI_FG_COLOR}};
+    fg-col2: {{COLOR_SUBTEXT}};
+    grey: {{COLOR_OVERLAY}};
+
+    width: {{ROFI_WIDTH}};
+}
+
+window {
+    padding: 20px;
+    background-color: @bg-col;
+    border: 2px;
+    border-color: @border-col;
+    border-radius: {{ROFI_BORDER_RADIUS}}px;
+}
+
+mainbox {
+    background-color: transparent;
+}
+
+inputbar {
+    children: [prompt,entry];
+    background-color: {{ROFI_INPUT_BG_COLOR}};
+    border: 1px;
+    border-color: {{ROFI_INPUT_FOCUS_BORDER_COLOR}};
+    border-radius: 8px;
+    padding: 4px;
+    margin: 0px 0px 10px 0px;
+}
+
+prompt {
+    background-color: @selected-col;
+    padding: 6px 12px;
+    text-color: {{COLOR_BASE}};
+    border-radius: 6px;
+}
+
+entry {
+    padding: 6px;
+    text-color: @fg-col;
+    background-color: transparent;
+    placeholder: "{{ROFI_PROMPT}}";
+}
+
+listview {
+    border: 0px;
+    padding: 6px 0px 0px;
+    columns: 1;
+    lines: 8;
+    background-color: transparent;
+}
+
+element {
+    padding: 8px;
+    background-color: transparent;
+    text-color: @fg-col;
+    border-radius: 6px;
+}
+
+element-icon {
+    size: {{ROFI_IMAGE_SIZE}}px;
+    margin: 0px 10px 0px 0px;
+}
+
+element selected {
+    background-color: {{ROFI_ENTRY_SELECTED_BG_COLOR}};
+    text-color: {{ROFI_ENTRY_SELECTED_FG_COLOR}};
+    border: 1px;
+    border-color: @selected-col;
+}

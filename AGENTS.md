@@ -4,7 +4,7 @@ This document provides guidelines for AI agents working on the Pimarchy codebase
 
 ## Project Overview
 
-Pimarchy is a Raspberry Pi 5 Wayland desktop environment configuration tool. It transforms the default Raspberry Pi desktop into a modern, aesthetic environment using Labwc (window manager), Waybar (status bar), and related tools.
+Pimarchy is a Raspberry Pi 5/500 Arch Linux ARM provisioning tool. It transforms a barebones Arch installation into a modern, aesthetic "Omarchy-inspired" environment using Hyprland (compositor), Waybar (status bar), Rofi (launcher), and related tools.
 
 ## Build/Test Commands
 
@@ -79,8 +79,9 @@ Use these prefixes consistently:
 ### Template Processing
 
 Templates use `{{VARIABLE}}` syntax. Variables are defined in:
-- `config/theme.conf` - Theme colors, fonts, icons
-- `config/keybinds/keybinds.conf` - Keybindings and commands
+- `config/theme.conf` - Theme colors, fonts, icons, Rofi settings
+- Environment variables exported by `install.sh` (e.g., `PIMARCHY_ROOT`)
+- Derived variables (e.g., `COLOR_PRIMARY_HEX`)
 
 ## Project Structure
 
@@ -88,14 +89,10 @@ Templates use `{{VARIABLE}}` syntax. Variables are defined in:
 ├── install.sh          # Main installer script
 ├── uninstall.sh        # Uninstaller (restores backups)
 ├── validate.sh         # Configuration validator
-├── migrate.sh          # Migration utility
-├── diagnose.sh         # Diagnostic tool
 ├── lib/
 │   └── functions.sh    # Shared library functions
 ├── config/
 │   ├── theme.conf      # Theme configuration
-│   ├── keybinds/
-│   │   └── keybinds.conf  # Keybinding definitions
 │   ├── modules.conf    # Module registry
 │   └── */*.template    # Configuration templates
 └── .github/workflows/  # CI/CD automation
@@ -144,9 +141,10 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 
 ## Platform Notes
 
-- Target: Raspberry Pi 5 with Debian Bookworm
-- Window Manager: Labwc (Wayland)
+- Target: Raspberry Pi 5 with Arch Linux ARM
+- Window Manager: Hyprland (Wayland)
 - Status Bar: Waybar
-- App Launcher: Wofi
+- App Launcher: Rofi-Wayland
+- Shell: Bash + Pimarchy Aliases + Starship
 - Notifications: Mako
 - Terminal: Alacritty
