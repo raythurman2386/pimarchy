@@ -199,6 +199,10 @@ fi
 echo "[5.5/6] Configuring greetd..."
 
 if [ "$DRY_RUN" = false ]; then
+    # Disable getty on tty1 to prevent conflict with greetd
+    sudo systemctl disable getty@tty1.service 2>/dev/null || true
+    sudo systemctl mask getty@tty1.service 2>/dev/null || true
+    
     sudo mkdir -p /etc/greetd
     cat << 'GREETD' | sudo tee /etc/greetd/config.toml > /dev/null
 [terminal]
@@ -206,12 +210,12 @@ vt = 1
 
 [default_session]
 command = "tuigreet --cmd Hyprland"
-user = "greeter"
+user = "_greetd"
 GREETD
     sudo systemctl enable greetd 2>/dev/null || true
     log_success "greetd configured and enabled"
 else
-    log_info "Would configure greetd and enable service"
+    log_info "Would configure greetd and disable getty@tty1"
 fi
 
 # -------------------------------------------------------------
