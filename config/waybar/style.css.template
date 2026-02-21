@@ -31,18 +31,18 @@ window#waybar {
 #custom-power,
 #workspaces,
 #tray {
-    padding: 0 14px;
-    margin: 4px 2px;
+    padding: 0 8px;
+    margin: 3px 1px;
     background-color: {{MODULE_BG_COLOR}};
-    border-radius: 10px;
+    border-radius: 8px;
     color: {{MODULE_FG_COLOR}};
 }
 
 #custom-launcher {
-    font-size: 16px;
+    font-size: 15px;
     color: {{COLOR_PRIMARY}};
     background-color: {{LAUNCHER_BG_COLOR}};
-    padding: 0 12px;
+    padding: 0 8px;
 }
 
 #custom-launcher:hover {
@@ -110,10 +110,10 @@ window#waybar {
 }
 
 #custom-power {
-    font-size: 15px;
+    font-size: 14px;
     color: {{COLOR_POWER}};
     background-color: {{POWER_BG_COLOR}};
-    padding: 0 10px;
+    padding: 0 8px;
 }
 
 #custom-power:hover {
