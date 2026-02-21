@@ -1,7 +1,7 @@
 /* Pimarchy Waybar Theme - Full-width Top Bar */
 
 * {
-    font-family: "{{FONT_FAMILY}}", "FontAwesome", sans-serif;
+    font-family: "{{FONT_FAMILY}}", "Noto Color Emoji", "FontAwesome", sans-serif;
     font-size: {{FONT_SIZE_PX}}px;
     border: none;
     border-radius: 0;
@@ -23,38 +23,42 @@ window#waybar {
 
 /* All modules base style */
 #clock,
-#cpu,
+#temperature,
 #memory,
 #network,
 #pulseaudio,
 #custom-launcher,
 #custom-power,
-#custom-workspaces,
+#workspaces,
 #tray {
-    padding: 0 14px;
-    margin: 4px 2px;
+    padding: 0 8px;
+    margin: 3px 1px;
     background-color: {{MODULE_BG_COLOR}};
-    border-radius: 10px;
+    border-radius: 8px;
     color: {{MODULE_FG_COLOR}};
 }
 
 #custom-launcher {
-    font-size: 16px;
+    font-size: 15px;
     color: {{COLOR_PRIMARY}};
     background-color: {{LAUNCHER_BG_COLOR}};
-    padding: 0 12px;
+    padding: 0 8px;
 }
 
 #custom-launcher:hover {
     background-color: {{LAUNCHER_HOVER_BG_COLOR}};
 }
 
-/* Workspace indicator (custom script) */
-#custom-workspaces {
+/* Workspace indicator */
+#workspaces button {
     padding: 0 6px;
     font-size: 12px;
     font-weight: bold;
-    letter-spacing: 1px;
+    color: {{COLOR_INACTIVE}};
+}
+
+#workspaces button.active {
+    color: {{COLOR_ACTIVE}};
 }
 
 /* Clock (center) */
@@ -64,8 +68,12 @@ window#waybar {
     background-color: {{CLOCK_BG_COLOR}};
 }
 
-#cpu {
-    color: {{COLOR_CPU}};
+#temperature {
+    color: {{COLOR_TEMP}};
+}
+
+#temperature.critical {
+    color: {{COLOR_ERROR}};
 }
 
 #memory {
@@ -102,20 +110,34 @@ window#waybar {
 }
 
 #custom-power {
-    font-size: 15px;
+    font-size: 14px;
     color: {{COLOR_POWER}};
     background-color: {{POWER_BG_COLOR}};
-    padding: 0 10px;
+    padding: 0 8px;
 }
 
 #custom-power:hover {
     background-color: {{POWER_HOVER_BG_COLOR}};
 }
 
-#cpu:hover,
+#temperature:hover,
 #memory:hover,
 #network:hover,
 #pulseaudio:hover,
 #clock:hover {
     background-color: {{MODULE_HOVER_BG_COLOR}};
+}
+
+/* ── Tooltip styling ─────────────────────────────────────────────────────── */
+/* Waybar tooltips are GTK popovers; target both the window and inner label  */
+tooltip {
+    background-color: {{ROFI_BG_COLOR}};
+    border:           1px solid {{ROFI_BORDER_COLOR}};
+    border-radius:    8px;
+    padding:          4px 2px;
+}
+
+tooltip label {
+    color:            {{BAR_FG_COLOR}};
+    padding:          4px 8px;
 }

@@ -14,9 +14,9 @@ LIB_DIR="$PIMARCHY_DIR/lib"
 BACKUP_DIR="$HOME/.config/Pimarchy-backup"
 
 # System paths
-LABWC_DIR="$HOME/.config/labwc"
+HYPRLAND_DIR="$HOME/.config/hypr"
 WAYBAR_DIR="$HOME/.config/waybar"
-WOFI_DIR="$HOME/.config/wofi"
+ROFI_DIR="$HOME/.config/rofi"
 MAKO_DIR="$HOME/.config/mako"
 GTK3_DIR="$HOME/.config/gtk-3.0"
 TERMINAL_DIR="$HOME/.config/alacritty"
@@ -58,7 +58,7 @@ backup_configs() {
         mkdir -p "$new_backup_dir"
         
         # Move current configs to timestamped backup
-        local items=("labwc" "waybar" "wofi" "mako" "gtk-3.0" "alacritty" "pcmanfm")
+        local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "alacritty")
         
         for item in "${items[@]}"; do
             if [ -d "$HOME/.config/$item" ]; then
@@ -75,7 +75,7 @@ backup_configs() {
     else
         # First time install - backup original configs
         log_info "Creating original backup of system configs..."
-        local items=("labwc" "waybar" "wofi" "mako" "gtk-3.0" "alacritty" "pcmanfm")
+        local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "alacritty")
         
         for item in "${items[@]}"; do
             if [ -d "$HOME/.config/$item" ]; then
@@ -102,7 +102,7 @@ restore_configs() {
     
     if [ ! -d "$BACKUP_DIR" ]; then
         log_warn "No backup directory found at $BACKUP_DIR"
-        return 1
+        return 0
     fi
     
     # Check if we have original backups
@@ -110,34 +110,13 @@ restore_configs() {
         log_warn "No original backup marker found - backup may not contain original configs"
     fi
     
-    local items=("labwc" "waybar" "wofi" "mako" "pcmanfm" "gtk-3.0" "alacritty")
+    local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "alacritty")
 
     for item in "${items[@]}"; do
         if [ -d "$BACKUP_DIR/${item}.bak" ]; then
             log_info "Restoring ~/.config/$item"
-
-            if [ "$item" = "labwc" ]; then
-                # For labwc, merge back individual files
-                for f in "$BACKUP_DIR/${item}.bak"/*; do
-                    if [ -e "$f" ]; then
-                        base=$(basename "$f")
-                        # Special handling for autostart - don't restore if it's identical to system
-                        if [ "$base" = "autostart" ]; then
-                            if [ -f "/etc/xdg/labwc/autostart" ]; then
-                                if diff -q "$f" "/etc/xdg/labwc/autostart" > /dev/null 2>&1; then
-                                    log_info "Skipping autostart (identical to system default)"
-                                    rm -f "$HOME/.config/labwc/autostart"
-                                    continue
-                                fi
-                            fi
-                        fi
-                        cp -r "$f" "$HOME/.config/labwc/$base"
-                    fi
-                done
-            else
-                rm -rf "$HOME/.config/$item"
-                cp -r "$BACKUP_DIR/${item}.bak" "$HOME/.config/$item"
-            fi
+            rm -rf "$HOME/.config/$item"
+            cp -r "$BACKUP_DIR/${item}.bak" "$HOME/.config/$item"
         fi
     done
     
@@ -186,15 +165,17 @@ process_template() {
     content=$(<"$template_file")
     
     # Replace all {{VAR}} patterns with their corresponding environment variables
+    # Declare loop variables before the loop so `local` doesn't mask exit codes
+    local var_name var_value
     while [[ $content =~ \{\{([A-Za-z_][A-Za-z0-9_]*)\}\} ]]; do
-        local var_name="${BASH_REMATCH[1]}"
-        local var_value="${!var_name}"
-        
-        # Check if variable is set
+        var_name="${BASH_REMATCH[1]}"
+
+        # Check if variable is set before reading its value
         if [ -z "${!var_name+x}" ]; then
             log_warn "Undefined variable in template: $var_name"
-            # Replace with empty string to prevent infinite loop
             var_value=""
+        else
+            var_value="${!var_name}"
         fi
         
         content="${content//\{\{$var_name\}\}/$var_value}"
@@ -213,22 +194,159 @@ process_template() {
 }
 
 # ============================================================================
-# Package Management
+# Package Management (Debian/Ubuntu/Pi OS)
 # ============================================================================
 
+# configure_docker_repo — adds the official Docker CE apt repository so that
+# docker-ce, docker-compose-plugin, and docker-buildx-plugin can be installed
+# at their latest upstream versions. Idempotent: skips if already configured.
+# Follows the official Docker docs for Debian (arm64 / Pi OS Bookworm).
+configure_docker_repo() {
+    if [ -f /etc/apt/sources.list.d/docker.list ]; then
+        log_info "Docker apt repository already configured — skipping"
+        return 0
+    fi
+
+    log_info "Adding official Docker CE apt repository..."
+
+    # Install prerequisites for adding the repo
+    sudo apt install -y ca-certificates curl gnupg
+
+    # Import Docker's official GPG key
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/debian/gpg \
+        | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+    # Pi OS Bookworm reports VERSION_CODENAME="bookworm" — use that for the repo
+    local codename
+    codename=$(. /etc/os-release && echo "$VERSION_CODENAME")
+    # Fallback: Pi OS may set only DEBIAN_CODENAME
+    if [ -z "$codename" ]; then
+        codename=$(. /etc/os-release && echo "$DEBIAN_CODENAME")
+    fi
+    if [ -z "$codename" ]; then
+        codename="bookworm"
+    fi
+
+    echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/debian ${codename} stable" \
+        | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # Pin Docker packages so they always come from the official repo, not Debian
+    cat <<'EOF' | sudo tee /etc/apt/preferences.d/docker-pin > /dev/null
+Package: docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+Pin: origin download.docker.com
+Pin-Priority: 1001
+EOF
+
+    sudo apt update
+    log_success "Docker CE repository added"
+}
+
 install_packages() {
-    log_info "Installing packages..."
+    log_info "Updating system and installing packages..."
     
-    local packages=(
-        waybar wofi mako-notifier swaybg grim slurp
-        wl-clipboard fonts-font-awesome xdg-desktop-portal-wlr
-        pavucontrol network-manager-gnome wtype
-        arc-theme papirus-icon-theme gtk2-engines-murrine
+    sudo apt update
+    sudo apt upgrade -y
+
+    # Set up Debian sid (unstable) repository for Hyprland
+    if [ ! -s /etc/apt/sources.list.d/sid.list ]; then
+        log_info "Adding Debian Sid (unstable) repository for Hyprland..."
+        echo "deb http://deb.debian.org/debian/ sid main contrib non-free" | sudo tee /etc/apt/sources.list.d/sid.list
+        
+        log_info "Configuring APT pinning to prefer current release but allow sid..."
+        cat <<EOF | sudo tee /etc/apt/preferences.d/sid-pin
+Package: *
+Pin: release n=sid
+Pin-Priority: 100
+EOF
+        sudo apt update
+    fi
+
+    # Remove conflicting bookworm list if it was added previously
+    if [ -f /etc/apt/sources.list.d/bookworm.list ]; then
+        sudo rm -f /etc/apt/sources.list.d/bookworm.list
+        sudo apt update
+    fi
+
+    # Add official Docker CE repository (provides docker-ce + docker-compose-plugin)
+    configure_docker_repo
+
+    # Base packages from the stable/testing repository
+    local base_packages=(
+        fonts-font-awesome
+        fonts-jetbrains-mono
+        fonts-noto-color-emoji
+        pavucontrol
+        network-manager-gnome
+        arc-theme
+        papirus-icon-theme
         alacritty
+        rofi
+        greetd
+        tuigreet
+        starship
+        thunar
+        gsettings-desktop-schemas
+        lxpolkit
+        bluez
+        bluez-tools
+        alsa-utils
+        unzip
+        wget
+        curl
+        fontconfig
+        chromium
+        btop
     )
 
-    sudo apt-get update -qq
-    sudo apt-get install -y -qq "${packages[@]}"
+    sudo apt install -y "${base_packages[@]}"
+
+    # Docker CE + Compose v2 from the official Docker repository
+    local docker_packages=(
+        docker-ce
+        docker-ce-cli
+        containerd.io
+        docker-buildx-plugin
+        docker-compose-plugin
+    )
+
+    sudo apt install -y "${docker_packages[@]}"
+
+    # Add current user to the docker group so Docker works without sudo
+    if ! id -nG "$USER" | grep -qw docker 2>/dev/null; then
+        sudo usermod -aG docker "$USER"
+        log_info "Added $USER to docker group (re-login required to take effect)"
+    fi
+
+    # Wayland/Hyprland specific packages from sid
+    local hypr_packages=(
+        hyprland
+        waybar
+        mako-notifier
+        swaybg
+        grim
+        slurp
+        wl-clipboard
+        xdg-desktop-portal-hyprland
+    )
+
+    sudo apt install -t sid -y "${hypr_packages[@]}"
+
+    if ! fc-list | grep -iq "CaskaydiaCove Nerd Font"; then
+        log_info "Installing CaskaydiaCove Nerd Font..."
+        mkdir -p "$HOME/.local/share/fonts"
+        wget -qO /tmp/CascadiaCode.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/CascadiaCode.zip
+        unzip -qo /tmp/CascadiaCode.zip -d "$HOME/.local/share/fonts/" || true
+        fc-cache -fv "$HOME/.local/share/fonts" > /dev/null
+        rm -f /tmp/CascadiaCode.zip
+    fi
+
+    # Rebuild the system-wide fontconfig cache so newly installed fonts
+    # (e.g. fonts-noto-color-emoji) are available to all applications.
+    sudo fc-cache -fv > /dev/null
 
     log_success "Packages installed"
 }
@@ -237,15 +355,49 @@ remove_packages() {
     log_info "Removing packages..."
 
     local packages=(
-        waybar wofi mako-notifier swaybg grim slurp
-        wl-clipboard pavucontrol network-manager-gnome wtype
-        arc-theme papirus-icon-theme gtk2-engines-murrine
+        hyprland
+        waybar
+        mako-notifier
+        swaybg
+        grim
+        slurp
+        wl-clipboard
+        fonts-font-awesome
+        fonts-jetbrains-mono
+        xdg-desktop-portal-hyprland
+        pavucontrol
+        network-manager-gnome
+        arc-theme
+        papirus-icon-theme
         alacritty
+        rofi
+        greetd
+        tuigreet
+        starship
+        thunar
+        gsettings-desktop-schemas
+        lxpolkit
+        bluez
+        bluez-tools
+        alsa-utils
+        chromium
+        btop
+        docker-ce
+        docker-ce-cli
+        containerd.io
+        docker-buildx-plugin
+        docker-compose-plugin
     )
     
-    sudo apt-get remove -y "${packages[@]}" 2>/dev/null || true
-    sudo apt-get autoremove -y 2>/dev/null || true
-    
+    sudo apt remove --purge -y "${packages[@]}" 2>/dev/null || true
+    sudo apt autoremove -y
+
+    # Remove Docker CE repository and GPG key
+    sudo rm -f /etc/apt/sources.list.d/docker.list
+    sudo rm -f /etc/apt/keyrings/docker.gpg
+    sudo rm -f /etc/apt/preferences.d/docker-pin
+    sudo apt update 2>/dev/null || true
+
     log_success "Packages removed"
 }
 
@@ -256,12 +408,14 @@ remove_packages() {
 create_config_dirs() {
     log_info "Creating config directories..."
     
-    mkdir -p "$LABWC_DIR"
+    mkdir -p "$HYPRLAND_DIR"
     mkdir -p "$WAYBAR_DIR"
-    mkdir -p "$WOFI_DIR"
+    mkdir -p "$ROFI_DIR"
     mkdir -p "$MAKO_DIR"
     mkdir -p "$GTK3_DIR"
     mkdir -p "$TERMINAL_DIR"
+    mkdir -p "$HOME/.config/btop/themes"
+    mkdir -p "$HOME/.config/opencode"
     
     log_success "Config directories created"
 }
@@ -270,14 +424,298 @@ create_config_dirs() {
 # Service Management
 # ============================================================================
 
+detect_keyboard_layout() {
+    local layout=""
+    
+    if command -v localectl &> /dev/null; then
+        layout=$(localectl status --no-pager 2>/dev/null | awk -F': ' '/X11 Layout/{gsub(/^[[:space:]]+/,"",$2); print $2; exit}')
+        if [ -n "$layout" ]; then
+            echo "$layout"
+            return 0
+        fi
+    fi
+    
+    if [ -f /etc/vconsole.conf ]; then
+        layout=$(grep -E "^KEYMAP=" /etc/vconsole.conf | cut -d= -f2)
+        if [ -n "$layout" ]; then
+            echo "$layout"
+            return 0
+        fi
+    fi
+    
+    if [ -d /usr/share/X11/xkb/symbols ]; then
+        for layout_file in /etc/X11/xorg.conf.d/*; do
+            if [ -f "$layout_file" ]; then
+                layout=$(grep -E "XkbLayout" "$layout_file" | head -1 | awk '{print $2}' | tr -d '"')
+                if [ -n "$layout" ]; then
+                    echo "$layout"
+                    return 0
+                fi
+            fi
+        done
+    fi
+    
+    echo "us"
+    return 0
+}
+
 stop_services() {
     log_info "Stopping Pimarchy services..."
     
-    pkill -f waybar 2>/dev/null || true
     pkill -f mako 2>/dev/null || true
-    pkill -f swaybg 2>/dev/null || true
     
-    log_success "Services stopped"
+    # Disable greetd and restore Pi OS getty
+    if systemctl is-enabled greetd &>/dev/null; then
+        sudo systemctl disable greetd 2>/dev/null || true
+    fi
+    sudo systemctl unmask getty@tty1.service 2>/dev/null || true
+    sudo systemctl enable getty@tty1.service 2>/dev/null || true
+    
+    # Restore default target (multi-user.target is standard for Pi OS Lite)
+    sudo systemctl set-default multi-user.target 2>/dev/null || true
+
+    # Remove system files written by install.sh
+    sudo rm -f /usr/local/bin/start-hyprland
+    sudo rm -f /etc/greetd/config.toml
+    sudo rm -f /etc/X11/xorg.conf.d/00-keyboard.conf
+
+    # Revert CPU governor and overclock settings
+    revert_governor
+    revert_overclock
+    
+    log_success "Services stopped and Pi OS boot environment restored"
+}
+
+# ============================================================================
+# Performance Configuration (Raspberry Pi 5)
+# ============================================================================
+
+# Returns 0 if running on a Raspberry Pi 5 or Pi 500, 1 otherwise.
+# Reads /proc/device-tree/compatible which lists the board identifiers.
+is_pi5() {
+    if [ -f /proc/device-tree/compatible ]; then
+        if tr '\0' '\n' < /proc/device-tree/compatible 2>/dev/null | grep -qE "raspberrypi,5|raspberrypi,500"; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# configure_governor — sets the CPU scaling governor to 'performance'.
+# This keeps the CPU at maximum frequency without disabling DVFS voltage
+# scaling. Safe on any Pi 5 / Pi 500, takes effect immediately, and
+# persists across reboots via a systemd oneshot service (no extra packages
+# required — cpufrequtils is not available in Pi OS / Debian Bookworm repos).
+configure_governor() {
+    log_info "Setting CPU governor to 'performance'..."
+
+    local service_file="/etc/systemd/system/pimarchy-governor.service"
+
+    # Install a oneshot systemd unit that sets the governor on every boot
+    sudo tee "$service_file" > /dev/null <<'EOF'
+[Unit]
+Description=Pimarchy CPU performance governor
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c 'for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do echo performance > "$f"; done'
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable pimarchy-governor.service 2>/dev/null || true
+
+    # Apply immediately to all cores without waiting for reboot
+    for gov_path in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        [ -f "$gov_path" ] && echo performance | sudo tee "$gov_path" > /dev/null || true
+    done
+
+    log_success "CPU governor set to 'performance' (persists across reboots via systemd)"
+}
+
+# configure_overclock — adds arm_freq=2600 to /boot/firmware/config.txt.
+# REQUIRES REBOOT. Only runs on confirmed Pi 5 / Pi 500 hardware.
+# arm_freq=2600 is a mild overclock (stock is 2400 MHz) that does not
+# require extra voltage on Pi 5 — the firmware's DVFS handles it.
+# COOLING NOTE: An active cooler or adequate passive cooling is strongly
+# recommended. Sustained load without cooling will trigger thermal
+# throttling at 80°C and may cause instability.
+configure_overclock() {
+    log_info "Configuring CPU overclock (arm_freq=2600)..."
+
+    # Safety: only proceed on Pi 5 hardware
+    if ! is_pi5; then
+        log_warn "Not running on a Raspberry Pi 5 / Pi 500 — skipping overclock"
+        log_warn "arm_freq=2600 is only validated for Pi 5 and may be unsafe on other boards"
+        return 0
+    fi
+
+    local config_txt="/boot/firmware/config.txt"
+    if [ ! -f "$config_txt" ]; then
+        log_warn "$config_txt not found — skipping overclock configuration"
+        return 0
+    fi
+
+    # Only add if not already present anywhere in the file (idempotent)
+    if sudo grep -q "^arm_freq=" "$config_txt"; then
+        log_info "arm_freq already set in $config_txt — skipping"
+        return 0
+    fi
+
+    log_info "Adding arm_freq=2600 to $config_txt"
+
+    if sudo grep -q "^\[all\]" "$config_txt"; then
+        # Insert after only the FIRST [all] line using awk (not sed, which
+        # would match every [all] occurrence)
+        local tmp
+        tmp=$(mktemp)
+        trap 'rm -f "$tmp"' RETURN
+        sudo awk '
+            /^\[all\]/ && !inserted {
+                print; print "arm_freq=2600"; inserted=1; next
+            }
+            { print }
+        ' "$config_txt" > "$tmp"
+        sudo cp "$tmp" "$config_txt"
+    else
+        printf '\n# Pimarchy: Pi 5 mild overclock (2600 MHz, no extra voltage required)\n[all]\narm_freq=2600\n' \
+            | sudo tee -a "$config_txt" > /dev/null
+    fi
+
+    log_success "arm_freq=2600 written to $config_txt"
+    log_warn "COOLING REQUIRED: ensure an active cooler or adequate ventilation before rebooting"
+    log_warn "A reboot is required for the overclock to take effect"
+}
+
+# revert_overclock — removes the arm_freq line written by configure_overclock.
+revert_overclock() {
+    local config_txt="/boot/firmware/config.txt"
+    if [ ! -f "$config_txt" ]; then
+        return 0
+    fi
+
+    if sudo grep -q "^arm_freq=" "$config_txt"; then
+        log_info "Removing arm_freq from $config_txt..."
+        # Remove the arm_freq line and the Pimarchy comment above it (if present)
+        sudo sed -i '/^# Pimarchy: Pi 5 mild overclock.*/d' "$config_txt"
+        sudo sed -i '/^arm_freq=/d' "$config_txt"
+        log_success "arm_freq removed from $config_txt — reboot required to take effect"
+    fi
+}
+
+# revert_governor — removes the Pimarchy governor service and resets to 'ondemand'.
+revert_governor() {
+    local service_file="/etc/systemd/system/pimarchy-governor.service"
+
+    if [ -f "$service_file" ]; then
+        sudo systemctl disable pimarchy-governor.service 2>/dev/null || true
+        sudo rm -f "$service_file"
+        sudo systemctl daemon-reload
+        log_success "Removed pimarchy-governor.service"
+    fi
+
+    # Apply immediately
+    for gov_path in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        [ -f "$gov_path" ] && echo ondemand | sudo tee "$gov_path" > /dev/null 2>/dev/null || true
+    done
+}
+
+# configure_swaybg — installs and enables a systemd user service that sets the
+# desktop wallpaper via swaybg. Running swaybg as a user service (instead of
+# exec-once in hyprland.conf) ensures it starts after graphical-session.target
+# is fully ready, preventing the silent connection failure that causes a black
+# desktop when Hyprland is launched via UWSM.
+configure_swaybg() {
+    log_info "Installing swaybg wallpaper service..."
+
+    local service_dir="$HOME/.config/systemd/user"
+    local service_file="$service_dir/swaybg.service"
+    local wallpaper="$HOME/.config/hypr/background.jpg"
+
+    mkdir -p "$service_dir"
+
+    cat > "$service_file" <<EOF
+[Unit]
+Description=Pimarchy desktop wallpaper (swaybg)
+PartOf=graphical-session.target
+After=graphical-session.target
+Requisite=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/swaybg -i ${wallpaper} -m fill
+Restart=on-failure
+
+[Install]
+WantedBy=graphical-session.target
+EOF
+
+    systemctl --user daemon-reload
+    systemctl --user enable swaybg.service 2>/dev/null || true
+
+    log_success "swaybg wallpaper service installed and enabled"
+}
+
+# revert_swaybg — disables and removes the swaybg user service written by
+# configure_swaybg.
+revert_swaybg() {
+    local service_file="$HOME/.config/systemd/user/swaybg.service"
+
+    systemctl --user disable swaybg.service 2>/dev/null || true
+    systemctl --user stop swaybg.service 2>/dev/null || true
+    rm -f "$service_file"
+    systemctl --user daemon-reload
+    log_success "swaybg wallpaper service removed"
+}
+
+# ============================================================================
+# OpenCode Installation
+# ============================================================================
+
+# install_opencode — installs the OpenCode AI coding agent using the official
+# install script from opencode.ai. Idempotent: skips if already installed.
+install_opencode() {
+    if command -v opencode &>/dev/null; then
+        log_info "OpenCode already installed ($(opencode --version 2>/dev/null || echo 'unknown version')) — skipping"
+        return 0
+    fi
+
+    log_info "Installing OpenCode..."
+
+    if ! command -v curl &>/dev/null; then
+        sudo apt install -y curl
+    fi
+
+    curl -fsSL https://opencode.ai/install | bash
+
+    if command -v opencode &>/dev/null; then
+        log_success "OpenCode installed successfully"
+    else
+        log_warn "OpenCode installer ran but 'opencode' not found in PATH — may need to re-login or source ~/.bashrc"
+    fi
+}
+
+# remove_opencode — removes the OpenCode installation written by install_opencode.
+# The official install script places everything under ~/.opencode/ and adds
+# ~/.opencode/bin to PATH in ~/.bashrc.
+remove_opencode() {
+    local opencode_dir="$HOME/.opencode"
+
+    if [ -d "$opencode_dir" ]; then
+        rm -rf "$opencode_dir"
+        log_success "OpenCode installation removed ($opencode_dir)"
+    else
+        log_info "OpenCode not found at $opencode_dir — nothing to remove"
+    fi
+
+    # Remove the PATH entry added by the installer to ~/.bashrc (if present)
+    if grep -q '\.opencode/bin' "$HOME/.bashrc" 2>/dev/null; then
+        sed -i '/\.opencode\/bin/d' "$HOME/.bashrc"
+        log_info "Removed OpenCode PATH entry from ~/.bashrc"
+    fi
 }
 
 # ============================================================================
@@ -317,17 +755,12 @@ reset_gsettings() {
 remove_pimarchy_files() {
     log_info "Removing Pimarchy configuration files..."
     
-    # Labwc files
-    rm -f "$LABWC_DIR/rc.xml"
-    rm -f "$LABWC_DIR/autostart"
-    rm -f "$LABWC_DIR/power-menu.sh"
-    rm -f "$LABWC_DIR/workspace-display.sh"
-    rm -f "$LABWC_DIR/workspace-click.sh"
-    rm -f /tmp/pimarchy-workspace
+    # Hyprland files
+    rm -rf "$HYPRLAND_DIR"
     
-    # Waybar, wofi, mako
+    # Waybar, rofi, mako
     rm -rf "$WAYBAR_DIR"
-    rm -rf "$WOFI_DIR"
+    rm -rf "$ROFI_DIR"
     rm -rf "$MAKO_DIR"
     
     # GTK configs
@@ -335,45 +768,27 @@ remove_pimarchy_files() {
     rm -f "$HOME/.gtkrc-2.0"
     
     # Terminal config
-    rm -f "$TERMINAL_DIR/alacritty.toml"
+    rm -rf "$TERMINAL_DIR"
     
-    # Environment (clean up pimarchy lines or remove if we created it)
-    if [ -f "$LABWC_DIR/environment" ]; then
-        sed -i '/^# Pimarchy theming$/d' "$LABWC_DIR/environment"
-        sed -i '/^XCURSOR_THEME=/d' "$LABWC_DIR/environment"
-        sed -i '/^XCURSOR_SIZE=/d' "$LABWC_DIR/environment"
-        # Remove file if it's now empty (Pimarchy created it)
-        if [ ! -s "$LABWC_DIR/environment" ] || ! grep -q '[^[:space:]]' "$LABWC_DIR/environment" 2>/dev/null; then
-            rm -f "$LABWC_DIR/environment"
-        fi
-    fi
+    # Shell & Starship
+    rm -f "$HOME/.bashrc.pimarchy"
+    rm -f "$HOME/.config/starship.toml"
     
     # Chromium dark mode flags
-    sudo rm -f /etc/chromium.d/pimarchy-dark
+    rm -f "$HOME/.config/chromium-flags.conf"
+
+    # btop theme and config
+    rm -f "$HOME/.config/btop/btop.conf"
+    rm -f "$HOME/.config/btop/themes/ravenwood.theme"
+
+    # OpenCode config
+    rm -f "$HOME/.config/opencode/opencode.json"
+
+    # Debian-specific
+    sudo rm -f /etc/apt/sources.list.d/bookworm.list
+    sudo rm -f /etc/apt/sources.list.d/sid.list
+    sudo rm -f /etc/apt/preferences.d/sid-pin
     
     log_success "Pimarchy files removed"
 }
 
-# ============================================================================
-# Desktop Settings
-# ============================================================================
-
-hide_trash_icon() {
-    log_info "Hiding desktop trash icon..."
-    
-    for conf in "$HOME/.config/pcmanfm/LXDE-pi"/desktop-items-*.conf; do
-        if [ -f "$conf" ]; then
-            sed -i 's/show_trash=1/show_trash=0/g' "$conf"
-        fi
-    done
-}
-
-show_trash_icon() {
-    log_info "Restoring desktop trash icon..."
-    
-    for conf in "$HOME/.config/pcmanfm/LXDE-pi"/desktop-items-*.conf; do
-        if [ -f "$conf" ]; then
-            sed -i 's/show_trash=0/show_trash=1/g' "$conf"
-        fi
-    done
-}

@@ -1,0 +1,84 @@
+# Ravenwood btop theme
+# Based on the Everforest Dark palette — matches the Pimarchy desktop theme.
+
+# Main background (empty = use terminal background for transparency)
+theme[main_bg]="#282e33"
+
+# Main foreground text
+theme[main_fg]="#d3c6aa"
+
+# Box title text
+theme[title]="#7fbbb3"
+
+# Highlighted shortcut keys
+theme[hi_fg]="#e67e80"
+
+# Selected process row background / foreground
+theme[selected_bg]="#374145"
+theme[selected_fg]="#dbbc7f"
+
+# Inactive / disabled text
+theme[inactive_fg]="#495156"
+
+# Text drawn on top of graphs (uptime, network scale labels)
+theme[graph_text]="#9aa79d"
+
+# Background of percentage meters
+theme[meter_bg]="#495156"
+
+# Misc colors (mini cpu graphs, detail mem graph, status text in proc box)
+theme[proc_misc]="#83c092"
+
+# Box outline colors
+theme[cpu_box]="#374145"
+theme[mem_box]="#374145"
+theme[net_box]="#374145"
+theme[proc_box]="#374145"
+
+# Divider lines between sub-boxes
+theme[div_line]="#374145"
+
+# Temperature gradient: cool → warm → hot
+theme[temp_start]="#7fb38e"
+theme[temp_mid]="#dbbc7f"
+theme[temp_end]="#e67e80"
+
+# CPU usage gradient: low → mid → high
+theme[cpu_start]="#7fb38e"
+theme[cpu_mid]="#dbbc7f"
+theme[cpu_end]="#e67e80"
+
+# Memory free meter (full = bad = red, empty = good = green)
+theme[free_start]="#e67e80"
+theme[free_mid]="#dbbc7f"
+theme[free_end]="#7fb38e"
+
+# Memory cached meter
+theme[cached_start]="#7fbbb3"
+theme[cached_mid]="#83c092"
+theme[cached_end]="#7fb38e"
+
+# Memory available meter
+theme[available_start]="#e67e80"
+theme[available_mid]="#dbbc7f"
+theme[available_end]="#7fb38e"
+
+# Memory used meter
+theme[used_start]="#7fb38e"
+theme[used_mid]="#dbbc7f"
+theme[used_end]="#e67e80"
+
+# Network download gradient
+theme[download_start]="#7fb38e"
+theme[download_mid]="#83c092"
+theme[download_end]="#7fbbb3"
+
+# Network upload gradient
+theme[upload_start]="#dbbc7f"
+theme[upload_mid]="#e69875"
+theme[upload_end]="#e67e80"
+
+# Process list column gradient (threads, mem, cpu)
+theme[process_start]="#7fb38e"
+theme[process_mid]="#dbbc7f"
+theme[process_end]="#e67e80"

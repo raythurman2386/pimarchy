@@ -1,0 +1,96 @@
+#
+# Pimarchy Shell Aliases
+#
+
+# System (Debian/Pi OS)
+alias update='sudo apt update && sudo apt upgrade -y'
+alias install='sudo apt install -y'
+alias remove='sudo apt autoremove -y'
+alias search='apt search'
+alias orphans='sudo apt autoremove -y'
+
+# Pimarchy Commands
+alias pimarchy-edit='cd {{PIMARCHY_ROOT}}'
+alias pimarchy-update='cd {{PIMARCHY_ROOT}} && git pull && bash install.sh'
+alias pimarchy-refresh-hyprland='pimarchy-update'
+
+pimarchy-restart-waybar() {
+    pkill waybar || true
+    waybar > /dev/null 2>&1 & disown
+    echo "Waybar restarted."
+}
+
+pimarchy-theme-set() {
+    echo "Pimarchy currently uses a single unified theme engine based on Ravenwood."
+    echo "To customize your theme colors, edit the config:"
+    echo "  pimarchy-edit && nano config/theme.conf"
+    echo "Then apply changes with: pimarchy-update"
+}
+
+pimarchy-theme-bg-set() {
+    if [ -z "$1" ] || [ ! -f "$1" ]; then
+        echo "Usage: pimarchy-theme-bg-set <path-to-image>"
+        return 1
+    fi
+    mkdir -p ~/.config/hypr
+    cp "$1" ~/.config/hypr/background.jpg
+    pkill swaybg || true
+    swaybg -i ~/.config/hypr/background.jpg -m fill > /dev/null 2>&1 & disown
+    echo "Background updated successfully."
+}
+
+pimarchy-theme-bg-next() {
+    echo "Pimarchy currently does not auto-cycle wallpapers."
+    echo "To set a new wallpaper, use: pimarchy-theme-bg-set <path/to/image>"
+}
+
+# Raspberry Pi Utilities
+alias pi-temp='/usr/bin/vcgencmd measure_temp'
+alias pi-clock='/usr/bin/vcgencmd measure_clock arm'
+alias pi-volts='/usr/bin/vcgencmd measure_volts'
+alias pi-throttled='/usr/bin/vcgencmd get_throttled'
+
+pi-perf-status() {
+    echo "=== Raspberry Pi 5 Performance Status ==="
+    echo "Temperature : $(/usr/bin/vcgencmd measure_temp 2>/dev/null || echo 'unavailable')"
+    echo "ARM clock   : $(/usr/bin/vcgencmd measure_clock arm 2>/dev/null || echo 'unavailable')"
+    echo "Throttled   : $(/usr/bin/vcgencmd get_throttled 2>/dev/null || echo 'unavailable') (0x0 = none)"
+    echo "Governor    : $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo 'unavailable')"
+    echo "Current MHz : $(( $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq 2>/dev/null || echo 0) / 1000 )) MHz"
+    echo "Max MHz     : $(( $(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq 2>/dev/null || echo 0) / 1000 )) MHz"
+}
+
+# System monitoring
+alias top='btop'
+alias htop='btop'
+
+# Navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias .3='cd ../../../'
+alias .4='cd ../../../../'
+alias .5='cd ../../../../../'
+
+# Standard overrides
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+alias diff='diff --color=auto'
+alias ip='ip -color=auto'
+
+# Modern replacements
+if command -v lsd &> /dev/null; then
+    alias ls='lsd'
+    alias ll='lsd -l'
+    alias la='lsd -a'
+    alias lt='lsd --tree'
+fi
+
+if command -v bat &> /dev/null; then
+    alias cat='bat'
+fi
+
+# Handy shortcuts
+alias h='history'
+alias j='jobs -l'
+alias q='exit'
+alias c='clear'

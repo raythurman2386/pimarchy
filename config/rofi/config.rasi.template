@@ -1,0 +1,14 @@
+configuration {
+    modi: "drun,run";
+    show-icons: true;
+    icon-theme: "{{ICON_THEME}}";
+    terminal: "alacritty";
+    drun-display-format: "{icon} {name}";
+    location: 0;
+    disable-history: false;
+    hide-scrollbar: true;
+    display-drun: "   Apps ";
+    display-run: "   Run ";
+}
+
+@theme "theme"

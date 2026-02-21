@@ -1,29 +1,39 @@
 {
     "layer": "top",
     "position": "top",
-    "margin-top": 6,
+    "margin-top": 0,
     "margin-left": 0,
     "margin-right": 0,
-    "height": 36,
-    "spacing": 6,
-    "modules-left": ["custom/launcher", "custom/workspaces"],
+    "height": 32,
+    "spacing": 2,
+    "modules-left": ["custom/launcher", "hyprland/workspaces"],
     "modules-center": ["clock"],
-    "modules-right": ["cpu", "memory", "network", "pulseaudio", "tray", "custom/power"],
+    "modules-right": ["temperature", "memory", "network", "pulseaudio", "tray", "custom/power"],
 
     "custom/launcher": {
         "format": "{{ICON_LAUNCHER}}",
-        "on-click": "{{LAUNCHER_CMD}}",
+        "on-click": "rofi -show drun",
         "tooltip": false
     },
 
-    "custom/workspaces": {
-        "exec": "{{SCRIPT_DIR}}/workspace-display.sh",
-        "return-type": "json",
-        "interval": 1,
-        "format": "{}",
-        "tooltip": false,
-        "on-click": "{{SCRIPT_DIR}}/workspace-click.sh next",
-        "on-click-right": "{{SCRIPT_DIR}}/workspace-click.sh prev"
+    "hyprland/workspaces": {
+        "format": "{icon}",
+        "on-click": "activate",
+        "format-icons": {
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "active": "󰮯",
+            "default": "󰊠"
+        },
+        "sort-by-number": true,
+        "persistent-workspaces": {
+            "1": [],
+            "2": [],
+            "3": []
+        }
     },
 
     "clock": {
@@ -32,24 +42,30 @@
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
     },
 
-    "cpu": {
-        "format": "{{ICON_CPU}} {usage}%",
+    "temperature": {
+        "thermal-zone": 0,
+        "hwmon-path": "/sys/class/thermal/thermal_zone0/temp",
+        "critical-threshold": 80,
+        "format": "{{ICON_CPU}} {temperatureC}°C",
+        "format-critical": "{{ICON_CPU}} {temperatureC}°C",
         "interval": 5,
-        "tooltip": false
+        "tooltip": false,
+        "on-click": "alacritty --class btop -e btop"
     },
 
     "memory": {
         "format": "{{ICON_MEMORY}} {}%",
-        "interval": 5
+        "interval": 5,
+        "on-click": "alacritty --class btop -e btop"
     },
 
     "network": {
         "format-wifi": "{{ICON_WIFI}} {essid}",
-        "format-ethernet": "{{ICON_ETHERNET}} {ifname}",
-        "tooltip-format": "{ifname}: {ipaddr}/{cidr}\nvia {gwaddr}",
-        "format-linked": "{{ICON_ETHERNET}} {ifname} (No IP)",
+        "format-ethernet": "{{ICON_ETHERNET}} {ipaddr}",
+        "tooltip-format-wifi": "{essid}  {signalStrength}%\n{ipaddr}/{cidr}",
+        "tooltip-format-ethernet": "{ifname}: {ipaddr}/{cidr}\nvia {gwaddr}",
+        "format-linked": "{{ICON_ETHERNET}} (No IP)",
         "format-disconnected": "{{ICON_DISCONNECTED}} Disconnected",
-        "format-alt": "{{ICON_ETHERNET}} {ipaddr}/{cidr}",
         "on-click-right": "nm-connection-editor"
     },
 
@@ -70,7 +86,7 @@
 
     "custom/power": {
         "format": "{{ICON_POWER}}",
-        "on-click": "{{SCRIPT_DIR}}/power-menu.sh",
+        "on-click": "~/.config/rofi/power-menu.sh",
         "tooltip": false
     }
 }
