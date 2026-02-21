@@ -37,8 +37,8 @@
     },
 
     "clock": {
-        "format": "{{ICON_CLOCK}} {:%I:%M %p}",
-        "format-alt": "{{ICON_CALENDAR}} {:%A, %B %d}",
+        "format": "{{ICON_CLOCK}} <span color='{{COLOR_VALUE}}'>{:%I:%M}</span> <span color='{{COLOR_TEMP}}'>{:%p}</span>",
+        "format-alt": "{{ICON_CALENDAR}} <span color='{{COLOR_VALUE}}'>{:%A, %B %d}</span>",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
     },
 
@@ -46,15 +46,15 @@
         "thermal-zone": 0,
         "hwmon-path": "/sys/class/thermal/thermal_zone0/temp",
         "critical-threshold": 80,
-        "format": "{{ICON_CPU}} {temperatureC}°C",
-        "format-critical": "{{ICON_CPU}} {temperatureC}°C",
+        "format": "{{ICON_CPU}} <span color='{{COLOR_VALUE}}'>{temperatureC}°C</span>",
+        "format-critical": "{{ICON_CPU}} <span color='{{COLOR_ERROR}}'>{temperatureC}°C</span>",
         "interval": 5,
         "tooltip": false,
         "on-click": "alacritty --class btop -e btop"
     },
 
     "memory": {
-        "format": "{{ICON_MEMORY}} {}%",
+        "format": "{{ICON_MEMORY}} <span color='{{COLOR_VALUE}}'>{used:0.1f}G</span>",
         "interval": 5,
         "on-click": "alacritty --class btop -e btop"
     },
@@ -70,7 +70,7 @@
     },
 
     "pulseaudio": {
-        "format": "{icon} {volume}%",
+        "format": "{icon} <span color='{{COLOR_VALUE}}'>{volume}%</span>",
         "format-muted": "{{ICON_VOLUME_MUTED}} Muted",
         "format-icons": {
             "default": ["{{ICON_VOLUME_LOW}}", "{{ICON_VOLUME_MEDIUM}}", "{{ICON_VOLUME_HIGH}}"]
