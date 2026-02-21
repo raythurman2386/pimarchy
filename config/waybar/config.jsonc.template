@@ -28,7 +28,12 @@
             "active": "󰮯",
             "default": "󰊠"
         },
-        "sort-by-number": true
+        "sort-by-number": true,
+        "persistent-workspaces": {
+            "1": [],
+            "2": [],
+            "3": []
+        }
     },
 
     "clock": {
@@ -40,21 +45,23 @@
     "cpu": {
         "format": "{{ICON_CPU}} {usage}%",
         "interval": 5,
-        "tooltip": false
+        "tooltip": false,
+        "on-click": "alacritty --class btop -e btop"
     },
 
     "memory": {
         "format": "{{ICON_MEMORY}} {}%",
-        "interval": 5
+        "interval": 5,
+        "on-click": "alacritty --class btop -e btop"
     },
 
     "network": {
         "format-wifi": "{{ICON_WIFI}} {essid}",
-        "format-ethernet": "{{ICON_ETHERNET}} {ifname}",
-        "tooltip-format": "{ifname}: {ipaddr}/{cidr}\nvia {gwaddr}",
-        "format-linked": "{{ICON_ETHERNET}} {ifname} (No IP)",
+        "format-ethernet": "{{ICON_ETHERNET}} {ipaddr}",
+        "tooltip-format-wifi": "{essid}  {signalStrength}%\n{ipaddr}/{cidr}",
+        "tooltip-format-ethernet": "{ifname}: {ipaddr}/{cidr}\nvia {gwaddr}",
+        "format-linked": "{{ICON_ETHERNET}} (No IP)",
         "format-disconnected": "{{ICON_DISCONNECTED}} Disconnected",
-        "format-alt": "{{ICON_ETHERNET}} {ipaddr}/{cidr}",
         "on-click-right": "nm-connection-editor"
     },
 

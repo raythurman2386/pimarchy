@@ -165,15 +165,17 @@ process_template() {
     content=$(<"$template_file")
     
     # Replace all {{VAR}} patterns with their corresponding environment variables
+    # Declare loop variables before the loop so `local` doesn't mask exit codes
+    local var_name var_value
     while [[ $content =~ \{\{([A-Za-z_][A-Za-z0-9_]*)\}\} ]]; do
-        local var_name="${BASH_REMATCH[1]}"
-        local var_value="${!var_name}"
-        
-        # Check if variable is set
+        var_name="${BASH_REMATCH[1]}"
+
+        # Check if variable is set before reading its value
         if [ -z "${!var_name+x}" ]; then
             log_warn "Undefined variable in template: $var_name"
-            # Replace with empty string to prevent infinite loop
             var_value=""
+        else
+            var_value="${!var_name}"
         fi
         
         content="${content//\{\{$var_name\}\}/$var_value}"
@@ -244,6 +246,7 @@ EOF
         wget
         fontconfig
         chromium
+        btop
     )
 
     sudo apt install -y "${base_packages[@]}"
@@ -303,6 +306,8 @@ remove_packages() {
         bluez
         bluez-tools
         alsa-utils
+        chromium
+        btop
     )
     
     sudo apt remove --purge -y "${packages[@]}" 2>/dev/null || true
@@ -336,7 +341,7 @@ detect_keyboard_layout() {
     local layout=""
     
     if command -v localectl &> /dev/null; then
-        layout=$(localectl status --no-pager 2>/dev/null | grep "X11 Layout" | awk '{print $3}')
+        layout=$(localectl status --no-pager 2>/dev/null | awk -F': ' '/X11 Layout/{gsub(/^[[:space:]]+/,"",$2); print $2; exit}')
         if [ -n "$layout" ]; then
             echo "$layout"
             return 0
@@ -383,8 +388,152 @@ stop_services() {
     
     # Restore default target (multi-user.target is standard for Pi OS Lite)
     sudo systemctl set-default multi-user.target 2>/dev/null || true
+
+    # Remove system files written by install.sh
+    sudo rm -f /usr/local/bin/start-hyprland
+    sudo rm -f /etc/greetd/config.toml
+    sudo rm -f /etc/X11/xorg.conf.d/00-keyboard.conf
+
+    # Revert CPU governor and overclock settings
+    revert_governor
+    revert_overclock
     
     log_success "Services stopped and Pi OS boot environment restored"
+}
+
+# ============================================================================
+# Performance Configuration (Raspberry Pi 5)
+# ============================================================================
+
+# Returns 0 if running on a Raspberry Pi 5 or Pi 500, 1 otherwise.
+# Reads /proc/device-tree/compatible which lists the board identifiers.
+is_pi5() {
+    if [ -f /proc/device-tree/compatible ]; then
+        if tr '\0' '\n' < /proc/device-tree/compatible 2>/dev/null | grep -qE "raspberrypi,5|raspberrypi,500"; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# configure_governor — sets the CPU scaling governor to 'performance'.
+# This keeps the CPU at maximum frequency without disabling DVFS voltage
+# scaling. Safe on any Pi 5 / Pi 500, takes effect immediately, and
+# persists across reboots via cpufrequtils.
+configure_governor() {
+    log_info "Setting CPU governor to 'performance'..."
+
+    local cpufreq_conf="/etc/default/cpufrequtils"
+
+    if ! sudo apt install -y cpufrequtils; then
+        log_warn "Could not install cpufrequtils — governor will not persist across reboots"
+        log_warn "apt error shown above"
+    fi
+
+    # Write config: check first, then either replace or append
+    if [ -f "$cpufreq_conf" ] && sudo grep -q "^GOVERNOR=" "$cpufreq_conf"; then
+        sudo sed -i 's/^GOVERNOR=.*/GOVERNOR="performance"/' "$cpufreq_conf"
+    elif [ -f "$cpufreq_conf" ]; then
+        echo 'GOVERNOR="performance"' | sudo tee -a "$cpufreq_conf" > /dev/null
+    else
+        echo 'GOVERNOR="performance"' | sudo tee "$cpufreq_conf" > /dev/null
+    fi
+
+    sudo systemctl enable cpufrequtils 2>/dev/null || true
+
+    # Apply immediately to all cores without waiting for reboot
+    for gov_path in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        [ -f "$gov_path" ] && echo performance | sudo tee "$gov_path" > /dev/null || true
+    done
+
+    log_success "CPU governor set to 'performance' (persists across reboots)"
+}
+
+# configure_overclock — adds arm_freq=2600 to /boot/firmware/config.txt.
+# REQUIRES REBOOT. Only runs on confirmed Pi 5 / Pi 500 hardware.
+# arm_freq=2600 is a mild overclock (stock is 2400 MHz) that does not
+# require extra voltage on Pi 5 — the firmware's DVFS handles it.
+# COOLING NOTE: An active cooler or adequate passive cooling is strongly
+# recommended. Sustained load without cooling will trigger thermal
+# throttling at 80°C and may cause instability.
+configure_overclock() {
+    log_info "Configuring CPU overclock (arm_freq=2600)..."
+
+    # Safety: only proceed on Pi 5 hardware
+    if ! is_pi5; then
+        log_warn "Not running on a Raspberry Pi 5 / Pi 500 — skipping overclock"
+        log_warn "arm_freq=2600 is only validated for Pi 5 and may be unsafe on other boards"
+        return 0
+    fi
+
+    local config_txt="/boot/firmware/config.txt"
+    if [ ! -f "$config_txt" ]; then
+        log_warn "$config_txt not found — skipping overclock configuration"
+        return 0
+    fi
+
+    # Only add if not already present anywhere in the file (idempotent)
+    if sudo grep -q "^arm_freq=" "$config_txt"; then
+        log_info "arm_freq already set in $config_txt — skipping"
+        return 0
+    fi
+
+    log_info "Adding arm_freq=2600 to $config_txt"
+
+    if sudo grep -q "^\[all\]" "$config_txt"; then
+        # Insert after only the FIRST [all] line using awk (not sed, which
+        # would match every [all] occurrence)
+        local tmp
+        tmp=$(mktemp)
+        trap 'rm -f "$tmp"' RETURN
+        sudo awk '
+            /^\[all\]/ && !inserted {
+                print; print "arm_freq=2600"; inserted=1; next
+            }
+            { print }
+        ' "$config_txt" > "$tmp"
+        sudo cp "$tmp" "$config_txt"
+    else
+        printf '\n# Pimarchy: Pi 5 mild overclock (2600 MHz, no extra voltage required)\n[all]\narm_freq=2600\n' \
+            | sudo tee -a "$config_txt" > /dev/null
+    fi
+
+    log_success "arm_freq=2600 written to $config_txt"
+    log_warn "COOLING REQUIRED: ensure an active cooler or adequate ventilation before rebooting"
+    log_warn "A reboot is required for the overclock to take effect"
+}
+
+# revert_overclock — removes the arm_freq line written by configure_overclock.
+revert_overclock() {
+    local config_txt="/boot/firmware/config.txt"
+    if [ ! -f "$config_txt" ]; then
+        return 0
+    fi
+
+    if sudo grep -q "^arm_freq=" "$config_txt"; then
+        log_info "Removing arm_freq from $config_txt..."
+        # Remove the arm_freq line and the Pimarchy comment above it (if present)
+        sudo sed -i '/^# Pimarchy: Pi 5 mild overclock.*/d' "$config_txt"
+        sudo sed -i '/^arm_freq=/d' "$config_txt"
+        log_success "arm_freq removed from $config_txt — reboot required to take effect"
+    fi
+}
+
+# revert_governor — resets the CPU governor back to the default 'ondemand'.
+revert_governor() {
+    local cpufreq_conf="/etc/default/cpufrequtils"
+
+    if [ -f "$cpufreq_conf" ]; then
+        if sudo grep -q "^GOVERNOR=" "$cpufreq_conf"; then
+            sudo sed -i 's/^GOVERNOR=.*/GOVERNOR="ondemand"/' "$cpufreq_conf"
+            log_success "CPU governor reverted to 'ondemand' in $cpufreq_conf"
+        fi
+    fi
+
+    # Apply immediately
+    for gov_path in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        [ -f "$gov_path" ] && echo ondemand | sudo tee "$gov_path" > /dev/null 2>/dev/null || true
+    done
 }
 
 # ============================================================================

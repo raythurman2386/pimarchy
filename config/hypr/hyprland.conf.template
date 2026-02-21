@@ -14,8 +14,7 @@ monitor=,preferred,auto,1
 env = XCURSOR_SIZE,{{CURSOR_SIZE}}
 env = XCURSOR_THEME,{{CURSOR_THEME}}
 env = QT_QPA_PLATFORMTHEME,qt5ct
-env = WLR_DRM_DEVICES,/dev/dri/card1
-env = WLR_BACKEND,wayland
+# WLR_DRM_DEVICES is set at launch time by start-hyprland.sh (auto-detected)
 env = WLR_RENDERER,gles2
 env = WLR_NO_HARDWARE_CURSORS,1
 env = GDK_BACKEND,wayland,x11
@@ -24,9 +23,11 @@ env = GDK_BACKEND,wayland,x11
 # Autostart
 # ============================================================================
 # Only start these if NOT running under UWSM (which handles its own autostart)
-exec-once = [ -z "$UWSM_ID" ] && waybar
-exec-once = [ -z "$UWSM_ID" ] && mako
-exec-once = [ -z "$UWSM_ID" ] && nm-applet --indicator
+exec-once = bash -c '[ -z "$UWSM_ID" ] && waybar'
+exec-once = bash -c '[ -z "$UWSM_ID" ] && mako'
+
+# Polkit agent — needed for GUI auth dialogs (e.g. sudo prompts from apps)
+exec-once = lxpolkit
 
 # Background/Wallpaper
 exec-once = swaybg -i {{HOME}}/.config/hypr/background.jpg -m fill -c "#{{COLOR_BASE_HEX}}"
@@ -111,6 +112,13 @@ master {
 }
 
 # ============================================================================
+# Window Rules
+# ============================================================================
+windowrulev2 = float, class:^(btop)$
+windowrulev2 = size 900 600, class:^(btop)$
+windowrulev2 = center, class:^(btop)$
+
+# ============================================================================
 # Keybinds
 # ============================================================================
 $mainMod = SUPER
@@ -122,6 +130,7 @@ bind = $mainMod SHIFT, B, exec, chromium
 bind = $mainMod, E, exec, thunar
 bind = $mainMod, V, togglefloating, 
 bind = $mainMod, D, exec, rofi -show drun
+bind = $mainMod, M, exec, alacritty --class btop -e btop
 bind = $mainMod, P, pseudo, # dwindle
 bind = $mainMod, J, togglesplit, # dwindle
 bind = $mainMod, F, fullscreen, 0

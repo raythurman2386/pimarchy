@@ -1,75 +1,167 @@
 * {
     font: "{{FONT_NAME}} {{FONT_SIZE}}";
-    bg-col: {{ROFI_BG_COLOR}};
-    bg-col-light: {{COLOR_SURFACE}};
-    border-col: {{ROFI_BORDER_COLOR}};
+    bg-col:       {{ROFI_BG_COLOR}};
+    bg-col-light: {{ROFI_INPUT_BG_COLOR}};
+    border-col:   {{ROFI_BORDER_COLOR}};
     selected-col: {{COLOR_PRIMARY}};
-    fg-col: {{ROFI_FG_COLOR}};
-    fg-col2: {{COLOR_SUBTEXT}};
-    grey: {{COLOR_OVERLAY}};
+    fg-col:       {{ROFI_FG_COLOR}};
+    fg-col2:      {{COLOR_SUBTEXT}};
+    grey:         {{COLOR_OVERLAY}};
 
-    width: {{ROFI_WIDTH}};
+    width:        {{ROFI_WIDTH}};
+
+    /* GTK fallback reset — prevents white blocks on icons/text */
+    background-color: transparent;
+    text-color:       @fg-col;
 }
 
 window {
-    padding: 20px;
+    padding:          20px;
     background-color: @bg-col;
-    border: 2px;
-    border-color: @border-col;
-    border-radius: {{ROFI_BORDER_RADIUS}}px;
+    border:           2px solid;
+    border-color:     @border-col;
+    border-radius:    {{ROFI_BORDER_RADIUS}}px;
+    /* Ensure no system theme leaks through */
+    color:            @fg-col;
 }
 
 mainbox {
     background-color: transparent;
+    spacing:          0;
 }
 
 inputbar {
-    children: [prompt,entry];
-    background-color: {{ROFI_INPUT_BG_COLOR}};
-    border: 1px;
-    border-color: {{ROFI_INPUT_FOCUS_BORDER_COLOR}};
-    border-radius: 8px;
-    padding: 4px;
-    margin: 0px 0px 10px 0px;
+    children:         [prompt, entry];
+    background-color: @bg-col-light;
+    border:           1px solid;
+    border-color:     {{ROFI_INPUT_FOCUS_BORDER_COLOR}};
+    border-radius:    8px;
+    padding:          2px;
+    margin:           0px 0px 10px 0px;
 }
 
 prompt {
     background-color: @selected-col;
-    padding: 6px 12px;
-    text-color: {{COLOR_BASE}};
-    border-radius: 6px;
+    padding:          6px 12px;
+    text-color:       {{COLOR_BASE}};
+    border-radius:    6px;
+    /* vertically centre inside the inputbar */
+    vertical-align:   0.5;
+}
+
+textbox-prompt-colon {
+    expand:           false;
+    str:              ":";
+    padding:          0;
+    background-color: transparent;
+    text-color:       @fg-col2;
 }
 
 entry {
-    padding: 6px;
-    text-color: @fg-col;
+    padding:          6px 8px;
+    text-color:       @fg-col;
     background-color: transparent;
-    placeholder: "{{ROFI_PROMPT}}";
+    placeholder:      "{{ROFI_PROMPT}}";
+    placeholder-color: @fg-col2;
+    cursor:           text;
+    vertical-align:   0.5;
 }
 
 listview {
-    border: 0px;
-    padding: 6px 0px 0px;
-    columns: 1;
-    lines: 8;
+    border:           0px;
+    padding:          6px 0px 0px;
+    columns:          1;
+    lines:            8;
     background-color: transparent;
+    /* No scrollbar that might render as a white bar */
+    scrollbar:        false;
 }
 
 element {
-    padding: 8px;
+    padding:          8px 10px;
     background-color: transparent;
-    text-color: @fg-col;
-    border-radius: 6px;
+    text-color:       @fg-col;
+    border-radius:    6px;
+    orientation:      horizontal;
+    spacing:          10px;
+}
+
+element normal.normal {
+    background-color: transparent;
+    text-color:       @fg-col;
+}
+
+element normal.urgent {
+    background-color: transparent;
+    text-color:       {{COLOR_ERROR}};
+}
+
+element normal.active {
+    background-color: transparent;
+    text-color:       @selected-col;
+}
+
+element selected.normal {
+    background-color: {{ROFI_ENTRY_SELECTED_BG_COLOR}};
+    text-color:       {{ROFI_ENTRY_SELECTED_FG_COLOR}};
+    border:           1px solid;
+    border-color:     @selected-col;
+}
+
+element selected.urgent {
+    background-color: {{ROFI_ENTRY_SELECTED_BG_COLOR}};
+    text-color:       {{COLOR_ERROR}};
+}
+
+element selected.active {
+    background-color: {{ROFI_ENTRY_SELECTED_BG_COLOR}};
+    text-color:       @selected-col;
 }
 
 element-icon {
-    size: {{ROFI_IMAGE_SIZE}}px;
-    margin: 0px 10px 0px 0px;
+    size:             {{ROFI_IMAGE_SIZE}}px;
+    background-color: transparent;
+    /* Prevent GTK from drawing a white widget background behind the icon */
+    border:           0px;
+    vertical-align:   0.5;
 }
 
-element selected {
-    background-color: {{ROFI_ENTRY_SELECTED_BG_COLOR}};
-    text-color: {{ROFI_ENTRY_SELECTED_FG_COLOR}};
-    border: 1px;
-    border-color: @selected-col;
+element-text {
+    background-color: transparent;
+    text-color:       inherit;
+    highlight:        bold;
+    vertical-align:   0.5;
+    horizontal-align: 0.0;
+}
+
+/* Mode switcher tabs (drun / run) */
+mode-switcher {
+    background-color: transparent;
+    spacing:          4px;
+    margin:           8px 0px 0px 0px;
+}
+
+button {
+    padding:          6px 12px;
+    background-color: @bg-col-light;
+    text-color:       @fg-col2;
+    border-radius:    6px;
+    border:           0px;
+}
+
+button selected {
+    background-color: @selected-col;
+    text-color:       {{COLOR_BASE}};
+}
+
+/* Message / error text */
+message {
+    background-color: transparent;
+    padding:          4px 0px;
+}
+
+textbox {
+    background-color: transparent;
+    text-color:       @fg-col2;
+    padding:          4px 8px;
 }

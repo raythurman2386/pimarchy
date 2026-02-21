@@ -123,3 +123,17 @@ window#waybar {
 #clock:hover {
     background-color: {{MODULE_HOVER_BG_COLOR}};
 }
+
+/* ── Tooltip styling ─────────────────────────────────────────────────────── */
+/* Waybar tooltips are GTK popovers; target both the window and inner label  */
+tooltip {
+    background-color: {{ROFI_BG_COLOR}};
+    border:           1px solid {{ROFI_BORDER_COLOR}};
+    border-radius:    8px;
+    padding:          4px 2px;
+}
+
+tooltip label {
+    color:            {{BAR_FG_COLOR}};
+    padding:          4px 8px;
+}

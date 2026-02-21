@@ -18,7 +18,7 @@ echo "=== Pimarchy Uninstaller ==="
 echo ""
 echo "This will revert your desktop to the pre-Pimarchy configuration."
 echo ""
-read -p "Continue? [y/N] " confirm
+read -p "Continue? [y/N] " confirm || true
 if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
     echo "Cancelled."
     exit 0
@@ -36,12 +36,17 @@ stop_services
 echo "[2/5] Removing Pimarchy configuration..."
 remove_pimarchy_files
 
-# Clean up .bashrc
+# Clean up .bashrc — remove the entire Pimarchy block including the blank
+# line prepended before the comment, and the starship eval line.
 if grep -q "bashrc.pimarchy" "$HOME/.bashrc"; then
-    # Create a temporary file without the Pimarchy lines
-    sed -i '/# Pimarchy configuration/,/starship init bash/d' "$HOME/.bashrc"
-    # Remove trailing empty lines that might have been left
-    sed -i '${/^$/d;}' "$HOME/.bashrc"
+    # Remove from the blank line before "# Pimarchy configuration" through
+    # the starship init line (inclusive). The /^$/{N;/# Pimarchy/...} pattern
+    # catches the leading blank line inserted by install.sh.
+    sed -i '/^# Pimarchy configuration/,/starship init bash/{d}' "$HOME/.bashrc"
+    # Also remove a blank line that immediately precedes where the block was
+    # (install.sh writes a blank line, then the comment). We target a trailing
+    # blank line left at end-of-file or sequences of blank lines > 1.
+    sed -i -e '/^[[:space:]]*$/{N;/^\n$/d}' "$HOME/.bashrc" 2>/dev/null || true
 fi
 
 # -------------------------------------------------------------
@@ -57,7 +62,7 @@ reset_gsettings
 # 4. Optionally remove packages
 # -------------------------------------------------------------
 echo ""
-read -p "Remove packages installed by Pimarchy? (hyprland, waybar, rofi, mako, etc.) [y/N] " remove_pkgs
+read -p "Remove packages installed by Pimarchy? (hyprland, waybar, rofi, mako, etc.) [y/N] " remove_pkgs || true
 if [ "$remove_pkgs" = "y" ] || [ "$remove_pkgs" = "Y" ]; then
     echo "[4/5] Removing packages..."
     remove_packages
@@ -70,7 +75,7 @@ fi
 # 5. Clean up backup directory
 # -------------------------------------------------------------
 echo ""
-read -p "Remove backup files in $BACKUP_DIR? [y/N] " remove_backup
+read -p "Remove backup files in $BACKUP_DIR? [y/N] " remove_backup || true
 if [ "$remove_backup" = "y" ] || [ "$remove_backup" = "Y" ]; then
     rm -rf "$BACKUP_DIR"
     echo "[5/5] Backup directory removed."
@@ -81,5 +86,5 @@ fi
 echo ""
 echo "=== Pimarchy has been uninstalled ==="
 echo ""
-echo "Reboot to boot into your standard Arch Linux CLI environment."
+echo "Reboot to return to your standard Raspberry Pi OS CLI environment."
 echo ""

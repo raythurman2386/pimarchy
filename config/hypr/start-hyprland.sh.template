@@ -4,12 +4,31 @@
 # Optimized for Raspberry Pi 5 / 500
 #
 
+# Auto-detect the correct DRM device for the Pi 5 VideoCore VII GPU.
+# The VC7 render node is typically card1 when combined with a display adapter,
+# but we probe both to be safe rather than hardcoding.
+detect_drm_card() {
+    for card in /dev/dri/card1 /dev/dri/card0; do
+        if [ -e "$card" ]; then
+            echo "$card"
+            return
+        fi
+    done
+    # Fallback: let wlroots auto-detect
+    echo ""
+}
+
+DRM_CARD="$(detect_drm_card)"
+
 # Environment variables for Pi 5/500 VideoCore VII
-# These help ensure the best performance on the VC7 hardware.
-export WLR_DRM_DEVICES=/dev/dri/card1
 export WLR_NO_HARDWARE_CURSORS=1
 export GDK_BACKEND=wayland,x11
 export QT_QPA_PLATFORMTHEME=qt5ct
+
+# Only set WLR_DRM_DEVICES if we found a specific card
+if [ -n "$DRM_CARD" ]; then
+    export WLR_DRM_DEVICES="$DRM_CARD"
+fi
 
 # Clear console for clean transition
 clear
