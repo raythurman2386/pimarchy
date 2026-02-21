@@ -86,16 +86,25 @@ Templates use `{{VARIABLE}}` syntax. Variables are defined in:
 ## Project Structure
 
 ```
-├── install.sh          # Main installer script
-├── uninstall.sh        # Uninstaller (restores backups)
-├── validate.sh         # Configuration validator
+├── install.sh              # Main installer script
+├── uninstall.sh            # Uninstaller (restores backups)
+├── validate.sh             # Configuration validator
 ├── lib/
-│   └── functions.sh    # Shared library functions
+│   └── functions.sh        # Shared library functions
 ├── config/
-│   ├── theme.conf      # Theme configuration
-│   ├── modules.conf    # Module registry
-│   └── */*.template    # Configuration templates
-└── .github/workflows/  # CI/CD automation
+│   ├── theme.conf          # Theme configuration (Ravenwood/Everforest palette)
+│   ├── modules.conf        # Module registry (source → target mappings)
+│   ├── hypr/               # Hyprland config, wallpaper, screenshot helper
+│   ├── waybar/             # Waybar config + CSS
+│   ├── rofi/               # Launcher config, theme, power menu
+│   ├── mako/               # Notification daemon config
+│   ├── terminal/           # Alacritty config
+│   ├── shell/              # Bash aliases
+│   ├── starship/           # Starship prompt config
+│   ├── gtk/                # GTK2 / GTK3 theme settings
+│   ├── btop/               # btop.conf + ravenwood.theme
+│   └── opencode/           # opencode.json (AI agent config)
+└── .github/workflows/      # CI/CD automation
 ```
 
 ## Configuration System
@@ -141,10 +150,14 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 
 ## Platform Notes
 
-- Target: Raspberry Pi 5 with Pi OS Lite (Debian Bookworm)
-- Window Manager: Hyprland (Wayland)
+- Target: Raspberry Pi 5 / Pi 500 running Pi OS Lite (Debian Bookworm, arm64)
+- Window Manager: Hyprland (Wayland, launched via UWSM as a systemd session)
 - Status Bar: Waybar
 - App Launcher: Rofi
 - Shell: Bash + Pimarchy Aliases + Starship
 - Notifications: Mako
 - Terminal: Alacritty
+- Wallpaper: swaybg (systemd user service — not exec-once)
+- Containers: Docker CE + Docker Compose v2 (from download.docker.com — NOT docker.io)
+- System Monitor: btop (themed with Ravenwood palette via `config/btop/ravenwood.theme`)
+- AI Coding Agent: OpenCode (installed to `~/.opencode/`, config at `~/.config/opencode/opencode.json`)
