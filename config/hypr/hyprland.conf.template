@@ -22,15 +22,11 @@ env = GDK_BACKEND,wayland,x11
 # ============================================================================
 # Autostart
 # ============================================================================
-# Start bar and notifications; guard against duplicates if UWSM already launched them
-exec-once = bash -c 'pidof waybar || waybar'
-exec-once = bash -c 'pidof mako || mako'
+# NOTE: waybar and mako are managed by systemd user services (graphical-session.target)
+# and must NOT be started here — doing so causes duplicate instances under UWSM.
 
 # Polkit agent — needed for GUI auth dialogs (e.g. sudo prompts from apps)
 exec-once = lxpolkit
-
-# Background/Wallpaper
-exec-once = swaybg -i {{HOME}}/.config/hypr/background.jpg -m fill -c "#{{COLOR_BASE_HEX}}"
 
 # ============================================================================
 # Input

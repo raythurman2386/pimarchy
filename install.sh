@@ -219,6 +219,10 @@ EOF
     # Enable essential services
     sudo systemctl enable NetworkManager.service 2>/dev/null || true
     sudo systemctl enable bluetooth.service 2>/dev/null || true
+
+    # Install swaybg wallpaper as a systemd user service so it starts reliably
+    # after graphical-session.target (exec-once fires too early under UWSM)
+    configure_swaybg
 else
     log_info "Would initialize workspace state, apply gsettings, and configure .bashrc"
 fi

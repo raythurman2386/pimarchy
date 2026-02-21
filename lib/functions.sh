@@ -375,9 +375,7 @@ detect_keyboard_layout() {
 stop_services() {
     log_info "Stopping Pimarchy services..."
     
-    pkill -f waybar 2>/dev/null || true
     pkill -f mako 2>/dev/null || true
-    pkill -f swaybg 2>/dev/null || true
     
     # Disable greetd and restore Pi OS getty
     if systemctl is-enabled greetd &>/dev/null; then
@@ -537,6 +535,53 @@ revert_governor() {
     for gov_path in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
         [ -f "$gov_path" ] && echo ondemand | sudo tee "$gov_path" > /dev/null 2>/dev/null || true
     done
+}
+
+# configure_swaybg — installs and enables a systemd user service that sets the
+# desktop wallpaper via swaybg. Running swaybg as a user service (instead of
+# exec-once in hyprland.conf) ensures it starts after graphical-session.target
+# is fully ready, preventing the silent connection failure that causes a black
+# desktop when Hyprland is launched via UWSM.
+configure_swaybg() {
+    log_info "Installing swaybg wallpaper service..."
+
+    local service_dir="$HOME/.config/systemd/user"
+    local service_file="$service_dir/swaybg.service"
+    local wallpaper="$HOME/.config/hypr/background.jpg"
+
+    mkdir -p "$service_dir"
+
+    cat > "$service_file" <<EOF
+[Unit]
+Description=Pimarchy desktop wallpaper (swaybg)
+PartOf=graphical-session.target
+After=graphical-session.target
+Requisite=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/swaybg -i ${wallpaper} -m fill
+Restart=on-failure
+
+[Install]
+WantedBy=graphical-session.target
+EOF
+
+    systemctl --user daemon-reload
+    systemctl --user enable swaybg.service 2>/dev/null || true
+
+    log_success "swaybg wallpaper service installed and enabled"
+}
+
+# revert_swaybg — disables and removes the swaybg user service written by
+# configure_swaybg.
+revert_swaybg() {
+    local service_file="$HOME/.config/systemd/user/swaybg.service"
+
+    systemctl --user disable swaybg.service 2>/dev/null || true
+    systemctl --user stop swaybg.service 2>/dev/null || true
+    rm -f "$service_file"
+    systemctl --user daemon-reload
+    log_success "swaybg wallpaper service removed"
 }
 
 # ============================================================================
