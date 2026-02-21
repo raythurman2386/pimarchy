@@ -1,0 +1,90 @@
+site_name: Pimarchy
+site_url: https://raythurman2386.github.io/pimarchy/
+site_description: Aesthetic desktop transformation for Raspberry Pi 5 / Pi 500
+site_author: Ray Thurman
+repo_url: https://github.com/raythurman2386/pimarchy
+repo_name: raythurman2386/pimarchy
+
+theme:
+  name: material
+  logo: img/logo.svg
+  favicon: img/favicon.svg
+  palette:
+    # Palette based on Ravenwood / Everforest
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+
+nav:
+  - Welcome: index.md
+  - Getting Started:
+    - Requirements: getting-started/requirements.md
+    - Quick Start: getting-started/installation.md
+    - First Boot: getting-started/first-boot.md
+  - Usage Guide:
+    - Desktop Interface: usage/interface.md
+    - Keybinds: usage/keybinds.md
+    - Waybar Actions: usage/waybar.md
+  - Configuration:
+    - Theme Engine: configuration/theme.md
+    - Manual Tweaks: configuration/manual.md
+    - Backup System: configuration/backups.md
+  - Advanced:
+    - Overclocking: advanced/overclocking.md
+    - Docker & Containers: advanced/docker.md
+    - OpenCode AI: advanced/opencode.md
+  - Troubleshooting:
+    - Common Issues: troubleshooting/common.md
+    - Logging: troubleshooting/logs.md
+  - Development:
+    - Architecture: development/architecture.md
+    - Roadmap: development/roadmap.md
+    - Adding Modules: development/modules.md
+    - Contributing: development/contributing.md
+  - Uninstall: uninstall.md
