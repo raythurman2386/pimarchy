@@ -275,6 +275,10 @@ EOF
         rm -f /tmp/CascadiaCode.zip
     fi
 
+    # Rebuild the system-wide fontconfig cache so newly installed fonts
+    # (e.g. fonts-noto-color-emoji) are available to all applications.
+    sudo fc-cache -fv > /dev/null
+
     log_success "Packages installed"
 }
 

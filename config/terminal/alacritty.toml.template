@@ -16,9 +16,6 @@ size = {{FONT_SIZE}}
 # Disable built-in box drawing so Nerd Font glyphs render correctly
 builtin_box_drawing = false
 
-[[font.fallback]]
-family = "Noto Color Emoji"
-
 [colors.primary]
 background = "{{TERM_BG_COLOR}}"
 foreground = "{{TERM_FG_COLOR}}"
