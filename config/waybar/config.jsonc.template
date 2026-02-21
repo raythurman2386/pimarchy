@@ -8,7 +8,7 @@
     "spacing": 6,
     "modules-left": ["custom/launcher", "hyprland/workspaces"],
     "modules-center": ["clock"],
-    "modules-right": ["cpu", "memory", "network", "pulseaudio", "tray", "custom/power"],
+    "modules-right": ["temperature", "memory", "network", "pulseaudio", "tray", "custom/power"],
 
     "custom/launcher": {
         "format": "{{ICON_LAUNCHER}}",
@@ -42,8 +42,12 @@
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
     },
 
-    "cpu": {
-        "format": "{{ICON_CPU}} {usage}%",
+    "temperature": {
+        "thermal-zone": 0,
+        "hwmon-path": "/sys/class/thermal/thermal_zone0/temp",
+        "critical-threshold": 80,
+        "format": "{{ICON_TEMP}} {temperatureC}°C",
+        "format-critical": "{{ICON_TEMP}} {temperatureC}°C",
         "interval": 5,
         "tooltip": false,
         "on-click": "alacritty --class btop -e btop"

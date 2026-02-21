@@ -1,7 +1,7 @@
 /* Pimarchy Waybar Theme - Full-width Top Bar */
 
 * {
-    font-family: "{{FONT_FAMILY}}", "FontAwesome", sans-serif;
+    font-family: "{{FONT_FAMILY}}", "Noto Color Emoji", "FontAwesome", sans-serif;
     font-size: {{FONT_SIZE_PX}}px;
     border: none;
     border-radius: 0;
@@ -23,7 +23,7 @@ window#waybar {
 
 /* All modules base style */
 #clock,
-#cpu,
+#temperature,
 #memory,
 #network,
 #pulseaudio,
@@ -68,8 +68,12 @@ window#waybar {
     background-color: {{CLOCK_BG_COLOR}};
 }
 
-#cpu {
-    color: {{COLOR_CPU}};
+#temperature {
+    color: {{COLOR_TEMP}};
+}
+
+#temperature.critical {
+    color: {{COLOR_ERROR}};
 }
 
 #memory {
@@ -116,7 +120,7 @@ window#waybar {
     background-color: {{POWER_HOVER_BG_COLOR}};
 }
 
-#cpu:hover,
+#temperature:hover,
 #memory:hover,
 #network:hover,
 #pulseaudio:hover,

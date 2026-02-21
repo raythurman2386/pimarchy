@@ -227,6 +227,7 @@ EOF
     local base_packages=(
         fonts-font-awesome
         fonts-jetbrains-mono
+        fonts-noto-color-emoji
         pavucontrol
         network-manager-gnome
         arc-theme
