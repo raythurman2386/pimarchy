@@ -373,7 +373,17 @@ stop_services() {
     pkill -f mako 2>/dev/null || true
     pkill -f swaybg 2>/dev/null || true
     
-    log_success "Services stopped"
+    # Disable greetd and restore Pi OS getty
+    if systemctl is-enabled greetd &>/dev/null; then
+        sudo systemctl disable greetd 2>/dev/null || true
+    fi
+    sudo systemctl unmask getty@tty1.service 2>/dev/null || true
+    sudo systemctl enable getty@tty1.service 2>/dev/null || true
+    
+    # Restore default target (multi-user.target is standard for Pi OS Lite)
+    sudo systemctl set-default multi-user.target 2>/dev/null || true
+    
+    log_success "Services stopped and Pi OS boot environment restored"
 }
 
 # ============================================================================

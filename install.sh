@@ -206,10 +206,12 @@ if [ "$DRY_RUN" = false ]; then
     sudo mkdir -p /etc/greetd
     cat << 'GREETD' | sudo tee /etc/greetd/config.toml > /dev/null
 [terminal]
-vt = 1
+# Use vt7 to avoid systemd boot messages bleeding into the greeter
+vt = 7
 
 [default_session]
-command = "tuigreet --cmd Hyprland"
+# --time forces a redraw every second to ensure the screen stays clean
+command = "tuigreet --time --remember --remember-session --cmd Hyprland"
 user = "_greetd"
 GREETD
     sudo systemctl enable greetd 2>/dev/null || true
