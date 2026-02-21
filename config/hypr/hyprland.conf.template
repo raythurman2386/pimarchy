@@ -22,9 +22,9 @@ env = GDK_BACKEND,wayland,x11
 # ============================================================================
 # Autostart
 # ============================================================================
-# Only start these if NOT running under UWSM (which handles its own autostart)
-exec-once = bash -c '[ -z "$UWSM_ID" ] && waybar'
-exec-once = bash -c '[ -z "$UWSM_ID" ] && mako'
+# Start bar and notifications; guard against duplicates if UWSM already launched them
+exec-once = bash -c 'pidof waybar || waybar'
+exec-once = bash -c 'pidof mako || mako'
 
 # Polkit agent — needed for GUI auth dialogs (e.g. sudo prompts from apps)
 exec-once = lxpolkit
