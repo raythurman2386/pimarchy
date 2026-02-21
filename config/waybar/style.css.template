@@ -70,14 +70,17 @@ window#waybar {
 
 #temperature {
     color: {{COLOR_TEMP}};
+    font-weight: bold;
 }
 
 #temperature.critical {
     color: {{COLOR_ERROR}};
+    font-weight: bold;
 }
 
 #memory {
     color: {{COLOR_MEMORY}};
+    font-weight: bold;
 }
 
 #network {
@@ -90,6 +93,7 @@ window#waybar {
 
 #pulseaudio {
     color: {{COLOR_VOLUME}};
+    font-weight: bold;
 }
 
 #pulseaudio.muted {
