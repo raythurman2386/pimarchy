@@ -419,34 +419,37 @@ is_pi5() {
 # configure_governor — sets the CPU scaling governor to 'performance'.
 # This keeps the CPU at maximum frequency without disabling DVFS voltage
 # scaling. Safe on any Pi 5 / Pi 500, takes effect immediately, and
-# persists across reboots via cpufrequtils.
+# persists across reboots via a systemd oneshot service (no extra packages
+# required — cpufrequtils is not available in Pi OS / Debian Bookworm repos).
 configure_governor() {
     log_info "Setting CPU governor to 'performance'..."
 
-    local cpufreq_conf="/etc/default/cpufrequtils"
+    local service_file="/etc/systemd/system/pimarchy-governor.service"
 
-    if ! sudo apt install -y cpufrequtils; then
-        log_warn "Could not install cpufrequtils — governor will not persist across reboots"
-        log_warn "apt error shown above"
-    fi
+    # Install a oneshot systemd unit that sets the governor on every boot
+    sudo tee "$service_file" > /dev/null <<'EOF'
+[Unit]
+Description=Pimarchy CPU performance governor
+After=multi-user.target
 
-    # Write config: check first, then either replace or append
-    if [ -f "$cpufreq_conf" ] && sudo grep -q "^GOVERNOR=" "$cpufreq_conf"; then
-        sudo sed -i 's/^GOVERNOR=.*/GOVERNOR="performance"/' "$cpufreq_conf"
-    elif [ -f "$cpufreq_conf" ]; then
-        echo 'GOVERNOR="performance"' | sudo tee -a "$cpufreq_conf" > /dev/null
-    else
-        echo 'GOVERNOR="performance"' | sudo tee "$cpufreq_conf" > /dev/null
-    fi
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c 'for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do echo performance > "$f"; done'
 
-    sudo systemctl enable cpufrequtils 2>/dev/null || true
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable pimarchy-governor.service 2>/dev/null || true
 
     # Apply immediately to all cores without waiting for reboot
     for gov_path in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
         [ -f "$gov_path" ] && echo performance | sudo tee "$gov_path" > /dev/null || true
     done
 
-    log_success "CPU governor set to 'performance' (persists across reboots)"
+    log_success "CPU governor set to 'performance' (persists across reboots via systemd)"
 }
 
 # configure_overclock — adds arm_freq=2600 to /boot/firmware/config.txt.
@@ -519,15 +522,15 @@ revert_overclock() {
     fi
 }
 
-# revert_governor — resets the CPU governor back to the default 'ondemand'.
+# revert_governor — removes the Pimarchy governor service and resets to 'ondemand'.
 revert_governor() {
-    local cpufreq_conf="/etc/default/cpufrequtils"
+    local service_file="/etc/systemd/system/pimarchy-governor.service"
 
-    if [ -f "$cpufreq_conf" ]; then
-        if sudo grep -q "^GOVERNOR=" "$cpufreq_conf"; then
-            sudo sed -i 's/^GOVERNOR=.*/GOVERNOR="ondemand"/' "$cpufreq_conf"
-            log_success "CPU governor reverted to 'ondemand' in $cpufreq_conf"
-        fi
+    if [ -f "$service_file" ]; then
+        sudo systemctl disable pimarchy-governor.service 2>/dev/null || true
+        sudo rm -f "$service_file"
+        sudo systemctl daemon-reload
+        log_success "Removed pimarchy-governor.service"
     fi
 
     # Apply immediately
