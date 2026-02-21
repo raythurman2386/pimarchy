@@ -223,6 +223,9 @@ EOF
     # Install swaybg wallpaper as a systemd user service so it starts reliably
     # after graphical-session.target (exec-once fires too early under UWSM)
     configure_swaybg
+
+    # Install OpenCode AI coding agent
+    install_opencode
 else
     log_info "Would initialize workspace state, apply gsettings, and configure .bashrc"
 fi

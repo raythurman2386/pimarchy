@@ -197,6 +197,54 @@ process_template() {
 # Package Management (Debian/Ubuntu/Pi OS)
 # ============================================================================
 
+# configure_docker_repo — adds the official Docker CE apt repository so that
+# docker-ce, docker-compose-plugin, and docker-buildx-plugin can be installed
+# at their latest upstream versions. Idempotent: skips if already configured.
+# Follows the official Docker docs for Debian (arm64 / Pi OS Bookworm).
+configure_docker_repo() {
+    if [ -f /etc/apt/sources.list.d/docker.list ]; then
+        log_info "Docker apt repository already configured — skipping"
+        return 0
+    fi
+
+    log_info "Adding official Docker CE apt repository..."
+
+    # Install prerequisites for adding the repo
+    sudo apt install -y ca-certificates curl gnupg
+
+    # Import Docker's official GPG key
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/debian/gpg \
+        | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+    # Pi OS Bookworm reports VERSION_CODENAME="bookworm" — use that for the repo
+    local codename
+    codename=$(. /etc/os-release && echo "$VERSION_CODENAME")
+    # Fallback: Pi OS may set only DEBIAN_CODENAME
+    if [ -z "$codename" ]; then
+        codename=$(. /etc/os-release && echo "$DEBIAN_CODENAME")
+    fi
+    if [ -z "$codename" ]; then
+        codename="bookworm"
+    fi
+
+    echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/debian ${codename} stable" \
+        | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # Pin Docker packages so they always come from the official repo, not Debian
+    cat <<'EOF' | sudo tee /etc/apt/preferences.d/docker-pin > /dev/null
+Package: docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+Pin: origin download.docker.com
+Pin-Priority: 1001
+EOF
+
+    sudo apt update
+    log_success "Docker CE repository added"
+}
+
 install_packages() {
     log_info "Updating system and installing packages..."
     
@@ -223,6 +271,9 @@ EOF
         sudo apt update
     fi
 
+    # Add official Docker CE repository (provides docker-ce + docker-compose-plugin)
+    configure_docker_repo
+
     # Base packages from the stable/testing repository
     local base_packages=(
         fonts-font-awesome
@@ -245,12 +296,30 @@ EOF
         alsa-utils
         unzip
         wget
+        curl
         fontconfig
         chromium
         btop
     )
 
     sudo apt install -y "${base_packages[@]}"
+
+    # Docker CE + Compose v2 from the official Docker repository
+    local docker_packages=(
+        docker-ce
+        docker-ce-cli
+        containerd.io
+        docker-buildx-plugin
+        docker-compose-plugin
+    )
+
+    sudo apt install -y "${docker_packages[@]}"
+
+    # Add current user to the docker group so Docker works without sudo
+    if ! id -nG "$USER" | grep -qw docker 2>/dev/null; then
+        sudo usermod -aG docker "$USER"
+        log_info "Added $USER to docker group (re-login required to take effect)"
+    fi
 
     # Wayland/Hyprland specific packages from sid
     local hypr_packages=(
@@ -313,11 +382,22 @@ remove_packages() {
         alsa-utils
         chromium
         btop
+        docker-ce
+        docker-ce-cli
+        containerd.io
+        docker-buildx-plugin
+        docker-compose-plugin
     )
     
     sudo apt remove --purge -y "${packages[@]}" 2>/dev/null || true
     sudo apt autoremove -y
-    
+
+    # Remove Docker CE repository and GPG key
+    sudo rm -f /etc/apt/sources.list.d/docker.list
+    sudo rm -f /etc/apt/keyrings/docker.gpg
+    sudo rm -f /etc/apt/preferences.d/docker-pin
+    sudo apt update 2>/dev/null || true
+
     log_success "Packages removed"
 }
 
@@ -334,6 +414,8 @@ create_config_dirs() {
     mkdir -p "$MAKO_DIR"
     mkdir -p "$GTK3_DIR"
     mkdir -p "$TERMINAL_DIR"
+    mkdir -p "$HOME/.config/btop/themes"
+    mkdir -p "$HOME/.config/opencode"
     
     log_success "Config directories created"
 }
@@ -590,6 +672,53 @@ revert_swaybg() {
 }
 
 # ============================================================================
+# OpenCode Installation
+# ============================================================================
+
+# install_opencode — installs the OpenCode AI coding agent using the official
+# install script from opencode.ai. Idempotent: skips if already installed.
+install_opencode() {
+    if command -v opencode &>/dev/null; then
+        log_info "OpenCode already installed ($(opencode --version 2>/dev/null || echo 'unknown version')) — skipping"
+        return 0
+    fi
+
+    log_info "Installing OpenCode..."
+
+    if ! command -v curl &>/dev/null; then
+        sudo apt install -y curl
+    fi
+
+    curl -fsSL https://opencode.ai/install | bash
+
+    if command -v opencode &>/dev/null; then
+        log_success "OpenCode installed successfully"
+    else
+        log_warn "OpenCode installer ran but 'opencode' not found in PATH — may need to re-login or source ~/.bashrc"
+    fi
+}
+
+# remove_opencode — removes the OpenCode installation written by install_opencode.
+# The official install script places everything under ~/.opencode/ and adds
+# ~/.opencode/bin to PATH in ~/.bashrc.
+remove_opencode() {
+    local opencode_dir="$HOME/.opencode"
+
+    if [ -d "$opencode_dir" ]; then
+        rm -rf "$opencode_dir"
+        log_success "OpenCode installation removed ($opencode_dir)"
+    else
+        log_info "OpenCode not found at $opencode_dir — nothing to remove"
+    fi
+
+    # Remove the PATH entry added by the installer to ~/.bashrc (if present)
+    if grep -q '\.opencode/bin' "$HOME/.bashrc" 2>/dev/null; then
+        sed -i '/\.opencode\/bin/d' "$HOME/.bashrc"
+        log_info "Removed OpenCode PATH entry from ~/.bashrc"
+    fi
+}
+
+# ============================================================================
 # GSettings Management
 # ============================================================================
 
@@ -647,7 +776,14 @@ remove_pimarchy_files() {
     
     # Chromium dark mode flags
     rm -f "$HOME/.config/chromium-flags.conf"
-    
+
+    # btop theme and config
+    rm -f "$HOME/.config/btop/btop.conf"
+    rm -f "$HOME/.config/btop/themes/ravenwood.theme"
+
+    # OpenCode config
+    rm -f "$HOME/.config/opencode/opencode.json"
+
     # Debian-specific
     sudo rm -f /etc/apt/sources.list.d/bookworm.list
     sudo rm -f /etc/apt/sources.list.d/sid.list
