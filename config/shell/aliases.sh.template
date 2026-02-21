@@ -2,16 +2,47 @@
 # Pimarchy Shell Aliases
 #
 
-# System
-alias update='sudo pacman -Syu'
-alias install='yay -S'
-alias remove='yay -Rns'
-alias search='yay -Ss'
-alias orphans='pacman -Qtdq | xargs -r sudo pacman -Rs'
+# System (Debian/Pi OS)
+alias update='sudo apt update && sudo apt upgrade -y'
+alias install='sudo apt install -y'
+alias remove='sudo apt autoremove -y'
+alias search='apt search'
+alias orphans='sudo apt autoremove -y'
 
-# Pimarchy
+# Pimarchy Commands
 alias pimarchy-edit='cd {{PIMARCHY_ROOT}}'
 alias pimarchy-update='cd {{PIMARCHY_ROOT}} && git pull && bash install.sh'
+alias pimarchy-refresh-hyprland='pimarchy-update'
+
+pimarchy-restart-waybar() {
+    pkill waybar
+    waybar > /dev/null 2>&1 & disown
+    echo "Waybar restarted."
+}
+
+pimarchy-theme-set() {
+    echo "Pimarchy currently uses a single unified theme engine based on Ravenwood."
+    echo "To customize your theme colors, edit the config:"
+    echo "  pimarchy-edit && nano config/theme.conf"
+    echo "Then apply changes with: pimarchy-update"
+}
+
+pimarchy-theme-bg-set() {
+    if [ -z "$1" ] || [ ! -f "$1" ]; then
+        echo "Usage: pimarchy-theme-bg-set <path-to-image>"
+        return 1
+    fi
+    mkdir -p ~/.config/hypr
+    cp "$1" ~/.config/hypr/wallpaper
+    pkill swaybg
+    swaybg -i ~/.config/hypr/wallpaper -m fill > /dev/null 2>&1 & disown
+    echo "Background updated successfully."
+}
+
+pimarchy-theme-bg-next() {
+    echo "Pimarchy currently does not auto-cycle wallpapers."
+    echo "To set a new wallpaper, use: pimarchy-theme-bg-set <path/to/image>"
+}
 
 # Raspberry Pi Utilities
 alias pi-temp='/usr/bin/vcgencmd measure_temp'

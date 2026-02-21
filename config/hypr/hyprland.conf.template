@@ -24,7 +24,7 @@ env = GDK_BACKEND,wayland,x11
 # Autostart
 # ============================================================================
 exec-once = waybar
-exec-once = swaybg -c "#{{COLOR_BASE_HEX}}"
+exec-once = sh -c 'if [ -f ~/.config/hypr/wallpaper ]; then swaybg -i ~/.config/hypr/wallpaper -m fill; else swaybg -c "#{{COLOR_BASE_HEX}}"; fi'
 exec-once = mako
 exec-once = nm-applet --indicator
 
