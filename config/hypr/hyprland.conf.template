@@ -23,10 +23,13 @@ env = GDK_BACKEND,wayland,x11
 # ============================================================================
 # Autostart
 # ============================================================================
-exec-once = waybar
-exec-once = sh -c 'if [ -f ~/.config/hypr/wallpaper ]; then swaybg -i ~/.config/hypr/wallpaper -m fill; else swaybg -c "#{{COLOR_BASE_HEX}}"; fi'
-exec-once = mako
-exec-once = nm-applet --indicator
+# Only start these if NOT running under UWSM (which handles its own autostart)
+exec-once = [ -z "$UWSM_ID" ] && waybar
+exec-once = [ -z "$UWSM_ID" ] && mako
+exec-once = [ -z "$UWSM_ID" ] && nm-applet --indicator
+
+# Background/Wallpaper
+exec-once = swaybg -i {{HOME}}/.config/hypr/background.jpg -m fill -c "#{{COLOR_BASE_HEX}}"
 
 # ============================================================================
 # Input
@@ -104,7 +107,7 @@ dwindle {
 }
 
 master {
-    new_is_master = true
+    new_status = master
 }
 
 # ============================================================================
@@ -113,8 +116,9 @@ master {
 $mainMod = SUPER
 
 bind = $mainMod, Return, exec, alacritty
-bind = $mainMod, Q, killactive, 
-bind = $mainMod SHIFT, Q, exit, 
+bind = $mainMod, W, killactive, 
+bind = $mainMod SHIFT, W, exit, 
+bind = $mainMod SHIFT, B, exec, chromium
 bind = $mainMod, E, exec, thunar
 bind = $mainMod, V, togglefloating, 
 bind = $mainMod, D, exec, rofi -show drun

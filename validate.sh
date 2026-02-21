@@ -16,6 +16,9 @@ source "$PIMARCHY_ROOT/lib/functions.sh"
 
 echo "[1/4] Loading configurations..."
 load_config "$PIMARCHY_ROOT/config/theme.conf"
+# Set derived variables
+export USER=$(whoami)
+export HOME=$HOME
 # Set SCRIPT_DIR as install.sh does (needed for waybar config template)
 SCRIPT_DIR="$HOME/.config/hypr"
 export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"

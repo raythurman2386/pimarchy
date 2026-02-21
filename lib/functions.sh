@@ -243,6 +243,7 @@ EOF
         unzip
         wget
         fontconfig
+        chromium
     )
 
     sudo apt install -y "${base_packages[@]}"

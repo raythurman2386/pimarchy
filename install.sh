@@ -48,6 +48,8 @@ source "$PIMARCHY_ROOT/lib/functions.sh"
 load_config "$PIMARCHY_ROOT/config/theme.conf"
 
 # Set derived variables
+export USER=$(whoami)
+export HOME=$HOME
 SCRIPT_DIR="$HOME/.config/hypr"
 export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
 export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
@@ -115,7 +117,13 @@ while IFS='|' read -r module template target description <&3; do
     
     if [ "$DRY_RUN" = false ]; then
         log_info "Installing: $description"
-        process_template "$template_path" "$target_path"
+        if [[ "$template" == *.template ]]; then
+            process_template "$template_path" "$target_path"
+        else
+            mkdir -p "$(dirname "$target_path")"
+            cp "$template_path" "$target_path"
+            log_success "Copied: $target_path"
+        fi
         
         # Make scripts executable
         if [[ "$target" == *.sh ]]; then
@@ -123,21 +131,25 @@ while IFS='|' read -r module template target description <&3; do
         fi
     else
         log_info "Would install: $description -> $target_path"
-        # Check template for undefined variables in dry-run mode
-        undefined_vars=()
-        while IFS= read -r line; do
-            remaining="$line"
-            while [[ $remaining =~ \{\{([A-Za-z_][A-Za-z0-9_]*)\}\} ]]; do
-                var_name="${BASH_REMATCH[1]}"
-                if [ -z "${!var_name+x}" ]; then
-                    undefined_vars+=("$var_name")
-                fi
-                remaining="${remaining#*\}\}}"
-            done
-        done < "$template_path"
-        
-        if [ ${#undefined_vars[@]} -gt 0 ]; then
-            log_warn "Undefined variables in template: ${undefined_vars[*]}"
+        if [[ "$template" == *.template ]]; then
+            # Check template for undefined variables in dry-run mode
+            undefined_vars=()
+            while IFS= read -r line; do
+                remaining="$line"
+                while [[ $remaining =~ \{\{([A-Za-z_][A-Za-z0-9_]*)\}\} ]]; do
+                    var_name="${BASH_REMATCH[1]}"
+                    if [ -z "${!var_name+x}" ]; then
+                        undefined_vars+=("$var_name")
+                    fi
+                    remaining="${remaining#*\}\}}"
+                done
+            done < "$template_path"
+            
+            if [ ${#undefined_vars[@]} -gt 0 ]; then
+                log_warn "Undefined variables in template: ${undefined_vars[*]}"
+            fi
+        else
+            log_info "Would copy: $template_path -> $target_path"
         fi
     fi
 done 3< "$PIMARCHY_ROOT/config/modules.conf"
@@ -199,6 +211,15 @@ fi
 echo "[5.5/6] Configuring greetd..."
 
 if [ "$DRY_RUN" = false ]; then
+    # Install Hyprland startup wrapper to /usr/local/bin
+    log_info "Installing Hyprland startup wrapper..."
+    temp_wrapper=$(mktemp)
+    process_template "$PIMARCHY_ROOT/config/hypr/start-hyprland.sh.template" "$temp_wrapper"
+    sudo cp "$temp_wrapper" /usr/local/bin/start-hyprland
+    # Ensure it is readable and executable by all users (including _greetd)
+    sudo chmod 755 /usr/local/bin/start-hyprland
+    rm "$temp_wrapper"
+
     # Disable getty on tty1 to prevent conflict with greetd
     sudo systemctl disable getty@tty1.service 2>/dev/null || true
     sudo systemctl mask getty@tty1.service 2>/dev/null || true
@@ -211,14 +232,14 @@ vt = 7
 
 [default_session]
 # --time forces a redraw every second to ensure the screen stays clean
-command = "tuigreet --time --remember --remember-session --cmd start-hyprland"
+command = "tuigreet --time --remember --remember-session --cmd /usr/local/bin/start-hyprland"
 user = "_greetd"
 GREETD
     sudo systemctl enable greetd 2>/dev/null || true
     sudo systemctl set-default graphical.target 2>/dev/null || true
-    log_success "greetd configured and enabled"
+    log_success "greetd and start-hyprland configured"
 else
-    log_info "Would configure greetd and disable getty@tty1"
+    log_info "Would install start-hyprland to /usr/local/bin and configure greetd"
 fi
 
 # -------------------------------------------------------------
@@ -236,7 +257,8 @@ if [ "$DRY_RUN" = false ]; then
     echo "  SUPER+D        App launcher (Rofi)"
     echo "  SUPER+Return   Terminal"
     echo "  SUPER+E        File Manager"
-    echo "  SUPER+Q        Close window"
+    echo "  SUPER+W        Close window"
+    echo "  SUPER+SHIFT+B  Open Chromium"
     echo "  SUPER+F        Toggle fullscreen"
     echo "  SUPER+V        Toggle floating window"
     echo "  SUPER+Arrows   Move focus"

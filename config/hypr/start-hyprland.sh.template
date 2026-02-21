@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# Pimarchy Hyprland Startup Wrapper
+# Optimized for Raspberry Pi 5 / 500
+#
+
+# Environment variables for Pi 5/500 VideoCore VII
+# These help ensure the best performance on the VC7 hardware.
+export WLR_DRM_DEVICES=/dev/dri/card1
+export WLR_NO_HARDWARE_CURSORS=1
+export GDK_BACKEND=wayland,x11
+export QT_QPA_PLATFORMTHEME=qt5ct
+
+# Clear console for clean transition
+clear
+
+# Start the session
+# Prefer uwsm for better session management and resource cleanup.
+if command -v uwsm &> /dev/null; then
+    # We want to start the Hyprland session via uwsm.
+    # We don't use --cmd here because uwsm manages the entire session.
+    exec uwsm start hyprland.desktop
+else
+    # Fallback to direct Hyprland execution.
+    exec Hyprland
+fi
+
