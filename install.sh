@@ -211,7 +211,7 @@ vt = 7
 
 [default_session]
 # --time forces a redraw every second to ensure the screen stays clean
-command = "tuigreet --time --remember --remember-session --cmd Hyprland"
+command = "tuigreet --time --remember --remember-session --cmd start-hyprland"
 user = "_greetd"
 GREETD
     sudo systemctl enable greetd 2>/dev/null || true
