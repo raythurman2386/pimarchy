@@ -13,6 +13,8 @@ bold = { family = "{{FONT_FAMILY}}", style = "Bold" }
 italic = { family = "{{FONT_FAMILY}}", style = "Italic" }
 bold_italic = { family = "{{FONT_FAMILY}}", style = "Bold Italic" }
 size = {{FONT_SIZE}}
+# Disable built-in box drawing so Nerd Font glyphs render correctly
+builtin_box_drawing = false
 
 [colors.primary]
 background = "{{TERM_BG_COLOR}}"

@@ -24,6 +24,13 @@ $lua\
 disabled = false
 style = "bg:{{COLOR_PRIMARY}} fg:{{COLOR_BASE}}"
 
+# Explicitly set symbols so Alacritty uses the exact glyphs from
+# CaskaydiaCove Nerd Font Mono rather than relying on Starship's defaults,
+# which can render as boxes if glyph lookup order differs at runtime.
+[os.symbols]
+Raspbian = " "
+Linux = " "
+
 [username]
 show_always = true
 style_user = "bg:{{COLOR_PRIMARY}} fg:{{COLOR_BASE}}"
