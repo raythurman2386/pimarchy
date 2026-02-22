@@ -1,0 +1,16 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Shield Shape -->
+  <path d="M128 20L40 50V130C40 185.228 78.4772 235.456 128 250C177.523 235.456 216 185.228 216 130V50L128 20Z" fill="#374145" stroke="#7fbbb3" stroke-width="8" stroke-linejoin="round"/>
+  
+  <!-- Stylized Raspberry Pi Symbol -->
+  <!-- Main body -->
+  <circle cx="128" cy="145" r="35" fill="#7fbbb3"/>
+  <circle cx="105" cy="125" r="28" fill="#7fbbb3"/>
+  <circle cx="151" cy="125" r="28" fill="#7fbbb3"/>
+  <circle cx="128" cy="110" r="22" fill="#7fbbb3"/>
+  
+  <!-- Leaves -->
+  <path d="M128 85C128 85 110 65 110 50C110 35 128 35 128 35C128 35 146 35 146 50C146 65 128 85 128 85Z" fill="#7fb38e"/>
+  <path d="M128 85C128 85 135 60 148 55C161 50 165 65 165 65C165 65 155 85 128 85Z" fill="#7fb38e"/>
+  <path d="M128 85C128 85 121 60 108 55C95 50 91 65 91 65C91 65 101 85 128 85Z" fill="#7fb38e"/>
+</svg>
