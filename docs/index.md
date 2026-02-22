@@ -1,7 +1,7 @@
 # Pimarchy
 
 <p align="center">
-  <img src="img/screenshot.png" alt="Pimarchy Desktop" width="800">
+  <img src="./img/screenshot.png" alt="Pimarchy Desktop" width="800">
 </p>
 
 ## Overview
