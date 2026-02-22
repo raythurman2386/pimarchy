@@ -10,23 +10,55 @@ alias search='apt search'
 alias orphans='sudo apt autoremove -y'
 
 # Pimarchy Commands
-alias pimarchy-edit='cd {{PIMARCHY_ROOT}}'
-alias pimarchy-update='cd {{PIMARCHY_ROOT}} && git pull && bash install.sh'
-alias pimarchy-refresh-hyprland='pimarchy-update'
 
+# Open the Pimarchy source directory in the current shell
+alias pimarchy-edit='cd {{PIMARCHY_ROOT}}'
+
+# Pull latest changes and re-run the installer (runs in a subshell so your
+# working directory is not changed after the command returns)
+pimarchy-update() {
+    (
+        cd {{PIMARCHY_ROOT}} || { echo "[ERROR] Cannot cd to {{PIMARCHY_ROOT}}"; return 1; }
+        git pull
+        bash install.sh
+    )
+}
+
+# Hot-reload the running Hyprland compositor config without a full reinstall.
+# Uses hyprctl which sends SIGUSR2 to the Hyprland process.
+pimarchy-refresh-hyprland() {
+    if ! command -v hyprctl &> /dev/null; then
+        echo "[ERROR] hyprctl not found — is Hyprland installed?"
+        return 1
+    fi
+    if ! hyprctl reload 2>/dev/null; then
+        echo "[ERROR] hyprctl reload failed — is Hyprland running?"
+        return 1
+    fi
+    echo "Hyprland config reloaded."
+}
+
+# Restart Waybar via its systemd user service (Waybar is managed by systemd
+# under UWSM — do not use pkill/exec directly).
 pimarchy-restart-waybar() {
-    pkill waybar || true
-    waybar > /dev/null 2>&1 & disown
-    echo "Waybar restarted."
+    if systemctl --user restart waybar 2>/dev/null; then
+        echo "Waybar restarted."
+    else
+        echo "[WARN] systemctl restart failed, falling back to pkill..."
+        pkill waybar || true
+        sleep 0.5
+        waybar > /dev/null 2>&1 & disown
+        echo "Waybar restarted (fallback)."
+    fi
 }
 
 pimarchy-theme-set() {
-    echo "Pimarchy currently uses a single unified theme engine based on Ravenwood."
-    echo "To customize your theme colors, edit the config:"
-    echo "  pimarchy-edit && nano config/theme.conf"
+    echo "Pimarchy uses a single unified theme engine based on Ravenwood."
+    echo "To customize theme colors, edit: {{PIMARCHY_ROOT}}/config/theme.conf"
     echo "Then apply changes with: pimarchy-update"
 }
 
+# Set a new wallpaper image and restart the swaybg systemd user service.
 pimarchy-theme-bg-set() {
     if [ -z "$1" ] || [ ! -f "$1" ]; then
         echo "Usage: pimarchy-theme-bg-set <path-to-image>"
@@ -34,14 +66,21 @@ pimarchy-theme-bg-set() {
     fi
     mkdir -p ~/.config/hypr
     cp "$1" ~/.config/hypr/background.jpg
-    pkill swaybg || true
-    swaybg -i ~/.config/hypr/background.jpg -m fill > /dev/null 2>&1 & disown
-    echo "Background updated successfully."
+    # swaybg is a systemd user service — restart it rather than kill/re-exec.
+    if systemctl --user restart swaybg 2>/dev/null; then
+        echo "Background updated and swaybg restarted."
+    else
+        echo "[WARN] systemctl restart failed, falling back to pkill..."
+        pkill swaybg || true
+        sleep 0.3
+        swaybg -i ~/.config/hypr/background.jpg -m fill > /dev/null 2>&1 & disown
+        echo "Background updated (fallback)."
+    fi
 }
 
 pimarchy-theme-bg-next() {
-    echo "Pimarchy currently does not auto-cycle wallpapers."
-    echo "To set a new wallpaper, use: pimarchy-theme-bg-set <path/to/image>"
+    echo "Pimarchy does not auto-cycle wallpapers."
+    echo "To set a new wallpaper: pimarchy-theme-bg-set <path/to/image>"
 }
 
 # Raspberry Pi Utilities
