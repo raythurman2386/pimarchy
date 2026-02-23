@@ -1,16 +1,29 @@
-# Chromium Flags
-# Pimarchy automated config
+# Pimarchy Chromium configuration
+# Deployed to /etc/chromium.d/ — sourced as shell by /usr/bin/chromium
+#
+# NOTE: default-flags already sets --enable-gpu-rasterization; do not repeat.
+# NOTE: 00-rpi-vars sets --force-renderer-accessibility, --enable-remote-extensions.
 
-# Enable native Wayland support (sharp fonts, proper scaling)
---enable-features=UseOzonePlatform
---ozone-platform=wayland
---enable-wayland-ime
+# Native Wayland support (sharp fonts, correct HiDPI scaling)
+export CHROMIUM_FLAGS="$CHROMIUM_FLAGS --ozone-platform=wayland"
+export CHROMIUM_FLAGS="$CHROMIUM_FLAGS --enable-wayland-ime"
 
-# Enable hardware acceleration
---ignore-gpu-blocklist
---enable-gpu-rasterization
---enable-zero-copy
+# Dark mode (force UI and web content dark)
+export CHROMIUM_FLAGS="$CHROMIUM_FLAGS --force-dark-mode"
 
-# Dark mode
---force-dark-mode
---enable-features=WebUIDarkMode
+# Feature flags (comma-separated to merge cleanly with any others set elsewhere):
+#   WebUIDarkMode          — dark chrome UI
+#   VaapiVideoDecodeLinuxGL — VA-API decode via GL (required for V4L2 path on Pi)
+#   CanvasOopRasterization  — GPU canvas rasterisation via V3D (Pi 5 tiled GPU)
+export CHROMIUM_FLAGS="$CHROMIUM_FLAGS --enable-features=WebUIDarkMode,VaapiVideoDecodeLinuxGL,CanvasOopRasterization"
+
+# V4L2 stateless video decode — uses Pi 5's hardware video decoders (/dev/video19+)
+export CHROMIUM_FLAGS="$CHROMIUM_FLAGS --use-v4l2-codec"
+
+# GPU / rendering
+export CHROMIUM_FLAGS="$CHROMIUM_FLAGS --ignore-gpu-blocklist"
+export CHROMIUM_FLAGS="$CHROMIUM_FLAGS --enable-zero-copy"
+
+# Memory model — Pi 500 has 16 GB; allow more renderer processes and larger tile memory
+export CHROMIUM_FLAGS="$CHROMIUM_FLAGS --renderer-process-limit=8"
+export CHROMIUM_FLAGS="$CHROMIUM_FLAGS --gpu-memory-buffer-compositor-resources"

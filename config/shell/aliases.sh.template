@@ -1,6 +1,87 @@
 #
-# Pimarchy Shell Aliases
+# Pimarchy Shell Configuration
+# Sourced from ~/.bashrc — do not edit directly; managed by Pimarchy.
 #
+
+# ============================================================================
+# History
+# ============================================================================
+
+# Large history — never lose a command
+HISTSIZE=50000
+HISTFILESIZE=100000
+
+# Timestamps in history output (use `history` to see them)
+HISTTIMEFORMAT="%F %T  "
+
+# Ignore duplicate lines and lines starting with a space
+HISTCONTROL=ignoreboth:erasedups
+
+# Append to history on every command (don't overwrite on exit)
+shopt -s histappend
+
+# Store multi-line commands as a single history entry
+shopt -s cmdhist
+
+# Allow editing a recalled history command before executing
+shopt -s histverify
+
+# ============================================================================
+# Tab Completion
+# ============================================================================
+
+# Enable bash completion if available (may already be loaded by /etc/bash.bashrc)
+if ! shopt -oq posix; then
+    if [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+    elif [ -f /etc/bash_completion ]; then
+        . /etc/bash_completion
+    fi
+fi
+
+# Case-insensitive filename completion
+bind 'set completion-ignore-case on' 2>/dev/null || true
+
+# Show all matches immediately (don't beep) when ambiguous
+bind 'set show-all-if-ambiguous on' 2>/dev/null || true
+
+# Cycle through completions with Tab (menu-complete)
+bind 'TAB:menu-complete' 2>/dev/null || true
+bind '"\e[Z":menu-complete-backward' 2>/dev/null || true
+
+# Coloured completion matches
+bind 'set colored-stats on' 2>/dev/null || true
+bind 'set colored-completion-prefix on' 2>/dev/null || true
+
+# ============================================================================
+# Directory Navigation
+# ============================================================================
+
+# Automatically correct minor typos in cd
+shopt -s cdspell
+
+# cd to a directory by typing its name (no 'cd' needed)
+shopt -s autocd 2>/dev/null || true   # bash 4+
+
+# Correct typos in directory names during completion
+shopt -s dirspell 2>/dev/null || true # bash 4+
+
+# Keep track of visited directories in a stack (use pushd/popd/dirs)
+CDPATH=.:~
+
+# ============================================================================
+# Miscellaneous Shell Options
+# ============================================================================
+
+# Update LINES/COLUMNS after each command
+shopt -s checkwinsize
+
+# Glob patterns that match nothing expand to nothing (not literally)
+shopt -s nullglob 2>/dev/null || true
+
+# ============================================================================
+# Aliases — System (Debian/Pi OS)
+# ============================================================================
 
 # System (Debian/Pi OS)
 alias update='sudo apt update && sudo apt upgrade -y'
@@ -79,3 +160,26 @@ alias h='history'
 alias j='jobs -l'
 alias q='exit'
 alias c='clear'
+
+# ============================================================================
+# fzf Integration (if installed)
+# ============================================================================
+
+if command -v fzf &>/dev/null; then
+    # Reverse-search history with fzf (Ctrl+R)
+    if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+        . /usr/share/doc/fzf/examples/key-bindings.bash
+    elif [ -f /usr/share/fzf/key-bindings.bash ]; then
+        . /usr/share/fzf/key-bindings.bash
+    fi
+
+    # Fuzzy completion trigger (default **)
+    if [ -f /usr/share/doc/fzf/examples/completion.bash ]; then
+        . /usr/share/doc/fzf/examples/completion.bash
+    elif [ -f /usr/share/fzf/completion.bash ]; then
+        . /usr/share/fzf/completion.bash
+    fi
+
+    # Style: show preview, use Ravenwood-adjacent colours
+    export FZF_DEFAULT_OPTS='--height=40% --layout=reverse --border --info=inline'
+fi
