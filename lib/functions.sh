@@ -846,8 +846,8 @@ remove_pimarchy_files() {
     rm -f "$HOME/.bashrc.pimarchy"
     rm -f "$HOME/.config/starship.toml"
     
-    # Chromium dark mode flags
-    rm -f "$HOME/.config/chromium-flags.conf"
+    # Chromium drop-in flags (system path — requires sudo)
+    sudo rm -f /etc/chromium.d/pimarchy
 
     # btop theme and config
     rm -f "$HOME/.config/btop/btop.conf"

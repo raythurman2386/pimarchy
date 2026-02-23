@@ -138,14 +138,38 @@ while IFS='|' read -r module template target description <&3; do
     
     if [ "$DRY_RUN" = false ]; then
         log_info "Installing: $description"
+
+        # Determine if the target is a system path requiring sudo
+        needs_sudo=false
+        if [[ "$target_path" == /etc/* ]]; then
+            needs_sudo=true
+        fi
+
         if [[ "$template" == *.template ]]; then
-            process_template "$template_path" "$target_path"
+            if [ "$needs_sudo" = true ]; then
+                # Write to a temp file first, then copy with sudo
+                tmp_out=$(mktemp)
+                process_template "$template_path" "$tmp_out"
+                sudo mkdir -p "$(dirname "$target_path")"
+                sudo cp "$tmp_out" "$target_path"
+                sudo chmod 644 "$target_path"
+                rm -f "$tmp_out"
+                log_success "Generated (system): $target_path"
+            else
+                process_template "$template_path" "$target_path"
+            fi
         else
-            mkdir -p "$(dirname "$target_path")"
-            cp "$template_path" "$target_path"
+            if [ "$needs_sudo" = true ]; then
+                sudo mkdir -p "$(dirname "$target_path")"
+                sudo cp "$template_path" "$target_path"
+                sudo chmod 644 "$target_path"
+            else
+                mkdir -p "$(dirname "$target_path")"
+                cp "$template_path" "$target_path"
+            fi
             log_success "Copied: $target_path"
         fi
-        
+
         # Make scripts executable
         if [[ "$target" == *.sh ]]; then
             chmod +x "$target_path"
