@@ -598,9 +598,9 @@ EOF
     sudo systemctl enable pimarchy-governor.service 2>/dev/null || true
 
     # Apply immediately to all cores without waiting for reboot
-    for gov_path in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-        [ -f "$gov_path" ] && echo performance | sudo tee "$gov_path" > /dev/null || true
-    done
+    # Use a single sudo tee command with wildcard expansion to avoid multiple sudo calls
+    ls /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null 2>&1 && \
+        echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor > /dev/null || true
 
     log_success "CPU governor set to 'performance' (persists across reboots via systemd)"
 }
@@ -687,9 +687,9 @@ revert_governor() {
     fi
 
     # Apply immediately
-    for gov_path in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-        [ -f "$gov_path" ] && echo ondemand | sudo tee "$gov_path" > /dev/null 2>/dev/null || true
-    done
+    # Use a single sudo tee command with wildcard expansion to avoid multiple sudo calls
+    ls /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null 2>&1 && \
+        echo ondemand | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor > /dev/null 2>/dev/null || true
 }
 
 # configure_swaybg — installs and enables a systemd user service that sets the
