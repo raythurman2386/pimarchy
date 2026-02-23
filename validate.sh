@@ -97,6 +97,18 @@ else
     echo "  ✗ lib/functions.sh has syntax errors"
 fi
 
+if bash -n "$PIMARCHY_ROOT/netinstall.sh"; then
+    echo "  ✓ netinstall.sh syntax OK"
+else
+    echo "  ✗ netinstall.sh has syntax errors"
+fi
+
+if bash -n "$PIMARCHY_ROOT/bin/pimarchy"; then
+    echo "  ✓ bin/pimarchy syntax OK"
+else
+    echo "  ✗ bin/pimarchy has syntax errors"
+fi
+
 echo ""
 
 if [ ${#missing_vars[@]} -eq 0 ]; then

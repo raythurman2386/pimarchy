@@ -20,6 +20,7 @@ Pimarchy provisions a barebones Pi OS Lite installation into a fully configured,
 | File manager | Thunar |
 | Containers | Docker CE + Docker Compose v2 |
 | AI coding agent | OpenCode |
+| Firewall | ufw (Default Deny Incoming) |
 | System monitor | btop (Ravenwood theme) |
 
 All components are themed with the **Ravenwood** palette — a refined dark forest aesthetic based on Everforest.
@@ -175,6 +176,17 @@ Greetd will launch at startup. Log in with your username and password — Hyprla
 | Scroll on volume | Adjust volume |
 | Click CPU / Memory | Open system monitor (btop) |
 | Click power icon | Power menu (shutdown / reboot / logout) |
+
+---
+
+## Firewall
+
+Pimarchy automatically configures `ufw` (Uncomplicated Firewall) to secure your system:
+- **Default Incoming:** Deny
+- **Default Outgoing:** Allow
+- **SSH (Port 22):** Limited (rate-limited to prevent brute-force attacks)
+
+To manage firewall rules, use standard ufw commands: `sudo ufw status`.
 
 ---
 

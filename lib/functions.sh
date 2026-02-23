@@ -311,6 +311,7 @@ EOF
         chromium
         code
         btop
+        ufw
     )
 
     sudo apt install -y "${base_packages[@]}"
@@ -393,6 +394,7 @@ remove_packages() {
         alsa-utils
         chromium
         btop
+        ufw
         docker-ce
         docker-ce-cli
         containerd.io
@@ -468,6 +470,49 @@ detect_keyboard_layout() {
     
     echo "us"
     return 0
+}
+
+configure_firewall() {
+    log_info "Configuring firewall (ufw)..."
+
+    # Check if ufw is installed
+    if ! command -v ufw &> /dev/null; then
+        log_warn "ufw is not installed, skipping firewall configuration."
+        return 0
+    fi
+
+    # Reset to default state first to ensure clean slate
+    # We pipe 'y' to force reset without prompt
+    echo "y" | sudo ufw reset > /dev/null
+
+    # Set default policies
+    sudo ufw default deny incoming
+    sudo ufw default allow outgoing
+
+    # Allow SSH (limit to prevent brute force)
+    sudo ufw limit ssh
+
+    # Enable firewall
+    # We pipe 'y' to force enable without prompt
+    echo "y" | sudo ufw enable > /dev/null
+
+    log_success "Firewall configured and enabled (Default: Deny Incoming, Allow Outgoing, Limit SSH)"
+}
+
+revert_firewall() {
+    log_info "Reverting firewall configuration..."
+
+    if command -v ufw &> /dev/null; then
+        # Disable firewall
+        sudo ufw disable > /dev/null
+
+        # Reset rules
+        echo "y" | sudo ufw reset > /dev/null
+
+        log_success "Firewall disabled and rules reset"
+    else
+        log_info "ufw not found, skipping firewall revert."
+    fi
 }
 
 stop_services() {

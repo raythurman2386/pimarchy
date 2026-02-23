@@ -105,8 +105,10 @@ fi
 echo "[2/7] Installing packages..."
 if [ "$DRY_RUN" = false ]; then
     install_packages
+    configure_firewall
 else
     log_info "Would install: waybar, rofi, mako, hyprland, btop, and other packages"
+    log_info "Would configure firewall (ufw): deny incoming, allow outgoing, limit ssh"
 fi
 
 # -------------------------------------------------------------
