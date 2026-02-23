@@ -247,42 +247,49 @@ EOF
 
 install_packages() {
     log_info "Updating system and installing packages..."
-    
-    sudo apt update
-    sudo apt upgrade -y
 
-    # Set up Debian sid (unstable) repository for Hyprland
+    # --- Pre-flight: clean up any stale/conflicting apt sources ---
+
+    # VS Code: Microsoft's own installer writes vscode.sources (DEB822 format) using
+    # /usr/share/keyrings/microsoft.gpg. We write vscode.list using
+    # /etc/apt/keyrings/packages.microsoft.gpg. Having both registered for the same
+    # repo URL causes apt to hard-fail with a "Conflicting values for Signed-By" error.
+    # Solution: always remove all known VS Code source files and legacy key paths, then
+    # write a single canonical entry below. This is safe — the key is re-fetched fresh.
+    sudo rm -f \
+        /etc/apt/sources.list.d/vscode.list \
+        /etc/apt/sources.list.d/vscode.sources \
+        /usr/share/keyrings/microsoft.gpg
+
+    # Remove conflicting bookworm list if it was added by a previous Pimarchy version
+    sudo rm -f /etc/apt/sources.list.d/bookworm.list
+
+    # Set up Debian sid (unstable) repository for Hyprland (idempotent)
     if [ ! -s /etc/apt/sources.list.d/sid.list ]; then
         log_info "Adding Debian Sid (unstable) repository for Hyprland..."
-        echo "deb http://deb.debian.org/debian/ sid main contrib non-free" | sudo tee /etc/apt/sources.list.d/sid.list
-        
+        echo "deb http://deb.debian.org/debian/ sid main contrib non-free" | sudo tee /etc/apt/sources.list.d/sid.list > /dev/null
         log_info "Configuring APT pinning to prefer current release but allow sid..."
-        cat <<EOF | sudo tee /etc/apt/preferences.d/sid-pin
+        cat <<EOF | sudo tee /etc/apt/preferences.d/sid-pin > /dev/null
 Package: *
 Pin: release n=sid
 Pin-Priority: 100
 EOF
-        sudo apt update
     fi
 
-    # Remove conflicting bookworm list if it was added previously
-    if [ -f /etc/apt/sources.list.d/bookworm.list ]; then
-        sudo rm -f /etc/apt/sources.list.d/bookworm.list
-        sudo apt update
-    fi
-
-    # Add official Docker CE repository (provides docker-ce + docker-compose-plugin)
+    # Add official Docker CE repository (idempotent — skips if docker.list already present)
     configure_docker_repo
 
-    # Add official VS Code repository
-    if [ ! -s /etc/apt/sources.list.d/vscode.list ]; then
-        log_info "Adding Microsoft VS Code repository..."
-        curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
-        sudo install -D -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
-        echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
-        rm -f /tmp/packages.microsoft.gpg
-        sudo apt update
-    fi
+    # Add official VS Code repository (always rewritten above, so always install fresh)
+    log_info "Adding Microsoft VS Code repository..."
+    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
+    sudo install -D -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+    rm -f /tmp/packages.microsoft.gpg
+    echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" \
+        | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+
+    # Single apt update after all sources are in their final state
+    sudo apt update
+    sudo apt upgrade -y
 
     # Base packages from the stable/testing repository
     local base_packages=(
@@ -311,6 +318,7 @@ EOF
         chromium
         code
         btop
+        ufw
     )
 
     sudo apt install -y "${base_packages[@]}"
@@ -393,6 +401,7 @@ remove_packages() {
         alsa-utils
         chromium
         btop
+        ufw
         docker-ce
         docker-ce-cli
         containerd.io
@@ -403,10 +412,15 @@ remove_packages() {
     sudo apt remove --purge -y "${packages[@]}" 2>/dev/null || true
     sudo apt autoremove -y
 
-    # Remove Docker CE repository and GPG key
-    sudo rm -f /etc/apt/sources.list.d/docker.list
-    sudo rm -f /etc/apt/keyrings/docker.gpg
-    sudo rm -f /etc/apt/preferences.d/docker-pin
+    # Remove apt repositories and GPG keys added by Pimarchy
+    sudo rm -f \
+        /etc/apt/sources.list.d/docker.list \
+        /etc/apt/sources.list.d/vscode.list \
+        /etc/apt/sources.list.d/vscode.sources \
+        /etc/apt/keyrings/docker.gpg \
+        /etc/apt/keyrings/packages.microsoft.gpg \
+        /usr/share/keyrings/microsoft.gpg \
+        /etc/apt/preferences.d/docker-pin
     sudo apt update 2>/dev/null || true
 
     log_success "Packages removed"
@@ -468,6 +482,49 @@ detect_keyboard_layout() {
     
     echo "us"
     return 0
+}
+
+configure_firewall() {
+    log_info "Configuring firewall (ufw)..."
+
+    # Check if ufw is installed
+    if ! command -v ufw &> /dev/null; then
+        log_warn "ufw is not installed, skipping firewall configuration."
+        return 0
+    fi
+
+    # Reset to default state first to ensure clean slate
+    # We pipe 'y' to force reset without prompt
+    echo "y" | sudo ufw reset > /dev/null
+
+    # Set default policies
+    sudo ufw default deny incoming
+    sudo ufw default allow outgoing
+
+    # Allow SSH (limit to prevent brute force)
+    sudo ufw limit ssh
+
+    # Enable firewall
+    # We pipe 'y' to force enable without prompt
+    echo "y" | sudo ufw enable > /dev/null
+
+    log_success "Firewall configured and enabled (Default: Deny Incoming, Allow Outgoing, Limit SSH)"
+}
+
+revert_firewall() {
+    log_info "Reverting firewall configuration..."
+
+    if command -v ufw &> /dev/null; then
+        # Disable firewall
+        sudo ufw disable > /dev/null
+
+        # Reset rules
+        echo "y" | sudo ufw reset > /dev/null
+
+        log_success "Firewall disabled and rules reset"
+    else
+        log_info "ufw not found, skipping firewall revert."
+    fi
 }
 
 stop_services() {

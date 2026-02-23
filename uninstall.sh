@@ -30,6 +30,7 @@ fi
 echo "[1/5] Stopping Pimarchy services..."
 stop_services
 revert_swaybg
+revert_firewall
 
 # -------------------------------------------------------------
 # 2. Remove Pimarchy config files
