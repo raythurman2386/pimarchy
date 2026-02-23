@@ -85,7 +85,7 @@ if [ "$DRY_RUN" = true ]; then
 else
     echo "=== Pimarchy Installer ==="
     echo ""
-    read -p "This will install Pimarchy and modify your desktop configuration. Continue? [y/N] " confirm || true
+    read -p "This will install Pimarchy and modify your desktop configuration. Continue? [y/N] " confirm </dev/tty || true
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
         echo "Cancelled."
         exit 0
@@ -314,7 +314,7 @@ if [ "$DRY_RUN" = false ]; then
         echo "                      Requires an active cooler. Reboot required."
         echo "  N) Skip           — Leave CPU settings unchanged."
         echo ""
-        read -p "Configure CPU performance? [g/o/N] " perf_choice || true
+        read -p "Configure CPU performance? [g/o/N] " perf_choice </dev/tty || true
         case "$perf_choice" in
             g|G) PERF_MODE="governor" ;;
             o|O) PERF_MODE="overclock" ;;
