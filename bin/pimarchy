@@ -27,12 +27,15 @@ show_help() {
     echo "Usage: pimarchy <command> [options]"
     echo ""
     echo "Commands:"
-    echo "  install    Run the installation script to apply configurations."
-    echo "             Accepts installer options like --dry-run, --performance, --overclock."
-    echo "  uninstall  Run the uninstallation script to restore backups."
-    echo "  update     Fetch the latest version of Pimarchy from GitHub and re-apply configs."
-    echo "  validate   Run the configuration validation script."
-    echo "  help       Show this help message."
+    echo "  install      Run the installation script to apply configurations."
+    echo "               Accepts installer options like --dry-run, --performance, --overclock."
+    echo "  uninstall    Run the uninstallation script to restore backups."
+    echo "  update       Fetch the latest version of Pimarchy from GitHub and re-apply configs."
+    echo "  validate     Run the configuration validation script."
+    echo "  reload       Hot-reload the Hyprland compositor and Waybar configurations."
+    echo "  wallpaper    Set a new background wallpaper and restart the daemon."
+    echo "                 Usage: pimarchy wallpaper <path/to/image>"
+    echo "  help         Show this help message."
     echo ""
 }
 
@@ -64,6 +67,50 @@ case "$COMMAND" in
         echo -e "${BLUE}[*] Validating Pimarchy Configuration...${NC}"
         cd "$PIMARCHY_DIR"
         exec bash validate.sh "$@"
+        ;;
+    reload)
+        echo -e "${BLUE}[*] Reloading Pimarchy Configurations...${NC}"
+        
+        # Reload Hyprland
+        if command -v hyprctl &> /dev/null; then
+            if hyprctl reload 2>/dev/null; then
+                echo -e "${GREEN}[OK] Hyprland configuration reloaded.${NC}"
+            else
+                echo -e "${RED}[ERROR] hyprctl reload failed — is Hyprland running?${NC}"
+            fi
+        else
+            echo -e "${RED}[ERROR] hyprctl not found.${NC}"
+        fi
+
+        # Restart Waybar
+        if systemctl --user restart waybar 2>/dev/null; then
+            echo -e "${GREEN}[OK] Waybar restarted.${NC}"
+        else
+            echo -e "${YELLOW}[WARN] systemctl restart failed, falling back to pkill...${NC}"
+            pkill waybar || true
+            sleep 0.5
+            waybar > /dev/null 2>&1 & disown
+            echo -e "${GREEN}[OK] Waybar restarted (fallback).${NC}"
+        fi
+        ;;
+    wallpaper|bg)
+        if [ -z "$1" ] || [ ! -f "$1" ]; then
+            echo -e "${RED}[ERROR] Usage: pimarchy wallpaper <path-to-image>${NC}"
+            exit 1
+        fi
+        echo -e "${BLUE}[*] Setting new wallpaper...${NC}"
+        mkdir -p ~/.config/hypr
+        cp "$1" ~/.config/hypr/background.jpg
+        
+        if systemctl --user restart swaybg 2>/dev/null; then
+            echo -e "${GREEN}[OK] Background updated and swaybg restarted.${NC}"
+        else
+            echo -e "${YELLOW}[WARN] systemctl restart failed, falling back to pkill...${NC}"
+            pkill swaybg || true
+            sleep 0.3
+            swaybg -i ~/.config/hypr/background.jpg -m fill > /dev/null 2>&1 & disown
+            echo -e "${GREEN}[OK] Background updated (fallback).${NC}"
+        fi
         ;;
     update)
         echo -e "${BLUE}[*] Updating Pimarchy...${NC}"
