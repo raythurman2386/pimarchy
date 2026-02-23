@@ -315,11 +315,14 @@ else
 fi
 
 # -------------------------------------------------------------
-# 7. Finalize
+# 7. Finalize & CLI Setup
 # -------------------------------------------------------------
 echo "[7/7] Finalizing installation..."
 
 if [ "$DRY_RUN" = false ]; then
+    echo "Linking 'pimarchy' CLI tool to /usr/local/bin..."
+    sudo ln -sf "$PIMARCHY_ROOT/bin/pimarchy" /usr/local/bin/pimarchy
+    
     echo ""
     echo "=== Pimarchy installation complete! ==="
     echo ""

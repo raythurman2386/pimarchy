@@ -46,10 +46,8 @@ Inspired by [Omarchy](https://github.com/basecamp/omarchy) by Basecamp, it focus
 # 1. Update your Pi OS Lite
 sudo apt update && sudo apt full-upgrade -y && sudo reboot
 
-# 2. Clone and install
-git clone https://github.com/raythurman2386/pimarchy.git
-cd pimarchy
-bash install.sh
+# 2. Install Pimarchy
+curl -sL https://raw.githubusercontent.com/raythurman2386/pimarchy/main/netinstall.sh | bash
 ```
 
 !!! success "Ready to go!"

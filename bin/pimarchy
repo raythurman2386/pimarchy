@@ -1,0 +1,111 @@
+#!/bin/bash
+#
+# Pimarchy CLI Wrapper
+# A convenient global command-line interface to manage the Pimarchy installation.
+#
+
+set -e
+
+# Resolve the absolute path of this script (handling symlinks correctly)
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+PIMARCHY_DIR="$( cd -P "$( dirname "$SOURCE" )/.." && pwd )"
+
+# Output Formatting
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+show_help() {
+    echo -e "${BLUE}Pimarchy Manager CLI${NC}"
+    echo "Usage: pimarchy <command> [options]"
+    echo ""
+    echo "Commands:"
+    echo "  install    Run the installation script to apply configurations."
+    echo "             Accepts installer options like --dry-run, --performance, --overclock."
+    echo "  uninstall  Run the uninstallation script to restore backups."
+    echo "  update     Fetch the latest version of Pimarchy from GitHub and re-apply configs."
+    echo "  validate   Run the configuration validation script."
+    echo "  help       Show this help message."
+    echo ""
+}
+
+# Ensure we are actually in a git repository
+ensure_git_repo() {
+    if [ ! -d "$PIMARCHY_DIR/.git" ]; then
+        echo -e "${RED}[ERROR] Pimarchy directory ($PIMARCHY_DIR) is not a git repository.${NC}"
+        echo -e "Update command requires a cloned repository. Please reinstall via the web installer."
+        exit 1
+    fi
+}
+
+# Parse command
+COMMAND=$1
+shift || true
+
+case "$COMMAND" in
+    install)
+        echo -e "${BLUE}[*] Running Pimarchy Installer...${NC}"
+        cd "$PIMARCHY_DIR"
+        exec bash install.sh "$@"
+        ;;
+    uninstall)
+        echo -e "${BLUE}[*] Running Pimarchy Uninstaller...${NC}"
+        cd "$PIMARCHY_DIR"
+        exec bash uninstall.sh "$@"
+        ;;
+    validate)
+        echo -e "${BLUE}[*] Validating Pimarchy Configuration...${NC}"
+        cd "$PIMARCHY_DIR"
+        exec bash validate.sh "$@"
+        ;;
+    update)
+        echo -e "${BLUE}[*] Updating Pimarchy...${NC}"
+        ensure_git_repo
+        
+        cd "$PIMARCHY_DIR"
+        
+        # Check if working directory is clean
+        if ! git diff-index --quiet HEAD --; then
+            echo -e "${YELLOW}[!] You have uncommitted changes in $PIMARCHY_DIR.${NC}"
+            echo -e "Please stash or commit your changes before updating."
+            echo -e "Run: cd $PIMARCHY_DIR && git stash"
+            exit 1
+        fi
+        
+        echo -e "${YELLOW}[*] Fetching latest changes from GitHub...${NC}"
+        git fetch origin
+        
+        LOCAL=$(git rev-parse @)
+        REMOTE=$(git rev-parse @{u})
+        BASE=$(git merge-base @ @{u})
+        
+        if [ "$LOCAL" = "$REMOTE" ]; then
+            echo -e "${GREEN}[OK] Pimarchy is already up-to-date!${NC}"
+        elif [ "$LOCAL" = "$BASE" ]; then
+            echo -e "${YELLOW}[*] Pulling latest updates...${NC}"
+            git pull --ff-only
+            echo -e "${GREEN}[OK] Update downloaded. Re-applying configurations...${NC}"
+            # Re-run the installer silently (or with default options) to process new templates
+            bash install.sh
+        else
+            echo -e "${RED}[ERROR] Your local branch has diverged from the remote.${NC}"
+            echo -e "Please resolve this manually in $PIMARCHY_DIR."
+            exit 1
+        fi
+        ;;
+    help|-h|--help|"")
+        show_help
+        ;;
+    *)
+        echo -e "${RED}[ERROR] Unknown command: $COMMAND${NC}"
+        show_help
+        exit 1
+        ;;
+esac
