@@ -307,6 +307,7 @@ EOF
         starship
         thunar
         gsettings-desktop-schemas
+        dconf-cli
         lxpolkit
         bluez
         bluez-tools
@@ -395,6 +396,7 @@ remove_packages() {
         starship
         thunar
         gsettings-desktop-schemas
+        dconf-cli
         lxpolkit
         bluez
         bluez-tools
@@ -795,29 +797,57 @@ remove_opencode() {
 # ============================================================================
 
 apply_gsettings() {
-    log_info "Applying gsettings..."
-    
-    gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" 2>/dev/null || true
-    gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME" 2>/dev/null || true
-    gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME" 2>/dev/null || true
-    gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE" 2>/dev/null || true
-    gsettings set org.gnome.desktop.interface font-name "$FONT_FAMILY $FONT_SIZE" 2>/dev/null || true
-    gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME" 2>/dev/null || true
-    
-    log_success "GSettings applied"
+    log_info "Applying desktop settings via dconf..."
+
+    # Pi OS Lite does not ship the gsettings CLI (libglib2.0-bin), but dconf-cli
+    # is installed.  The xdg-desktop-portal-gtk backend reads dconf directly and
+    # exposes the values through org.freedesktop.portal.Settings — which is how
+    # Chromium (and other Wayland apps) discover the preferred colour scheme.
+    if command -v dconf &>/dev/null; then
+        dconf write /org/gnome/desktop/interface/gtk-theme "'$GTK_THEME'" 2>/dev/null || true
+        dconf write /org/gnome/desktop/interface/icon-theme "'$ICON_THEME'" 2>/dev/null || true
+        dconf write /org/gnome/desktop/interface/cursor-theme "'$CURSOR_THEME'" 2>/dev/null || true
+        dconf write /org/gnome/desktop/interface/cursor-size "$CURSOR_SIZE" 2>/dev/null || true
+        dconf write /org/gnome/desktop/interface/font-name "'$FONT_FAMILY $FONT_SIZE'" 2>/dev/null || true
+        dconf write /org/gnome/desktop/interface/color-scheme "'$COLOR_SCHEME'" 2>/dev/null || true
+    elif command -v gsettings &>/dev/null; then
+        gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface font-name "$FONT_FAMILY $FONT_SIZE" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME" 2>/dev/null || true
+    else
+        log_warn "Neither dconf nor gsettings found — skipping desktop settings"
+        return
+    fi
+
+    log_success "Desktop settings applied (color-scheme=$COLOR_SCHEME)"
 }
 
 reset_gsettings() {
-    log_info "Resetting gsettings to defaults..."
-    
-    gsettings reset org.gnome.desktop.interface gtk-theme 2>/dev/null || true
-    gsettings reset org.gnome.desktop.interface icon-theme 2>/dev/null || true
-    gsettings reset org.gnome.desktop.interface cursor-theme 2>/dev/null || true
-    gsettings reset org.gnome.desktop.interface cursor-size 2>/dev/null || true
-    gsettings reset org.gnome.desktop.interface font-name 2>/dev/null || true
-    gsettings reset org.gnome.desktop.interface color-scheme 2>/dev/null || true
-    
-    log_success "GSettings reset"
+    log_info "Resetting desktop settings to defaults..."
+
+    if command -v dconf &>/dev/null; then
+        dconf reset /org/gnome/desktop/interface/gtk-theme 2>/dev/null || true
+        dconf reset /org/gnome/desktop/interface/icon-theme 2>/dev/null || true
+        dconf reset /org/gnome/desktop/interface/cursor-theme 2>/dev/null || true
+        dconf reset /org/gnome/desktop/interface/cursor-size 2>/dev/null || true
+        dconf reset /org/gnome/desktop/interface/font-name 2>/dev/null || true
+        dconf reset /org/gnome/desktop/interface/color-scheme 2>/dev/null || true
+    elif command -v gsettings &>/dev/null; then
+        gsettings reset org.gnome.desktop.interface gtk-theme 2>/dev/null || true
+        gsettings reset org.gnome.desktop.interface icon-theme 2>/dev/null || true
+        gsettings reset org.gnome.desktop.interface cursor-theme 2>/dev/null || true
+        gsettings reset org.gnome.desktop.interface cursor-size 2>/dev/null || true
+        gsettings reset org.gnome.desktop.interface font-name 2>/dev/null || true
+        gsettings reset org.gnome.desktop.interface color-scheme 2>/dev/null || true
+    else
+        log_warn "Neither dconf nor gsettings found — skipping reset"
+        return
+    fi
+
+    log_success "Desktop settings reset"
 }
 
 # ============================================================================
@@ -848,6 +878,10 @@ remove_pimarchy_files() {
     
     # Chromium drop-in flags (system path — requires sudo)
     sudo rm -f /etc/chromium.d/pimarchy
+
+    # Remove stale chromium-flags.conf from previous Pimarchy versions
+    # (Debian Chromium ignores this file; flags must live in /etc/chromium.d/)
+    rm -f "$HOME/.config/chromium-flags.conf"
 
     # btop theme and config
     rm -f "$HOME/.config/btop/btop.conf"

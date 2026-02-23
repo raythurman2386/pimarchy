@@ -208,6 +208,10 @@ if [ "$DRY_RUN" = false ]; then
     # Initialize workspace state file
     echo "1" > /tmp/pimarchy-workspace
     
+    # Remove stale chromium-flags.conf from previous Pimarchy versions.
+    # Debian Chromium ignores this file; flags now live in /etc/chromium.d/pimarchy.
+    rm -f "$HOME/.config/chromium-flags.conf"
+
     # Apply gsettings
     apply_gsettings
     
