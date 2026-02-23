@@ -27,35 +27,25 @@ sudo reboot
 !!! danger "Full Upgrade is Critical"
     A standard `sudo apt upgrade` is not sufficient. A `full-upgrade` is required because Pimarchy adds the **Debian Sid** repository for Hyprland, which often requires resolving new dependency chains.
 
-## Step 3: Clone and Install
+## Step 3: Install Pimarchy
 
-Once your Pi has rebooted, install Git and clone the repository:
+Once your Pi has rebooted, you can install Pimarchy using our automated web installer. This single command will configure Git (prompting for Name/Email if not set), download Pimarchy, and launch the installer.
 
 ```bash
-sudo apt install -y git
-git clone https://github.com/raythurman2386/pimarchy.git
-cd pimarchy
+curl -sL https://raw.githubusercontent.com/raythurman2386/pimarchy/main/netinstall.sh | bash
 ```
 
 ### Dry Run (Recommended)
 
-Before applying any changes, you can run a dry run to see exactly what will be installed:
+Before applying any changes, you can run a dry run to see exactly what will be installed by passing the `--dry-run` flag to the web installer:
 
 ```bash
-bash install.sh --dry-run
-```
-
-### Run the Installer
-
-Start the transformation:
-
-```bash
-bash install.sh
+curl -sL https://raw.githubusercontent.com/raythurman2386/pimarchy/main/netinstall.sh | bash -s -- --dry-run
 ```
 
 ## Step 4: Installation Options
 
-During the installation, you will be prompted with several options:
+During the installation, you will be prompted with several options. Alternatively, you can pass these flags directly to the web installer:
 
 ### 1. Performance and Overclocking
 
@@ -69,11 +59,11 @@ The installer will ask how you want to handle CPU performance:
 
 ### 2. Quiet Mode (Flags)
 
-If you prefer to skip the interactive prompt, you can pass flags directly:
+If you prefer to skip the interactive prompt, you can pass flags directly to the installer:
 
 ```bash
-bash install.sh --performance   # Governor only
-bash install.sh --overclock     # Governor + 2.6 GHz Overclock
+curl -sL https://raw.githubusercontent.com/raythurman2386/pimarchy/main/netinstall.sh | bash -s -- --performance   # Governor only
+curl -sL https://raw.githubusercontent.com/raythurman2386/pimarchy/main/netinstall.sh | bash -s -- --overclock     # Governor + 2.6 GHz Overclock
 ```
 
 ## Step 5: Final Reboot
@@ -85,6 +75,39 @@ sudo reboot
 ```
 
 After rebooting, you will be greeted by the **Tuigreet** login manager. Log in with your username and password, and **Hyprland** will start automatically.
+
+---
+
+## Managing Pimarchy (CLI Tool)
+
+Once installed, Pimarchy includes a global CLI tool to easily manage updates and configurations.
+
+```bash
+# Fetch the latest version from GitHub and apply new configurations
+pimarchy update
+
+# Validate your current template configurations
+pimarchy validate
+
+# Re-run the installer (e.g. to apply a new theme.conf)
+pimarchy install
+
+# Uninstall Pimarchy and restore original config backups
+pimarchy uninstall
+```
+
+---
+
+## Advanced: Manual Setup
+
+If you prefer to clone and run the installer manually:
+
+```bash
+sudo apt install -y git
+git clone https://github.com/raythurman2386/pimarchy.git ~/.local/share/pimarchy
+cd ~/.local/share/pimarchy
+bash install.sh
+```
 
 ---
 

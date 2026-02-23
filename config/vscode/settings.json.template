@@ -1,0 +1,16 @@
+{
+  "workbench.colorTheme": "{{THEME_NAME}} Dark",
+  "window.titleBarStyle": "custom",
+  "editor.fontFamily": "'{{FONT_FAMILY}}', monospace",
+  "editor.fontSize": 14,
+  "terminal.integrated.fontFamily": "'{{FONT_FAMILY}}'",
+  "terminal.integrated.fontSize": 14,
+  "editor.renderWhitespace": "selection",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "workbench.iconTheme": "vs-minimal",
+  "editor.minimap.enabled": false,
+  "breadcrumbs.enabled": true,
+  "window.menuBarVisibility": "toggle",
+  "telemetry.telemetryLevel": "off"
+}

@@ -58,32 +58,58 @@ sudo reboot
 
 > `full-upgrade` is required (not just `upgrade`) to allow Debian to resolve dependency changes correctly. This is important because Pimarchy adds the Debian Sid repository for Hyprland.
 
-### 3. Install Git
+### 3. Install Pimarchy
 
-Git is not installed on Pi OS Lite by default:
+Run the web installer. This single command will configure Git (prompting for Name/Email if not set), download Pimarchy, and launch the installer.
 
 ```bash
+curl -sL https://raw.githubusercontent.com/raythurman2386/pimarchy/main/netinstall.sh | bash
+```
+
+**Installer Options**
+The web installer accepts arguments by passing them at the end of the command:
+- `... | bash -s -- --dry-run`: Preview changes without installing.
+- `... | bash -s -- --performance`: Set CPU to 'performance' governor (safe).
+- `... | bash -s -- --overclock`: Governor + 2.6 GHz overclock (requires cooling).
+
+---
+
+## Managing Pimarchy (CLI Tool)
+
+Once installed, Pimarchy includes a global CLI tool to easily manage updates and configurations.
+
+```bash
+# Fetch the latest version from GitHub and apply new configurations
+pimarchy update
+
+# Validate your current template configurations
+pimarchy validate
+
+# Re-run the installer (e.g. to apply a new theme.conf)
+pimarchy install
+
+# Uninstall Pimarchy and restore original config backups
+pimarchy uninstall
+```
+
+---
+
+## Advanced: Manual Setup
+
+If you prefer to clone and run the installer manually:
+
+```bash
+# 1. Install git
 sudo apt install -y git
-```
 
-### 4. Clone Pimarchy
+# 2. Clone the repository
+git clone https://github.com/raythurman2386/pimarchy.git ~/.local/share/pimarchy
+cd ~/.local/share/pimarchy
 
-```bash
-git clone https://github.com/raythurman2386/pimarchy.git
-cd pimarchy
-```
-
-### 5. (Optional) Preview the Install
-
-Run a dry run to see exactly what will be installed and deployed without making any changes:
-
-```bash
+# 3. Run a dry run to see what will be installed
 bash install.sh --dry-run
-```
 
-### 6. Run the Installer
-
-```bash
+# 4. Run the installer
 bash install.sh
 ```
 

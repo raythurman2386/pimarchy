@@ -274,6 +274,16 @@ EOF
     # Add official Docker CE repository (provides docker-ce + docker-compose-plugin)
     configure_docker_repo
 
+    # Add official VS Code repository
+    if [ ! -s /etc/apt/sources.list.d/vscode.list ]; then
+        log_info "Adding Microsoft VS Code repository..."
+        curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
+        sudo install -D -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+        echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+        rm -f /tmp/packages.microsoft.gpg
+        sudo apt update
+    fi
+
     # Base packages from the stable/testing repository
     local base_packages=(
         fonts-font-awesome
@@ -299,6 +309,7 @@ EOF
         curl
         fontconfig
         chromium
+        code
         btop
     )
 
@@ -630,33 +641,37 @@ revert_governor() {
 # is fully ready, preventing the silent connection failure that causes a black
 # desktop when Hyprland is launched via UWSM.
 configure_swaybg() {
-    log_info "Installing swaybg wallpaper service..."
-
-    local service_dir="$HOME/.config/systemd/user"
-    local service_file="$service_dir/swaybg.service"
-    local wallpaper="$HOME/.config/hypr/background.jpg"
-
-    mkdir -p "$service_dir"
-
-    cat > "$service_file" <<EOF
+    log_info "Configuring swaybg user service..."
+    local systemd_dir="$HOME/.config/systemd/user"
+    mkdir -p "$systemd_dir"
+    
+    cat << 'EOF' > "$systemd_dir/swaybg.service"
 [Unit]
-Description=Pimarchy desktop wallpaper (swaybg)
+Description=swaybg wallpaper daemon
+Documentation=man:swaybg(1)
 PartOf=graphical-session.target
 After=graphical-session.target
-Requisite=graphical-session.target
 
 [Service]
-ExecStart=/usr/bin/swaybg -i ${wallpaper} -m fill
+Type=simple
+# swaybg requires wayland; UWSM sets WAYLAND_DISPLAY
+ExecStart=/usr/bin/swaybg -i %h/.config/hypr/background.jpg -m fill
 Restart=on-failure
+RestartSec=1
 
 [Install]
 WantedBy=graphical-session.target
 EOF
 
     systemctl --user daemon-reload
-    systemctl --user enable swaybg.service 2>/dev/null || true
+    systemctl --user enable swaybg.service
+}
 
-    log_success "swaybg wallpaper service installed and enabled"
+configure_vscode_extensions() {
+    if command -v code &> /dev/null; then
+        log_info "Installing VS Code extensions..."
+        code --install-extension RaymondThurman.ravenwood --force >/dev/null 2>&1 || true
+    fi
 }
 
 # revert_swaybg — disables and removes the swaybg user service written by

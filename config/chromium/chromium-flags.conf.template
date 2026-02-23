@@ -1,0 +1,16 @@
+# Chromium Flags
+# Pimarchy automated config
+
+# Enable native Wayland support (sharp fonts, proper scaling)
+--enable-features=UseOzonePlatform
+--ozone-platform=wayland
+--enable-wayland-ime
+
+# Enable hardware acceleration
+--ignore-gpu-blocklist
+--enable-gpu-rasterization
+--enable-zero-copy
+
+# Dark mode
+--force-dark-mode
+--enable-features=WebUIDarkMode

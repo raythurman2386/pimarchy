@@ -187,11 +187,6 @@ if [ "$DRY_RUN" = false ]; then
     
     # Ensure Pictures directory exists for screenshots
     mkdir -p ~/Pictures
-    
-    # Chromium dark mode flags
-    mkdir -p "$HOME/.config"
-    echo '--force-dark-mode' > "$HOME/.config/chromium-flags.conf"
-    echo '--enable-features=WebUIDarkMode' >> "$HOME/.config/chromium-flags.conf"
 
     # Configure Shell (source pimarchy aliases and start starship)
     if ! grep -q "bashrc.pimarchy" "$HOME/.bashrc"; then
@@ -223,6 +218,9 @@ EOF
     # Install swaybg wallpaper as a systemd user service so it starts reliably
     # after graphical-session.target (exec-once fires too early under UWSM)
     configure_swaybg
+
+    # Install VS Code Extensions
+    configure_vscode_extensions
 
     # Install OpenCode AI coding agent
     install_opencode
@@ -315,11 +313,14 @@ else
 fi
 
 # -------------------------------------------------------------
-# 7. Finalize
+# 7. Finalize & CLI Setup
 # -------------------------------------------------------------
 echo "[7/7] Finalizing installation..."
 
 if [ "$DRY_RUN" = false ]; then
+    echo "Linking 'pimarchy' CLI tool to /usr/local/bin..."
+    sudo ln -sf "$PIMARCHY_ROOT/bin/pimarchy" /usr/local/bin/pimarchy
+    
     echo ""
     echo "=== Pimarchy installation complete! ==="
     echo ""
