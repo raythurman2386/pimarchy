@@ -6,7 +6,7 @@
 
 ## Overview
 
-**Pimarchy** is an automated desktop transformation tool designed for the **Raspberry Pi 5 and Pi 500**. It converts a barebones **Pi OS Lite (Debian Bookworm)** installation into a modern, aesthetic, and functional Wayland-based desktop environment.
+**Pimarchy** is an automated desktop transformation tool designed for the **Raspberry Pi 5 and Pi 500**. It converts a barebones **Pi OS Lite (Debian Trixie)** installation into a modern, aesthetic, and functional Wayland-based desktop environment.
 
 Inspired by [Omarchy](https://github.com/basecamp/omarchy) by Basecamp, it focuses on extreme efficiency, beautiful aesthetics, and a keyboard-driven workflow.
 

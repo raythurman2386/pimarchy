@@ -10,7 +10,7 @@ Be respectful and constructive in all interactions.
 ### Reporting Issues
 When reporting issues, please include:
 -   **Hardware:** Raspberry Pi 5 / Pi 500
--   **OS Version:** Pi OS Lite (Debian Bookworm)
+-   **OS Version:** Pi OS Lite (Debian Trixie)
 -   **Step:** Which part of the `install.sh` or `uninstall.sh` failed?
 -   **Error:** Copy and paste the exact error message.
 -   **Logs:** Provide any relevant logs from `/tmp/hypr/` or `journalctl`.

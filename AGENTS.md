@@ -150,7 +150,7 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 
 ## Platform Notes
 
-- Target: Raspberry Pi 5 / Pi 500 running Pi OS Lite (Debian Bookworm, arm64)
+- Target: Raspberry Pi 5 / Pi 500 running Pi OS Lite (Debian Trixie, arm64)
 - Window Manager: Hyprland (Wayland, launched via UWSM as a systemd session)
 - Status Bar: Waybar
 - App Launcher: Rofi

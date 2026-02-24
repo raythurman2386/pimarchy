@@ -24,8 +24,8 @@ To ensure a smooth experience with Pimarchy, ensure your hardware and software m
 
 Pimarchy is built specifically for:
 - **Operating System:** Raspberry Pi OS Lite (64-bit)
-- **Codename:** Debian Bookworm
-- **Kernel Version:** 6.1+ (Standard in Bookworm)
+- **Codename:** Debian Trixie
+- **Kernel Version:** 6.6+ (Standard in Trixie)
 
 !!! danger "Do Not Use Pi OS Desktop"
     Pimarchy is an **automated transformation tool** for **Pi OS Lite**. Running it on a system that already has a desktop environment (like GNOME or KDE) may lead to conflicting configurations and broken packages.

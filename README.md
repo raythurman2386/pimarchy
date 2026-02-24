@@ -1,6 +1,6 @@
 # Pimarchy
 
-A lightweight, aesthetic Omarchy-inspired desktop transformation for Raspberry Pi 5 / Pi 500 running **Pi OS Lite (Debian Bookworm)**.
+A lightweight, aesthetic Omarchy-inspired desktop transformation for Raspberry Pi 5 / Pi 500 running **Pi OS Lite (Debian Trixie)**.
 
 ![Screenshot](screenshot.png)
 
@@ -30,7 +30,7 @@ All components are themed with the **Ravenwood** palette — a refined dark fore
 ## Requirements
 
 - Raspberry Pi 5 or Pi 500
-- MicroSD card / USB drive flashed with **Pi OS Lite (64-bit, Debian Bookworm)**
+- MicroSD card / USB drive flashed with **Pi OS Lite (64-bit, Debian Trixie)**
 - Active internet connection
 - At least 8 GB of storage (16 GB+ recommended)
 

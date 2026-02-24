@@ -4,9 +4,9 @@ This file provides foundational context and instructions for AI agents working o
 
 ## Project Overview
 
-**Pimarchy** is an automated desktop transformation tool designed for the Raspberry Pi 5 and Pi 500. It converts a barebones **Pi OS Lite (Debian Bookworm)** installation into a modern, aesthetic, and functional Wayland-based desktop environment.
+**Pimarchy** is an automated desktop transformation tool designed for the Raspberry Pi 5 and Pi 500. It converts a barebones **Pi OS Lite (Debian Trixie)** installation into a modern, aesthetic, and functional Wayland-based desktop environment.
 
-> **OS target:** Pi OS Lite (Debian Bookworm / arm64). All package management uses `apt`. Do not introduce `pacman`, `yay`, or any Arch Linux tooling.
+> **OS target:** Pi OS Lite (Debian Trixie / arm64). All package management uses `apt`. Do not introduce `pacman`, `yay`, or any Arch Linux tooling.
 
 ### Core Architecture
 
