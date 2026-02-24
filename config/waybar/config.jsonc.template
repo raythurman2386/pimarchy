@@ -7,7 +7,7 @@
     "height": 32,
     "spacing": 2,
     "modules-left": ["custom/launcher", "hyprland/workspaces"],
-    "modules-center": ["clock"],
+    "modules-center": ["clock", "custom/update"],
     "modules-right": ["temperature", "memory", "network", "pulseaudio", "tray", "custom/power"],
 
     "custom/launcher": {
@@ -40,6 +40,16 @@
         "format": "{{ICON_CLOCK}} {:%I:%M %p}",
         "format-alt": "{{ICON_CALENDAR}} {:%A, %B %d}",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+
+    "custom/update": {
+        "format": "󰚰",
+        "exec": "pimarchy-update-available",
+        "on-click": "alacritty --class pimarchy-update -e bash -c 'pimarchy update; echo; read -n1 -p \"Press any key to close...\"'",
+        "tooltip-format": "{}",
+        "signal": 8,
+        "interval": 3600,
+        "return-type": "text"
     },
 
     "temperature": {

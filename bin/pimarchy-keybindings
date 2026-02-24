@@ -1,0 +1,175 @@
+#!/bin/bash
+#
+# pimarchy-keybindings
+#
+# Displays all active Hyprland keybindings in a fuzzy-searchable Rofi dmenu.
+# Uses hyprctl -j binds (Hyprland IPC) to get live binding data, so the list
+# is always current — including any user overrides.
+#
+# Requires: hyprctl, jq, rofi
+# Optional: --print / -p flag to print to stdout instead of opening Rofi
+#
+# Keybindings must be declared with 'bindd' in hyprland.conf for descriptions
+# to appear. Plain 'bind' entries show the raw command as the description.
+#
+
+set -e
+
+PRINT_MODE=false
+if [[ "${1:-}" == "--print" ]] || [[ "${1:-}" == "-p" ]]; then
+    PRINT_MODE=true
+fi
+
+# ── Dependency checks ────────────────────────────────────────────────────────
+
+if ! command -v hyprctl &>/dev/null; then
+    notify-send -u critical "Pimarchy Keybindings" "hyprctl not found — is Hyprland running?" 2>/dev/null || true
+    exit 1
+fi
+
+if ! command -v jq &>/dev/null; then
+    notify-send -u critical "Pimarchy Keybindings" "jq is required but not installed." 2>/dev/null || true
+    exit 1
+fi
+
+if ! command -v rofi &>/dev/null && [ "$PRINT_MODE" = false ]; then
+    exit 1
+fi
+
+# ── Modifier bitmask → human-readable name ───────────────────────────────────
+# Hyprland reports modifiers as a bitmask integer in the JSON output.
+# Values from Hyprland source (src/helpers/keys.hpp):
+#   1 = SHIFT, 4 = CTRL, 8 = ALT, 64 = SUPER, 65 = SUPER+SHIFT, etc.
+
+decode_mods() {
+    local mask=$1
+    local parts=()
+
+    (( mask & 64  )) && parts+=("SUPER")
+    (( mask & 1   )) && parts+=("SHIFT")
+    (( mask & 4   )) && parts+=("CTRL")
+    (( mask & 8   )) && parts+=("ALT")
+
+    if [ ${#parts[@]} -eq 0 ]; then
+        echo ""
+    else
+        local IFS=" + "
+        echo "${parts[*]}"
+    fi
+}
+
+# ── Format a single binding entry ────────────────────────────────────────────
+
+format_binding() {
+    local mod_str="$1"
+    local key="$2"
+    local desc="$3"
+
+    # Build the key combo string
+    local combo
+    if [ -n "$mod_str" ]; then
+        combo="$mod_str + $key"
+    else
+        combo="$key"
+    fi
+
+    # Pad combo to 30 chars for alignment
+    printf "%-30s  %s\n" "$combo" "$desc"
+}
+
+# ── Collect and format all bindings ──────────────────────────────────────────
+
+collect_bindings() {
+    local binds_json
+    binds_json=$(hyprctl -j binds 2>/dev/null) || {
+        echo "Error: Could not query Hyprland bindings."
+        exit 1
+    }
+
+    # Process each binding entry via jq + bash
+    while IFS=$'\t' read -r modmask key description dispatcher arg; do
+        # Normalise key to uppercase
+        key="${key^^}"
+
+        # Decode modifier bitmask
+        local mod_str
+        mod_str=$(decode_mods "$modmask")
+
+        # Build display description:
+        # If a bindd description was provided, use it.
+        # Otherwise derive a label from the dispatcher + arg.
+        local display_desc
+        if [ -n "$description" ] && [ "$description" != "null" ]; then
+            display_desc="$description"
+        else
+            # Fallback: use dispatcher:arg, strip leading path noise
+            local raw="$dispatcher"
+            if [ -n "$arg" ] && [ "$arg" != "null" ]; then
+                # Strip ~/.local/share paths, keep just the command name
+                local clean_arg
+                clean_arg=$(echo "$arg" | sed 's|.*bin/||; s|uwsm-app -- ||; s|uwsm app -- ||')
+                raw="$dispatcher: $clean_arg"
+            fi
+            display_desc="$raw"
+        fi
+
+        format_binding "$mod_str" "$key" "$display_desc"
+
+    done < <(echo "$binds_json" | jq -r '.[] | [
+        (.modmask // 0 | tostring),
+        (.key // "?"),
+        (.description // ""),
+        (.dispatcher // ""),
+        (.arg // "")
+    ] | @tsv')
+}
+
+# ── Sort output: put common apps first, then everything else ─────────────────
+
+sort_bindings() {
+    awk '
+    {
+        line = $0
+        lower = tolower(line)
+        # Priority scoring — lower number = higher in list
+        if      (lower ~ /terminal/)    score = 10
+        else if (lower ~ /browser|chromium/) score = 11
+        else if (lower ~ /file manager|thunar/) score = 12
+        else if (lower ~ /launcher|rofi/) score = 13
+        else if (lower ~ /monitor|btop/) score = 14
+        else if (lower ~ /keybind/)     score = 15
+        else if (lower ~ /screenshot/)  score = 20
+        else if (lower ~ /volume|audio|mute/) score = 25
+        else if (lower ~ /workspace/)   score = 30
+        else if (lower ~ /focus/)       score = 35
+        else if (lower ~ /window|kill|float|fullscreen/) score = 40
+        else if (lower ~ /move.*window|resize/) score = 45
+        else                             score = 50
+        print score "\t" line
+    }
+    ' | sort -n | cut -f2-
+}
+
+# ── Main ─────────────────────────────────────────────────────────────────────
+
+output=$(collect_bindings | sort_bindings)
+
+if [ "$PRINT_MODE" = true ]; then
+    echo "$output"
+    exit 0
+fi
+
+# Calculate height: 40% of the focused monitor height (same approach as Omarchy)
+monitor_height=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .height' 2>/dev/null || echo "1080")
+menu_height=$(( monitor_height * 40 / 100 ))
+
+# Pipe into Rofi dmenu using the existing Pimarchy theme
+echo "$output" | rofi \
+    -dmenu \
+    -p " Keybindings" \
+    -theme "theme" \
+    -width 900 \
+    -height "$menu_height" \
+    -no-custom \
+    -i \
+    2>/dev/null || true

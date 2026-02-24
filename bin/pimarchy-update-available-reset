@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# pimarchy-update-available-reset
+#
+# Sends SIGRTMIN+8 to Waybar so the custom/update module immediately
+# re-evaluates pimarchy-update-available. Called at the end of
+# `pimarchy update` to hide the update icon as soon as the update
+# completes — without waiting for the next polling interval.
+#
+
+pkill -RTMIN+8 waybar 2>/dev/null || true
+exit 0
