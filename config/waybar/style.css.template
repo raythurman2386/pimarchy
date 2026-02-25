@@ -29,6 +29,7 @@ window#waybar {
 #pulseaudio,
 #custom-launcher,
 #custom-power,
+#custom-update,
 #workspaces,
 #tray {
     padding: 0 8px;
@@ -118,6 +119,25 @@ window#waybar {
 
 #custom-power:hover {
     background-color: {{POWER_HOVER_BG_RGBA}};
+}
+
+/* Update available indicator (center bar, next to clock) */
+#custom-update {
+    font-size: 15px;
+    color: {{COLOR_PRIMARY}};
+    background-color: {{LAUNCHER_BG_RGBA}};
+    padding: 0 10px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+#custom-update:hover {
+    background-color: {{LAUNCHER_HOVER_BG_RGBA}};
+}
+
+@keyframes pulse {
+    0%   { opacity: 1.0; }
+    50%  { opacity: 0.55; }
+    100% { opacity: 1.0; }
 }
 
 #temperature:hover,

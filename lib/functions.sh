@@ -245,8 +245,89 @@ EOF
     log_success "Docker CE repository added"
 }
 
+# ============================================================================
+# Development Tools
+# ============================================================================
+
+# configure_nodejs — adds NodeSource repository and installs Node.js (v22 LTS).
+configure_nodejs() {
+    if command -v node &> /dev/null; then
+        log_info "Node.js already installed ($(node --version)) — skipping"
+        return 0
+    fi
+
+    log_info "Installing Node.js from NodeSource..."
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - >/dev/null
+    sudo apt install -y nodejs
+    log_success "Node.js installed ($(node --version))"
+}
+
+# install_go — downloads and installs Go from golang.org dynamically.
+install_go() {
+    if command -v go &> /dev/null; then
+        log_info "Go already installed ($(go version 2>/dev/null | awk '{print $3}')) — skipping"
+        return 0
+    fi
+
+    log_info "Installing Go..."
+    # Fetch the latest stable release dynamically using jq
+    local go_version
+    go_version=$(curl -sSL https://go.dev/dl/?mode=json 2>/dev/null | jq -r '.[0].version' 2>/dev/null)
+    
+    # Fallback if network or jq fails
+    if [ -z "$go_version" ] || [ "$go_version" = "null" ]; then
+        go_version="go1.24.0"
+    fi
+
+    local go_arch="arm64"
+    local go_pkg="${go_version}.linux-${go_arch}.tar.gz"
+
+    log_info "Downloading ${go_pkg}..."
+    wget -qO /tmp/go.tar.gz "https://golang.org/dl/${go_pkg}"
+    sudo rm -rf /usr/local/go
+    sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+    rm -f /tmp/go.tar.gz
+
+    if ! grep -q '/usr/local/go/bin' "$HOME/.bashrc"; then
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> "$HOME/.bashrc"
+    fi
+
+    export PATH=$PATH:/usr/local/go/bin
+    log_success "Go installed ($go_version)"
+}
+
+# install_python_dev — installs modern Python dev packages (venv and pipx).
+# Note: Debian 12+ (PEP 668) prevents global pip install --user.
+install_python_dev() {
+    log_info "Installing Python development tools..."
+
+    sudo apt install -y python3-pip python3-venv pipx
+    
+    # Ensure pipx path is setup for the current user
+    if command -v pipx &> /dev/null; then
+        pipx ensurepath >/dev/null 2>&1 || true
+    fi
+
+    log_success "Python development tools ready (use python3 -m venv or pipx)"
+}
+
+# install_libreoffice — installs base LibreOffice suite.
+install_libreoffice() {
+    if command -v libreoffice &> /dev/null; then
+        log_info "LibreOffice already installed — skipping"
+        return 0
+    fi
+
+    log_info "Installing LibreOffice..."
+    sudo apt install -y libreoffice-writer libreoffice-calc libreoffice-impress
+    log_success "LibreOffice installed"
+}
+
 install_packages() {
     log_info "Updating system and installing packages..."
+
+    # Set noninteractive frontend to prevent debconf prompts (e.g., libc6 restart)
+    export DEBIAN_FRONTEND=noninteractive
 
     # --- Pre-flight: clean up any stale/conflicting apt sources ---
 
@@ -320,9 +401,17 @@ EOF
         code
         btop
         ufw
+        gh
+        jq
     )
 
     sudo apt install -y "${base_packages[@]}"
+
+    # Development tools - Node.js, Go, Python
+    configure_nodejs
+    install_go
+    install_python_dev
+    install_libreoffice
 
     # Docker CE + Compose v2 from the official Docker repository
     local docker_packages=(
@@ -341,9 +430,15 @@ EOF
         log_info "Added $USER to docker group (re-login required to take effect)"
     fi
 
+    # ============================================================================
+    # Development Tools
+    # ============================================================================
+    # (Functions defined at top of file, called below after packages)
+
     # Wayland/Hyprland specific packages from sid
     local hypr_packages=(
         hyprland
+        hyprland-guiutils
         waybar
         mako-notifier
         swaybg
@@ -351,6 +446,7 @@ EOF
         slurp
         wl-clipboard
         xdg-desktop-portal-hyprland
+        uwsm
     )
 
     sudo apt install -t sid -y "${hypr_packages[@]}"
@@ -726,6 +822,64 @@ EOF
     systemctl --user enable swaybg.service
 }
 
+# configure_waybar — installs and enables a systemd user service that starts
+# waybar. We override the system service to remove Requisite= (which blocks
+# startup when graphical-session.target isn't active yet).
+configure_waybar() {
+    log_info "Configuring waybar user service..."
+    local systemd_dir="$HOME/.config/systemd/user"
+    mkdir -p "$systemd_dir"
+    
+    cat << 'EOF' > "$systemd_dir/waybar.service"
+[Unit]
+Description=Waybar status bar
+Documentation=man:waybar(1)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/waybar
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=graphical-session.target
+EOF
+
+    systemctl --user daemon-reload
+    systemctl --user enable waybar.service
+}
+
+# configure_mako — installs and enables a systemd user service that starts
+# mako notification daemon. Running as a user service ensures it starts after
+# graphical-session.target is ready.
+configure_mako() {
+    log_info "Configuring mako user service..."
+    local systemd_dir="$HOME/.config/systemd/user"
+    mkdir -p "$systemd_dir"
+    
+    cat << 'EOF' > "$systemd_dir/mako.service"
+[Unit]
+Description=mako notification daemon
+Documentation=man:mako(1)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/mako
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=graphical-session.target
+EOF
+
+    systemctl --user daemon-reload
+    systemctl --user enable mako.service
+}
+
 configure_vscode_extensions() {
     if command -v code &> /dev/null; then
         log_info "Installing VS Code extensions..."
@@ -743,6 +897,28 @@ revert_swaybg() {
     rm -f "$service_file"
     systemctl --user daemon-reload
     log_success "swaybg wallpaper service removed"
+}
+
+# revert_waybar — disables and removes the waybar user service.
+revert_waybar() {
+    local service_file="$HOME/.config/systemd/user/waybar.service"
+
+    systemctl --user disable waybar.service 2>/dev/null || true
+    systemctl --user stop waybar.service 2>/dev/null || true
+    rm -f "$service_file"
+    systemctl --user daemon-reload
+    log_success "waybar service removed"
+}
+
+# revert_mako — disables and removes the mako user service.
+revert_mako() {
+    local service_file="$HOME/.config/systemd/user/mako.service"
+
+    systemctl --user disable mako.service 2>/dev/null || true
+    systemctl --user stop mako.service 2>/dev/null || true
+    rm -f "$service_file"
+    systemctl --user daemon-reload
+    log_success "mako notification service removed"
 }
 
 # ============================================================================

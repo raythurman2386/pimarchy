@@ -12,6 +12,7 @@ Pimarchy is built for a keyboard-driven workflow. Master these keybinds to navig
 | **SUPER + E** | **File Manager** | Open **Thunar** file manager. |
 | **SUPER + M** | **System Monitor** | Open **btop** system monitor. |
 | **SUPER + SHIFT + B** | **Chromium** | Launch **Chromium** browser. |
+| **SUPER + K** | **Keybind Viewer** | View all active keybinds in **Rofi**. |
 | **SUPER + Q** | **Lock** | Lock the screen (swaylock). |
 
 ## Window Management

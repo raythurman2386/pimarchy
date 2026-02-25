@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# pimarchy-update-available
+#
+# Checks whether a newer commit exists on origin/main compared to the
+# currently checked-out HEAD. Called by the Waybar custom/update module
+# on a polling interval.
+#
+# Exit codes (Waybar interprets these):
+#   0 — update available  → Waybar shows the widget icon
+#   1 — already up-to-date → Waybar hides the widget entirely
+#
+# Any stdout output becomes the widget's tooltip text when exit code is 0.
+#
+
+# Resolve the Pimarchy repo root — this script lives in bin/ inside the repo
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PIMARCHY_PATH="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Require a git repo
+if [ ! -d "$PIMARCHY_PATH/.git" ]; then
+    exit 1
+fi
+
+# Silently fetch remote refs — network failure is non-fatal
+git -C "$PIMARCHY_PATH" fetch --quiet origin main 2>/dev/null || exit 1
+
+# Compare local HEAD with remote origin/main
+local_ref=$(git -C "$PIMARCHY_PATH" rev-parse HEAD 2>/dev/null)
+remote_ref=$(git -C "$PIMARCHY_PATH" rev-parse origin/main 2>/dev/null)
+
+if [ -z "$local_ref" ] || [ -z "$remote_ref" ]; then
+    exit 1
+fi
+
+if [ "$local_ref" != "$remote_ref" ]; then
+    # Count how many commits behind we are
+    behind=$(git -C "$PIMARCHY_PATH" rev-list --count HEAD..origin/main 2>/dev/null || echo "")
+    if [ -n "$behind" ] && [ "$behind" -gt 0 ]; then
+        echo "Pimarchy update available ($behind new commit$([ "$behind" -gt 1 ] && echo 's' || true))"
+        exit 0
+    fi
+fi
+
+exit 1

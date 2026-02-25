@@ -171,7 +171,7 @@ while IFS='|' read -r module template target description <&3; do
         fi
 
         # Make scripts executable
-        if [[ "$target" == *.sh ]]; then
+        if [[ "$target" == *.sh ]] || [[ "$target_path" == */bin/* ]]; then
             chmod +x "$target_path"
         fi
     else
@@ -248,6 +248,8 @@ EOF
     # Install swaybg wallpaper as a systemd user service so it starts reliably
     # after graphical-session.target (exec-once fires too early under UWSM)
     configure_swaybg
+    configure_waybar
+    configure_mako
 
     # Install VS Code Extensions
     configure_vscode_extensions
@@ -350,7 +352,15 @@ echo "[7/7] Finalizing installation..."
 if [ "$DRY_RUN" = false ]; then
     echo "Linking 'pimarchy' CLI tool to /usr/local/bin..."
     sudo ln -sf "$PIMARCHY_ROOT/bin/pimarchy" /usr/local/bin/pimarchy
-    
+
+    # Ensure ~/.local/bin is on PATH (required for pimarchy-keybindings and pimarchy-update-available)
+    mkdir -p "$HOME/.local/bin"
+    if ! grep -q '\.local/bin' "$HOME/.bashrc" 2>/dev/null; then
+        echo "" >> "$HOME/.bashrc"
+        echo '# Pimarchy: user scripts' >> "$HOME/.bashrc"
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+    fi
+
     echo ""
     echo "=== Pimarchy installation complete! ==="
     echo ""
@@ -361,6 +371,7 @@ if [ "$DRY_RUN" = false ]; then
     echo "  SUPER+Return     Terminal"
     echo "  SUPER+E          File Manager"
     echo "  SUPER+M          System monitor (btop)"
+    echo "  SUPER+K          Keybindings viewer"
     echo "  SUPER+W          Close window"
     echo "  SUPER+SHIFT+B    Open Chromium"
     echo "  SUPER+F          Toggle fullscreen"
@@ -379,9 +390,10 @@ if [ "$DRY_RUN" = false ]; then
     echo "  Click volume         Open audio mixer"
     echo "  Scroll on volume     Adjust volume"
     echo "  Click CPU/Memory     Open system monitor (btop)"
+    echo "  Click update icon    Run pimarchy update (when available)"
     echo "  Click power icon     Power menu (shutdown/reboot/logout)"
     echo ""
-    echo "To customize keybinds:   Edit ~/.config/hypr/hyprland.conf"
+    echo "To customize keybinds:   Press SUPER+K or edit ~/.config/hypr/hyprland.conf"
     echo "To customize theme:      Edit config/theme.conf and run install.sh"
     echo "To uninstall:            bash uninstall.sh"
     echo ""

@@ -141,6 +141,8 @@ case "$COMMAND" in
             echo -e "${GREEN}[OK] Update downloaded. Re-applying configurations...${NC}"
             # Re-run the installer silently (or with default options) to process new templates
             bash install.sh
+            # Tell Waybar to hide the update icon immediately (SIGRTMIN+8)
+            pimarchy-update-available-reset 2>/dev/null || true
         else
             echo -e "${RED}[ERROR] Your local branch has diverged from the remote.${NC}"
             echo -e "Please resolve this manually in $PIMARCHY_DIR."

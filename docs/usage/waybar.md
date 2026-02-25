@@ -10,6 +10,7 @@ The status bar is interactive. Use these actions to manage your system quickly.
 | **Workspaces** | **Right-click** | Toggle window overview (if configured). |
 | **Workspaces** | **Scroll** | Cycle through workspaces (Next/Previous). |
 | **Clock** | **Click** | Toggle the date and time format. |
+| **Update Icon** | **Click** | Open update terminal (visible only when updates are available). |
 | **WiFi** | **Right-click** | Open the NetworkManager terminal UI (`nmtui`). |
 | **Volume** | **Click** | Mute or unmute the audio output. |
 | **Volume** | **Scroll** | Increase or decrease the volume level. |

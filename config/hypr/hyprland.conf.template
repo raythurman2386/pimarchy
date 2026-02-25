@@ -103,53 +103,61 @@ master {
 # Window Rules
 # ============================================================================
 windowrule = match:class ^(btop)$, float 1, size 900 600, center 1
+# Floating terminal for pimarchy update (launched by waybar update widget)
+windowrule = match:class ^(pimarchy-update)$, float 1, size 800 500, center 1
 
 # ============================================================================
 # Keybinds
 # ============================================================================
+# Note: 'bindd' includes a description field used by pimarchy-keybindings
+# to build the live keybindings viewer (Super+K).
 $mainMod = SUPER
 
-bind = $mainMod, Return, exec, alacritty
-bind = $mainMod, W, killactive, 
-bind = $mainMod SHIFT, W, exit, 
-bind = $mainMod SHIFT, B, exec, chromium
-bind = $mainMod, E, exec, thunar
-bind = $mainMod, V, togglefloating, 
-bind = $mainMod, D, exec, rofi -show drun
-bind = $mainMod, M, exec, alacritty --class btop -e btop
-bind = $mainMod, P, pseudo, # dwindle
-bind = $mainMod, J, togglesplit, # dwindle
-bind = $mainMod, F, fullscreen, 0
+# Applications
+bindd = $mainMod, Return, Terminal, exec, alacritty
+bindd = $mainMod, D, App Launcher, exec, rofi -show drun
+bindd = $mainMod SHIFT, B, Browser, exec, chromium
+bindd = $mainMod, E, File Manager, exec, thunar
+bindd = $mainMod, M, System Monitor, exec, alacritty --class btop -e btop
+bindd = $mainMod, K, Show Keybindings, exec, pimarchy-keybindings
 
-# Move focus with mainMod + arrow keys
-bind = $mainMod, left, movefocus, l
-bind = $mainMod, right, movefocus, r
-bind = $mainMod, up, movefocus, u
-bind = $mainMod, down, movefocus, d
+# Window management
+bindd = $mainMod, W, Close Window, killactive,
+bindd = $mainMod SHIFT, W, Exit Hyprland, exit,
+bindd = $mainMod, V, Toggle Floating, togglefloating,
+bindd = $mainMod, F, Toggle Fullscreen, fullscreen, 0
+bindd = $mainMod, P, Toggle Pseudo-tile, pseudo,
+bindd = $mainMod, J, Toggle Split, togglesplit,
+
+# Focus movement
+bindd = $mainMod, left, Focus Left, movefocus, l
+bindd = $mainMod, right, Focus Right, movefocus, r
+bindd = $mainMod, up, Focus Up, movefocus, u
+bindd = $mainMod, down, Focus Down, movefocus, d
 
 # Switch workspaces with mainMod + [0-9]
-bind = $mainMod, 1, workspace, 1
-bind = $mainMod, 2, workspace, 2
-bind = $mainMod, 3, workspace, 3
-bind = $mainMod, 4, workspace, 4
-bind = $mainMod, 5, workspace, 5
-bind = $mainMod, 6, workspace, 6
-bind = $mainMod, 7, workspace, 7
-bind = $mainMod, 8, workspace, 8
-bind = $mainMod, 9, workspace, 9
-bind = $mainMod, 0, workspace, 10
+bindd = $mainMod, 1, Workspace 1, workspace, 1
+bindd = $mainMod, 2, Workspace 2, workspace, 2
+bindd = $mainMod, 3, Workspace 3, workspace, 3
+bindd = $mainMod, 4, Workspace 4, workspace, 4
+bindd = $mainMod, 5, Workspace 5, workspace, 5
+bindd = $mainMod, 6, Workspace 6, workspace, 6
+bindd = $mainMod, 7, Workspace 7, workspace, 7
+bindd = $mainMod, 8, Workspace 8, workspace, 8
+bindd = $mainMod, 9, Workspace 9, workspace, 9
+bindd = $mainMod, 0, Workspace 10, workspace, 10
 
 # Move active window to a workspace with mainMod + SHIFT + [0-9]
-bind = $mainMod SHIFT, 1, movetoworkspace, 1
-bind = $mainMod SHIFT, 2, movetoworkspace, 2
-bind = $mainMod SHIFT, 3, movetoworkspace, 3
-bind = $mainMod SHIFT, 4, movetoworkspace, 4
-bind = $mainMod SHIFT, 5, movetoworkspace, 5
-bind = $mainMod SHIFT, 6, movetoworkspace, 6
-bind = $mainMod SHIFT, 7, movetoworkspace, 7
-bind = $mainMod SHIFT, 8, movetoworkspace, 8
-bind = $mainMod SHIFT, 9, movetoworkspace, 9
-bind = $mainMod SHIFT, 0, movetoworkspace, 10
+bindd = $mainMod SHIFT, 1, Move to Workspace 1, movetoworkspace, 1
+bindd = $mainMod SHIFT, 2, Move to Workspace 2, movetoworkspace, 2
+bindd = $mainMod SHIFT, 3, Move to Workspace 3, movetoworkspace, 3
+bindd = $mainMod SHIFT, 4, Move to Workspace 4, movetoworkspace, 4
+bindd = $mainMod SHIFT, 5, Move to Workspace 5, movetoworkspace, 5
+bindd = $mainMod SHIFT, 6, Move to Workspace 6, movetoworkspace, 6
+bindd = $mainMod SHIFT, 7, Move to Workspace 7, movetoworkspace, 7
+bindd = $mainMod SHIFT, 8, Move to Workspace 8, movetoworkspace, 8
+bindd = $mainMod SHIFT, 9, Move to Workspace 9, movetoworkspace, 9
+bindd = $mainMod SHIFT, 0, Move to Workspace 10, movetoworkspace, 10
 
 # Scroll through existing workspaces with mainMod + scroll
 bind = $mainMod, mouse_down, workspace, e+1
@@ -160,10 +168,10 @@ bindm = $mainMod, mouse:272, movewindow
 bindm = $mainMod, mouse:273, resizewindow
 
 # Volume controls
-bind = , XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
-bind = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
-bind = , XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+bindd = , XF86AudioRaiseVolume, Volume Up, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
+bindd = , XF86AudioLowerVolume, Volume Down, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+bindd = , XF86AudioMute, Toggle Mute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
 
 # Screenshots
-bind = , Print, exec, ~/.config/hypr/screenshot.sh region
-bind = SHIFT, Print, exec, ~/.config/hypr/screenshot.sh full
+bindd = , Print, Screenshot (Region), exec, ~/.config/hypr/screenshot.sh region
+bindd = SHIFT, Print, Screenshot (Full Screen), exec, ~/.config/hypr/screenshot.sh full

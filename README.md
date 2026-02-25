@@ -19,6 +19,8 @@ Pimarchy provisions a barebones Pi OS Lite installation into a fully configured,
 | Shell | Bash + Starship + custom aliases |
 | File manager | Thunar |
 | Containers | Docker CE + Docker Compose v2 |
+| Languages | Node.js (v22), Go (latest), Python 3 |
+| Productivity | LibreOffice (Writer, Calc, Impress) |
 | AI coding agent | OpenCode |
 | Firewall | ufw (Default Deny Incoming) |
 | System monitor | btop (Ravenwood theme) |
@@ -120,7 +122,8 @@ The installer will:
 2. **Update the system** and add the required apt repositories:
    - Debian Sid (for the latest Hyprland)
    - Official Docker CE repository (for `docker-compose-plugin`)
-3. **Install all packages:** Hyprland, Waybar, Rofi, Mako, Alacritty, Greetd, Tuigreet, Starship, Thunar, btop, Docker CE, and more
+   - NodeSource (for the latest Node.js)
+3. **Install all packages:** Hyprland, Waybar, Rofi, Mako, Alacritty, Greetd, Tuigreet, Starship, Thunar, btop, Docker CE, Node.js, Go, Python, LibreOffice, and more
 4. **Deploy all configuration files** using the Ravenwood theme
 5. **Install OpenCode** (AI coding agent) to `~/.opencode/`
 6. **Configure Greetd** as the login manager, replacing the default console login
@@ -158,6 +161,7 @@ Greetd will launch at startup. Log in with your username and password — Hyprla
 | `SUPER + SHIFT + B` | Open Chromium |
 | `SUPER + F` | Toggle fullscreen |
 | `SUPER + V` | Toggle floating window |
+| `SUPER + K` | View all keybinds (Rofi) |
 | `SUPER + Arrow keys` | Move focus |
 | `SUPER + 1–0` | Switch to workspace 1–10 |
 | `SUPER + SHIFT + 1–0` | Move window to workspace 1–10 |
@@ -170,6 +174,7 @@ Greetd will launch at startup. Log in with your username and password — Hyprla
 |--------|--------|
 | Click clock | Toggle date/time format |
 | Click workspaces | Cycle to next workspace |
+| Click update icon | Run system update (if available) |
 | Right-click workspaces | Cycle to previous workspace |
 | Right-click WiFi | Open network settings |
 | Click volume | Open audio mixer (pavucontrol) |
