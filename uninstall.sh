@@ -30,6 +30,8 @@ fi
 echo "[1/5] Stopping Pimarchy services..."
 stop_services
 revert_swaybg
+revert_waybar
+revert_mako
 revert_firewall
 
 # -------------------------------------------------------------

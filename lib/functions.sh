@@ -248,6 +248,9 @@ EOF
 install_packages() {
     log_info "Updating system and installing packages..."
 
+    # Set noninteractive frontend to prevent debconf prompts (e.g., libc6 restart)
+    export DEBIAN_FRONTEND=noninteractive
+
     # --- Pre-flight: clean up any stale/conflicting apt sources ---
 
     # VS Code: Microsoft's own installer writes vscode.sources (DEB822 format) using
@@ -320,6 +323,7 @@ EOF
         code
         btop
         ufw
+        gh
     )
 
     sudo apt install -y "${base_packages[@]}"
@@ -344,6 +348,7 @@ EOF
     # Wayland/Hyprland specific packages from sid
     local hypr_packages=(
         hyprland
+        hyprland-guiutils
         waybar
         mako-notifier
         swaybg
@@ -351,6 +356,7 @@ EOF
         slurp
         wl-clipboard
         xdg-desktop-portal-hyprland
+        uwsm
     )
 
     sudo apt install -t sid -y "${hypr_packages[@]}"
@@ -726,6 +732,64 @@ EOF
     systemctl --user enable swaybg.service
 }
 
+# configure_waybar — installs and enables a systemd user service that starts
+# waybar. We override the system service to remove Requisite= (which blocks
+# startup when graphical-session.target isn't active yet).
+configure_waybar() {
+    log_info "Configuring waybar user service..."
+    local systemd_dir="$HOME/.config/systemd/user"
+    mkdir -p "$systemd_dir"
+    
+    cat << 'EOF' > "$systemd_dir/waybar.service"
+[Unit]
+Description=Waybar status bar
+Documentation=man:waybar(1)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/waybar
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=graphical-session.target
+EOF
+
+    systemctl --user daemon-reload
+    systemctl --user enable waybar.service
+}
+
+# configure_mako — installs and enables a systemd user service that starts
+# mako notification daemon. Running as a user service ensures it starts after
+# graphical-session.target is ready.
+configure_mako() {
+    log_info "Configuring mako user service..."
+    local systemd_dir="$HOME/.config/systemd/user"
+    mkdir -p "$systemd_dir"
+    
+    cat << 'EOF' > "$systemd_dir/mako.service"
+[Unit]
+Description=mako notification daemon
+Documentation=man:mako(1)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/mako
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=graphical-session.target
+EOF
+
+    systemctl --user daemon-reload
+    systemctl --user enable mako.service
+}
+
 configure_vscode_extensions() {
     if command -v code &> /dev/null; then
         log_info "Installing VS Code extensions..."
@@ -743,6 +807,28 @@ revert_swaybg() {
     rm -f "$service_file"
     systemctl --user daemon-reload
     log_success "swaybg wallpaper service removed"
+}
+
+# revert_waybar — disables and removes the waybar user service.
+revert_waybar() {
+    local service_file="$HOME/.config/systemd/user/waybar.service"
+
+    systemctl --user disable waybar.service 2>/dev/null || true
+    systemctl --user stop waybar.service 2>/dev/null || true
+    rm -f "$service_file"
+    systemctl --user daemon-reload
+    log_success "waybar service removed"
+}
+
+# revert_mako — disables and removes the mako user service.
+revert_mako() {
+    local service_file="$HOME/.config/systemd/user/mako.service"
+
+    systemctl --user disable mako.service 2>/dev/null || true
+    systemctl --user stop mako.service 2>/dev/null || true
+    rm -f "$service_file"
+    systemctl --user daemon-reload
+    log_success "mako notification service removed"
 }
 
 # ============================================================================
