@@ -329,6 +329,12 @@ EOF
 
     sudo apt install -y "${base_packages[@]}"
 
+    # Development tools - Node.js, Go, Python
+    configure_nodejs
+    install_go
+    install_python_dev
+    install_libreoffice
+
     # Docker CE + Compose v2 from the official Docker repository
     local docker_packages=(
         docker-ce
@@ -345,6 +351,74 @@ EOF
         sudo usermod -aG docker "$USER"
         log_info "Added $USER to docker group (re-login required to take effect)"
     fi
+
+    # ============================================================================
+    # Development Tools
+    # ============================================================================
+
+    # configure_nodejs — adds NodeSource repository and installs Node.js (latest).
+    # Use nvm for managing multiple Node versions (LTS + latest).
+    configure_nodejs() {
+        if command -v node &> /dev/null; then
+            log_info "Node.js already installed ($(node --version)) — skipping"
+            return 0
+        fi
+
+        log_info "Installing Node.js from NodeSource..."
+        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - >/dev/null
+        sudo apt install -y nodejs
+        log_success "Node.js installed ($(node --version))"
+    }
+
+    # install_go — downloads and installs the latest Go from golang.org.
+    install_go() {
+        if command -v go &> /dev/null; then
+            log_info "Go already installed ($(go version 2>/dev/null | awk '{print $3}')) — skipping"
+            return 0
+        fi
+
+        log_info "Installing Go..."
+        local go_version
+        go_version=$(curl -sSL https://golang.org/dl/?mode=json | head -100 | grep -oP '"version": "\K[^"]+' | head -1)
+        local go_arch="arm64"
+        local go_pkg="go${go_version}.linux-${go_arch}.tar.gz"
+
+        wget -qO /tmp/go.tar.gz "https://golang.org/dl/${go_pkg}"
+        sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+        rm -f /tmp/go.tar.gz
+
+        # Add to PATH in .bashrc
+        if ! grep -q '/usr/local/go/bin' "$HOME/.bashrc"; then
+            echo 'export PATH=$PATH:/usr/local/go/bin' >> "$HOME/.bashrc"
+        fi
+
+        export PATH=$PATH:/usr/local/go/bin
+        log_success "Go installed ($go_version)"
+    }
+
+    # install_python_dev — ensures pip is available and upgrades pip/setuptools/wheel.
+    install_python_dev() {
+        log_info "Installing Python development tools..."
+
+        if ! command -v pip3 &> /dev/null; then
+            sudo apt install -y python3-pip
+        fi
+
+        pip3 install --upgrade pip setuptools wheel --user 2>/dev/null || true
+        log_success "Python development tools ready"
+    }
+
+    # install_libreoffice — installs base LibreOffice suite.
+    install_libreoffice() {
+        if command -v libreoffice &> /dev/null; then
+            log_info "LibreOffice already installed — skipping"
+            return 0
+        fi
+
+        log_info "Installing LibreOffice..."
+        sudo apt install -y libreoffice-writer libreoffice-calc libreoffice-impress
+        log_success "LibreOffice installed"
+    }
 
     # Wayland/Hyprland specific packages from sid
     local hypr_packages=(
