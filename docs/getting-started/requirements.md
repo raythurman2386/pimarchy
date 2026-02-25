@@ -34,5 +34,5 @@ Pimarchy is built specifically for:
 
 An active internet connection is required during installation to:
 -   Update the system packages.
--   Add the Debian Sid (unstable) repository (for the latest Hyprland).
--   Download Docker CE and OpenCode.
+-   Add external repositories (Debian Sid, Docker, NodeSource).
+-   Download programming languages (Go, Node.js) and OpenCode.
