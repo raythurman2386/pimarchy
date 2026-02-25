@@ -324,6 +324,7 @@ EOF
         btop
         ufw
         gh
+        jq
     )
 
     sudo apt install -y "${base_packages[@]}"
