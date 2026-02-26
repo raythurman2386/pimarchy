@@ -1,4 +1,5 @@
 {
+    "reload_style_on_change": true,
     "layer": "top",
     "position": "top",
     "margin-top": 0,
@@ -70,12 +71,15 @@
     },
 
     "network": {
-        "format-wifi": "{{ICON_WIFI}} {essid}",
+        "format-icons": ["{{ICON_WIFI_NONE}}", "{{ICON_WIFI_WEAK}}", "{{ICON_WIFI_OK}}", "{{ICON_WIFI_GOOD}}", "{{ICON_WIFI}}"],
+        "format-wifi": "{icon} {essid}",
         "format-ethernet": "{{ICON_ETHERNET}} {ipaddr}",
-        "tooltip-format-wifi": "{essid}  {signalStrength}%\n{ipaddr}/{cidr}",
-        "tooltip-format-ethernet": "{ifname}: {ipaddr}/{cidr}\nvia {gwaddr}",
+        "tooltip-format-wifi": "{essid} ({frequency} GHz)  {signalStrength}%\n{ipaddr}/{cidr}\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+        "tooltip-format-ethernet": "{ifname}: {ipaddr}/{cidr}\nvia {gwaddr}\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
         "format-linked": "{{ICON_ETHERNET}} (No IP)",
         "format-disconnected": "{{ICON_DISCONNECTED}} Disconnected",
+        "tooltip-format-disconnected": "No network connection",
+        "interval": 5,
         "on-click-right": "nm-connection-editor"
     },
 
