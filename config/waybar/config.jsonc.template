@@ -9,7 +9,7 @@
     "spacing": 2,
     "modules-left": ["custom/launcher", "hyprland/workspaces"],
     "modules-center": ["clock", "custom/update"],
-    "modules-right": ["temperature", "memory", "network", "pulseaudio", "tray", "custom/power"],
+    "modules-right": ["temperature", "memory", "pulseaudio", "tray", "custom/power"],
 
     "custom/launcher": {
         "format": "{{ICON_LAUNCHER}}",
@@ -68,19 +68,6 @@
         "format": "{{ICON_MEMORY}} {}%",
         "interval": 5,
         "on-click": "alacritty --class btop -e btop"
-    },
-
-    "network": {
-        "format-icons": ["{{ICON_WIFI_NONE}}", "{{ICON_WIFI_WEAK}}", "{{ICON_WIFI_OK}}", "{{ICON_WIFI_GOOD}}", "{{ICON_WIFI}}"],
-        "format-wifi": "{icon} {essid}",
-        "format-ethernet": "{{ICON_ETHERNET}} {ipaddr}",
-        "tooltip-format-wifi": "{essid} ({frequency} GHz)  {signalStrength}%\n{ipaddr}/{cidr}\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
-        "tooltip-format-ethernet": "{ifname}: {ipaddr}/{cidr}\nvia {gwaddr}\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
-        "format-linked": "{{ICON_ETHERNET}} (No IP)",
-        "format-disconnected": "{{ICON_DISCONNECTED}} Disconnected",
-        "tooltip-format-disconnected": "No network connection",
-        "interval": 5,
-        "on-click-right": "nm-connection-editor"
     },
 
     "pulseaudio": {

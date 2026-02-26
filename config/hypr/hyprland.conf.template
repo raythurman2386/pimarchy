@@ -14,9 +14,10 @@ monitor=,preferred,auto,1
 env = XCURSOR_SIZE,{{CURSOR_SIZE}}
 env = XCURSOR_THEME,{{CURSOR_THEME}}
 env = QT_QPA_PLATFORMTHEME,qt5ct
-# WLR_DRM_DEVICES is set at launch time by start-hyprland.sh (auto-detected)
+# WLR_DRM_DEVICES/AQ_DRM_DEVICES is set at launch time by start-hyprland.sh (auto-detected)
 env = WLR_RENDERER,gles2
 env = WLR_NO_HARDWARE_CURSORS,1
+env = AQ_NO_HARDWARE_CURSORS,1
 env = GDK_BACKEND,wayland,x11
 
 # ============================================================================

@@ -21,13 +21,16 @@ detect_drm_card() {
 DRM_CARD="$(detect_drm_card)"
 
 # Environment variables for Pi 5/500 VideoCore VII
+# Supports both wlroots (Hyprland <0.42) and Aquamarine (Hyprland >=0.42)
 export WLR_NO_HARDWARE_CURSORS=1
+export AQ_NO_HARDWARE_CURSORS=1
 export GDK_BACKEND=wayland,x11
 export QT_QPA_PLATFORMTHEME=qt5ct
 
-# Only set WLR_DRM_DEVICES if we found a specific card
+# Only set DRM devices if we found a specific card
 if [ -n "$DRM_CARD" ]; then
     export WLR_DRM_DEVICES="$DRM_CARD"
+    export AQ_DRM_DEVICES="$DRM_CARD"
 fi
 
 # Clear console for clean transition
