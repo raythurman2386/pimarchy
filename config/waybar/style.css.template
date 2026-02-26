@@ -1,4 +1,4 @@
-/* Pimarchy Waybar Theme - Full-width Top Bar */
+/* Pimarchy Waybar Theme - Optimized */
 
 * {
     font-family: "{{FONT_FAMILY}}", "Noto Color Emoji", "FontAwesome", sans-serif;
@@ -10,22 +10,14 @@
 
 window#waybar {
     background: {{BAR_BG_RGBA}};
-    border-radius: 0;
     color: {{BAR_FG_COLOR}};
-    border: none;
     border-bottom: 1px solid {{BAR_BORDER_RGBA}};
-}
-
-/* Module containers */
-.modules-left, .modules-center, .modules-right {
-    background-color: transparent;
 }
 
 /* All modules base style */
 #clock,
 #temperature,
 #memory,
-#network,
 #pulseaudio,
 #custom-launcher,
 #custom-power,
@@ -33,46 +25,54 @@ window#waybar {
 #workspaces,
 #tray {
     padding: 0 8px;
-    margin: 3px 1px;
+    margin: 3px 2px;
     background-color: {{MODULE_BG_RGBA}};
     border-radius: 8px;
     color: {{MODULE_FG_COLOR}};
+    transition: background-color 0.2s ease;
 }
 
+/* Module Hover states */
+#temperature:hover,
+#memory:hover,
+#pulseaudio:hover,
+#clock:hover {
+    background-color: {{MODULE_HOVER_BG_RGBA}};
+}
+
+/* Launcher */
 #custom-launcher {
     font-size: 15px;
     color: {{COLOR_PRIMARY}};
     background-color: {{LAUNCHER_BG_RGBA}};
-    padding: 0 8px;
 }
-
 #custom-launcher:hover {
     background-color: {{LAUNCHER_HOVER_BG_RGBA}};
 }
 
-/* Workspace indicator */
+/* Workspaces */
 #workspaces button {
     padding: 0 6px;
     font-size: 12px;
     font-weight: bold;
     color: {{COLOR_INACTIVE}};
+    transition: color 0.2s ease;
 }
-
 #workspaces button.active {
     color: {{COLOR_ACTIVE}};
 }
 
-/* Clock (center) */
+/* Clock */
 #clock {
     font-weight: bold;
     color: {{CLOCK_FG_COLOR}};
     background-color: {{CLOCK_BG_RGBA}};
 }
 
+/* Hardware Info */
 #temperature {
     color: {{COLOR_TEMP}};
 }
-
 #temperature.critical {
     color: {{COLOR_ERROR}};
 }
@@ -81,55 +81,40 @@ window#waybar {
     color: {{COLOR_MEMORY}};
 }
 
-#network {
-    color: {{COLOR_NETWORK}};
-}
-
-#network.disconnected {
-    color: {{COLOR_DISCONNECTED}};
-}
-
+/* Audio */
 #pulseaudio {
     color: {{COLOR_VOLUME}};
 }
-
 #pulseaudio.muted {
     color: {{COLOR_MUTED}};
 }
 
-#tray {
-    padding: 0 8px;
-}
-
+/* Tray */
 #tray > .passive {
     -gtk-icon-effect: dim;
 }
-
 #tray > .needs-attention {
     -gtk-icon-effect: highlight;
     background-color: {{TRAY_ATTENTION_BG_RGBA}};
 }
 
+/* Power Menu */
 #custom-power {
     font-size: 14px;
     color: {{COLOR_POWER}};
     background-color: {{POWER_BG_RGBA}};
-    padding: 0 8px;
 }
-
 #custom-power:hover {
     background-color: {{POWER_HOVER_BG_RGBA}};
 }
 
-/* Update available indicator (center bar, next to clock) */
+/* Update Indicator */
 #custom-update {
     font-size: 15px;
     color: {{COLOR_PRIMARY}};
     background-color: {{LAUNCHER_BG_RGBA}};
-    padding: 0 10px;
     animation: pulse 2s ease-in-out infinite;
 }
-
 #custom-update:hover {
     background-color: {{LAUNCHER_HOVER_BG_RGBA}};
 }
@@ -140,24 +125,14 @@ window#waybar {
     100% { opacity: 1.0; }
 }
 
-#temperature:hover,
-#memory:hover,
-#network:hover,
-#pulseaudio:hover,
-#clock:hover {
-    background-color: {{MODULE_HOVER_BG_RGBA}};
-}
-
-/* ── Tooltip styling ─────────────────────────────────────────────────────── */
-/* Waybar tooltips are GTK popovers; target both the window and inner label  */
+/* Tooltips */
 tooltip {
     background-color: {{ROFI_BG_RGBA}};
-    border:           1px solid {{ROFI_BORDER_RGBA}};
-    border-radius:    8px;
-    padding:          4px 2px;
+    border: 1px solid {{ROFI_BORDER_RGBA}};
+    border-radius: 8px;
+    padding: 4px 2px;
 }
-
 tooltip label {
-    color:            {{BAR_FG_COLOR}};
-    padding:          4px 8px;
+    color: {{BAR_FG_COLOR}};
+    padding: 4px 8px;
 }
