@@ -547,6 +547,22 @@ create_config_dirs() {
 # Service Management
 # ============================================================================
 
+# remove_user_service — helper function to disable, stop, and remove a
+# systemd user service.
+remove_user_service() {
+    local service_name="$1"
+    local display_name="$2"
+    local service_file="$HOME/.config/systemd/user/$service_name"
+
+    if [ -f "$service_file" ]; then
+        systemctl --user disable "$service_name" 2>/dev/null || true
+        systemctl --user stop "$service_name" 2>/dev/null || true
+        rm -f "$service_file"
+        systemctl --user daemon-reload
+        log_success "${display_name:-$service_name} removed"
+    fi
+}
+
 detect_keyboard_layout() {
     local layout=""
     
@@ -890,35 +906,17 @@ configure_vscode_extensions() {
 # revert_swaybg — disables and removes the swaybg user service written by
 # configure_swaybg.
 revert_swaybg() {
-    local service_file="$HOME/.config/systemd/user/swaybg.service"
-
-    systemctl --user disable swaybg.service 2>/dev/null || true
-    systemctl --user stop swaybg.service 2>/dev/null || true
-    rm -f "$service_file"
-    systemctl --user daemon-reload
-    log_success "swaybg wallpaper service removed"
+    remove_user_service "swaybg.service" "swaybg wallpaper service"
 }
 
 # revert_waybar — disables and removes the waybar user service.
 revert_waybar() {
-    local service_file="$HOME/.config/systemd/user/waybar.service"
-
-    systemctl --user disable waybar.service 2>/dev/null || true
-    systemctl --user stop waybar.service 2>/dev/null || true
-    rm -f "$service_file"
-    systemctl --user daemon-reload
-    log_success "waybar service removed"
+    remove_user_service "waybar.service" "waybar service"
 }
 
 # revert_mako — disables and removes the mako user service.
 revert_mako() {
-    local service_file="$HOME/.config/systemd/user/mako.service"
-
-    systemctl --user disable mako.service 2>/dev/null || true
-    systemctl --user stop mako.service 2>/dev/null || true
-    rm -f "$service_file"
-    systemctl --user daemon-reload
-    log_success "mako notification service removed"
+    remove_user_service "mako.service" "mako notification service"
 }
 
 # ============================================================================
