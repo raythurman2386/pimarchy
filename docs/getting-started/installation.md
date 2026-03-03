@@ -76,6 +76,16 @@ sudo reboot
 
 After rebooting, you will be greeted by the **Tuigreet** login manager. Log in with your username and password, and **Hyprland** will start automatically.
 
+## Optional: Enable Auto-Login
+
+If you want your Pi to automatically login and start Hyprland on boot (useful for headless setups or ensuring services always start after a reboot), run:
+
+```bash
+sudo bash enable-autologin.sh
+```
+
+This configures `greetd` to skip the login prompt and automatically start the desktop environment for your user. To disable auto-login later, re-run the Pimarchy installer.
+
 ---
 
 ## Managing Pimarchy (CLI Tool)

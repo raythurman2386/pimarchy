@@ -147,6 +147,17 @@ sudo reboot
 
 Greetd will launch at startup. Log in with your username and password — Hyprland will start automatically.
 
+### Optional: Enable Auto-Login
+
+If you want your Pi to automatically login and start Hyprland on boot (useful for headless setups or ensuring services always start), run:
+
+```bash
+cd ~/.local/share/pimarchy
+sudo bash enable-autologin.sh
+```
+
+This configures `greetd` to skip the login prompt and automatically start the desktop. To disable auto-login later, re-run the Pimarchy installer.
+
 ---
 
 ## Keybinds
