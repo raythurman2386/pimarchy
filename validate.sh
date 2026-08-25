@@ -77,7 +77,7 @@ for var in "${required_vars[@]}"; do
 done
 
 echo ""
-echo "[4/4] Validating install/uninstall scripts..."
+echo "[4/5] Validating install/uninstall scripts..."
 
 if bash -n "$PIMARCHY_ROOT/install.sh"; then
     echo "  ✓ install.sh syntax OK"
@@ -107,6 +107,16 @@ if bash -n "$PIMARCHY_ROOT/bin/pimarchy"; then
     echo "  ✓ bin/pimarchy syntax OK"
 else
     echo "  ✗ bin/pimarchy has syntax errors"
+fi
+
+echo ""
+echo "[5/5] Running functional tests..."
+
+if bash "$PIMARCHY_ROOT/tests/test_template_loop.sh"; then
+    echo "  ✓ Template infinite loop protection OK"
+else
+    echo "  ✗ Template infinite loop protection FAILED"
+    exit 1
 fi
 
 echo ""
