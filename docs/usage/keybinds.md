@@ -6,7 +6,7 @@ Pimarchy is built for a keyboard-driven workflow. Master these keybinds to navig
 
 | Shortcut | Action | Description |
 |----------|--------|-------------|
-| **SUPER + Return** | **Terminal** | Open **Alacritty** terminal. |
+| **SUPER + Return** | **Terminal** | Open **Foot** terminal. |
 | **SUPER + D** | **Launcher** | Open **Rofi** app launcher. |
 | **SUPER + W** | **Close** | Close the focused window. |
 | **SUPER + E** | **File Manager** | Open **Thunar** file manager. |

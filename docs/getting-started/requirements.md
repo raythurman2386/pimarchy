@@ -35,4 +35,4 @@ Pimarchy is built specifically for:
 An active internet connection is required during installation to:
 -   Update the system packages.
 -   Add external repositories (Debian Sid, Docker, NodeSource).
--   Download programming languages (Go, Node.js) and OpenCode.
+-   Download programming languages (Go, Node.js), Ollama, and Raven.

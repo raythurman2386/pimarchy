@@ -23,9 +23,9 @@ The `uninstall.sh` script is the primary tool for removing Pimarchy. It handles 
     bash uninstall.sh
     ```
 3.  Follow the interactive prompts:
-    - **Remove packages?** (y/N) — If you select **y**, Hyprland, Waybar, Alacritty, and other packages will be removed.
+    - **Remove packages?** (y/N) — If you select **y**, Hyprland, Waybar, Foot, and other packages will be removed.
     - **Remove Docker?** (y/N) — Choose whether to remove Docker and its repositories.
-    - **Remove OpenCode?** (y/N) — Choose whether to remove the OpenCode AI agent.
+    - **Remove Raven + Ollama?** (y/N) — Choose whether to remove the Raven AI agent and Ollama inference server.
 
 4.  **Final Reboot:**
     ```bash

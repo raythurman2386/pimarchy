@@ -251,11 +251,14 @@ EOF
     configure_waybar
     configure_mako
 
-    # Install VS Code Extensions
-    configure_vscode_extensions
+    # Install Zed editor (Rust-based, efficient code editor)
+    install_zed
 
-    # Install OpenCode AI coding agent
-    install_opencode
+    # Install Ollama inference server (Raven's default model backend)
+    install_ollama
+
+    # Install Raven AI coding agent
+    install_raven
 else
     log_info "Would initialize workspace state, apply gsettings, and configure .bashrc"
 fi

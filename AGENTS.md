@@ -98,12 +98,13 @@ Templates use `{{VARIABLE}}` syntax. Variables are defined in:
 │   ├── waybar/             # Waybar config + CSS
 │   ├── rofi/               # Launcher config, theme, power menu
 │   ├── mako/               # Notification daemon config
-│   ├── terminal/           # Alacritty config
+│   ├── terminal/           # Foot config
 │   ├── shell/              # Bash aliases
 │   ├── starship/           # Starship prompt config
 │   ├── gtk/                # GTK2 / GTK3 theme settings
 │   ├── btop/               # btop.conf + ravenwood.theme
-│   └── opencode/           # opencode.json (AI agent config)
+│   ├── zed/                # zed/settings.json.template (editor config)
+│   └── raven/               # raven/config.toml (AI agent config)
 └── .github/workflows/      # CI/CD automation
 ```
 
@@ -156,8 +157,10 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 - App Launcher: Rofi
 - Shell: Bash + Pimarchy Aliases + Starship
 - Notifications: Mako
-- Terminal: Alacritty
+- Terminal: Foot
 - Wallpaper: swaybg (systemd user service — not exec-once)
 - Containers: Docker CE + Docker Compose v2 (from download.docker.com — NOT docker.io)
+- Code Editor: Zed (installed to `~/.local/zed.app/`, config at `~/.config/zed/settings.json`)
+- CLI Tools: fd, ripgrep (Rust-based)
 - System Monitor: btop (themed with Ravenwood palette via `config/btop/ravenwood.theme`)
-- AI Coding Agent: OpenCode (installed to `~/.opencode/`, config at `~/.config/opencode/opencode.json`)
+- AI Coding Agent: Raven (installed to `~/.cargo/bin/`, config at `~/.raven/config.toml`) + Ollama (local inference backend at `localhost:11434`)

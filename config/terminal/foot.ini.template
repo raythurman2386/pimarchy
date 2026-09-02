@@ -1,0 +1,74 @@
+# Pimarchy Foot Configuration
+# Ravenwood theme matching the desktop
+# Foot is a fast, lightweight Wayland-native terminal emulator.
+
+[main]
+# Font family and size
+font={{FONT_FAMILY}}:size={{FONT_SIZE}}
+
+# Padding (left, right, top, bottom)
+pad=6x6
+
+# Hide the window decorations (managed by Hyprland)
+hide-when-typing=yes
+
+# Scrollback lines
+scrollback=10000
+
+# Cursor style: block, underline, or beam
+cursor-style=block
+cursor-blink=no
+
+# ============================================================================
+# Colors (Ravenwood Dark)
+# ============================================================================
+
+[colors]
+# Foreground / background
+foreground={{TERM_FG_COLOR}}
+background={{TERM_BG_COLOR}}
+
+# Normal palette (16 colors)
+regular0={{TERM_PALETTE_0}}
+regular1={{TERM_PALETTE_1}}
+regular2={{TERM_PALETTE_2}}
+regular3={{TERM_PALETTE_3}}
+regular4={{TERM_PALETTE_4}}
+regular5={{TERM_PALETTE_5}}
+regular6={{TERM_PALETTE_6}}
+regular7={{TERM_PALETTE_7}}
+
+# Bright palette
+bright0={{TERM_PALETTE_8}}
+bright1={{TERM_PALETTE_9}}
+bright2={{TERM_PALETTE_10}}
+bright3={{TERM_PALETTE_11}}
+bright4={{TERM_PALETTE_12}}
+bright5={{TERM_PALETTE_13}}
+bright6={{TERM_PALETTE_14}}
+bright7={{TERM_PALETTE_15}}
+
+# Selection colors
+selection-foreground={{TERM_BG_COLOR}}
+selection-background={{TERM_PALETTE_6}}
+
+# ============================================================================
+# Keybindings
+# ============================================================================
+
+[key-bindings]
+# Copy / paste
+copy=Control+Shift+C
+paste=Control+Shift+V
+
+# Font size adjustments
+font-increase=Control+plus
+font-decrease=Control+minus
+font-reset=Control+0
+
+# ============================================================================
+# Mouse
+# ============================================================================
+
+[mouse]
+hide-when-typing=yes

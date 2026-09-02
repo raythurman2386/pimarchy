@@ -46,7 +46,7 @@
     "custom/update": {
         "format": "󰚰",
         "exec": "pimarchy-update-available",
-        "on-click": "alacritty --class pimarchy-update -e bash -c 'pimarchy update; echo; read -n1 -p \"Press any key to close...\"'",
+        "on-click": "foot --app-id pimarchy-update -e bash -c 'pimarchy update; echo; read -n1 -p \"Press any key to close...\"'",
         "tooltip-format": "{}",
         "signal": 8,
         "interval": 3600,
@@ -61,13 +61,13 @@
         "format-critical": "{{ICON_CPU}} {temperatureC}°C",
         "interval": 5,
         "tooltip": false,
-        "on-click": "alacritty --class btop -e btop"
+        "on-click": "foot --app-id btop -e btop"
     },
 
     "memory": {
         "format": "{{ICON_MEMORY}} {}%",
         "interval": 5,
-        "on-click": "alacritty --class btop -e btop"
+        "on-click": "foot --app-id btop -e btop"
     },
 
     "pulseaudio": {

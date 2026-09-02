@@ -125,7 +125,7 @@ bash install.sh
 
 1.  **Backup:** Backs up your existing configs to `~/.config/Pimarchy-backup/`.
 2.  **Repo Setup:** Adds Debian Sid (for Hyprland) and Docker CE repositories.
-3.  **Package Management:** Installs over 30 packages including Wayland, Hyprland, and Alacritty.
+3.  **Package Management:** Installs over 30 packages including Wayland, Hyprland, and Foot.
 4.  **Theming:** Deploys configurations based on the Ravenwood palette in `config/theme.conf`.
 5.  **Services:** Enables and configures `greetd` as the system's login manager.
-6.  **AI Tools:** Installs the OpenCode agent into `~/.opencode/`.
+6.  **AI Tools:** Installs the Ollama inference server and the Raven agent into `~/.cargo/bin/`.

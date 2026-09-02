@@ -19,7 +19,7 @@ WAYBAR_DIR="$HOME/.config/waybar"
 ROFI_DIR="$HOME/.config/rofi"
 MAKO_DIR="$HOME/.config/mako"
 GTK3_DIR="$HOME/.config/gtk-3.0"
-TERMINAL_DIR="$HOME/.config/alacritty"
+TERMINAL_DIR="$HOME/.config/foot"
 
 # ============================================================================
 # Logging Functions
@@ -58,7 +58,7 @@ backup_configs() {
         mkdir -p "$new_backup_dir"
         
         # Move current configs to timestamped backup
-        local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "alacritty")
+        local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "foot")
         
         for item in "${items[@]}"; do
             if [ -d "$HOME/.config/$item" ]; then
@@ -75,7 +75,7 @@ backup_configs() {
     else
         # First time install - backup original configs
         log_info "Creating original backup of system configs..."
-        local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "alacritty")
+        local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "foot")
         
         for item in "${items[@]}"; do
             if [ -d "$HOME/.config/$item" ]; then
@@ -110,7 +110,7 @@ restore_configs() {
         log_warn "No original backup marker found - backup may not contain original configs"
     fi
     
-    local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "alacritty")
+    local items=("hypr" "waybar" "rofi" "mako" "gtk-3.0" "foot")
 
     for item in "${items[@]}"; do
         if [ -d "$BACKUP_DIR/${item}.bak" ]; then
@@ -331,16 +331,13 @@ install_packages() {
 
     # --- Pre-flight: clean up any stale/conflicting apt sources ---
 
-    # VS Code: Microsoft's own installer writes vscode.sources (DEB822 format) using
-    # /usr/share/keyrings/microsoft.gpg. We write vscode.list using
-    # /etc/apt/keyrings/packages.microsoft.gpg. Having both registered for the same
-    # repo URL causes apt to hard-fail with a "Conflicting values for Signed-By" error.
-    # Solution: always remove all known VS Code source files and legacy key paths, then
-    # write a single canonical entry below. This is safe — the key is re-fetched fresh.
+    # Remove stale VS Code source files and keys from previous Pimarchy versions
+    # (VS Code is no longer installed; Zed replaces it).
     sudo rm -f \
         /etc/apt/sources.list.d/vscode.list \
         /etc/apt/sources.list.d/vscode.sources \
-        /usr/share/keyrings/microsoft.gpg
+        /usr/share/keyrings/microsoft.gpg \
+        /etc/apt/keyrings/packages.microsoft.gpg
 
     # Remove conflicting bookworm list if it was added by a previous Pimarchy version
     sudo rm -f /etc/apt/sources.list.d/bookworm.list
@@ -360,14 +357,6 @@ EOF
     # Add official Docker CE repository (idempotent — skips if docker.list already present)
     configure_docker_repo
 
-    # Add official VS Code repository (always rewritten above, so always install fresh)
-    log_info "Adding Microsoft VS Code repository..."
-    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
-    sudo install -D -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
-    rm -f /tmp/packages.microsoft.gpg
-    echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" \
-        | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
-
     # Single apt update after all sources are in their final state
     sudo apt update
     sudo apt upgrade -y
@@ -381,7 +370,9 @@ EOF
         network-manager-gnome
         arc-theme
         papirus-icon-theme
-        alacritty
+        foot
+        fd-find
+        ripgrep
         rofi
         greetd
         tuigreet
@@ -398,7 +389,6 @@ EOF
         curl
         fontconfig
         chromium
-        code
         btop
         ufw
         gh
@@ -485,7 +475,9 @@ remove_packages() {
         network-manager-gnome
         arc-theme
         papirus-icon-theme
-        alacritty
+        foot
+        fd-find
+        ripgrep
         rofi
         greetd
         tuigreet
@@ -498,6 +490,7 @@ remove_packages() {
         bluez-tools
         alsa-utils
         chromium
+        code
         btop
         ufw
         docker-ce
@@ -513,11 +506,7 @@ remove_packages() {
     # Remove apt repositories and GPG keys added by Pimarchy
     sudo rm -f \
         /etc/apt/sources.list.d/docker.list \
-        /etc/apt/sources.list.d/vscode.list \
-        /etc/apt/sources.list.d/vscode.sources \
         /etc/apt/keyrings/docker.gpg \
-        /etc/apt/keyrings/packages.microsoft.gpg \
-        /usr/share/keyrings/microsoft.gpg \
         /etc/apt/preferences.d/docker-pin
     sudo apt update 2>/dev/null || true
 
@@ -538,7 +527,8 @@ create_config_dirs() {
     mkdir -p "$GTK3_DIR"
     mkdir -p "$TERMINAL_DIR"
     mkdir -p "$HOME/.config/btop/themes"
-    mkdir -p "$HOME/.config/opencode"
+    mkdir -p "$HOME/.config/zed"
+    mkdir -p "$HOME/.raven"
     
     log_success "Config directories created"
 }
@@ -896,10 +886,52 @@ EOF
     systemctl --user enable mako.service
 }
 
-configure_vscode_extensions() {
-    if command -v code &> /dev/null; then
-        log_info "Installing VS Code extensions..."
-        code --install-extension RaymondThurman.ravenwood --force >/dev/null 2>&1 || true
+# ============================================================================
+# Zed Editor Installation
+# ============================================================================
+
+# install_zed — installs the Zed editor using the official install script from
+# zed.dev. Zed is a modern, Rust-based code editor. Idempotent: skips if already
+# installed. The install script places the binary at ~/.local/zed.app/bin/zed
+# and symlinks it to ~/.local/bin/zed.
+install_zed() {
+    if command -v zed &>/dev/null; then
+        log_info "Zed already installed ($(zed --version 2>/dev/null || echo 'unknown version')) — skipping"
+        return 0
+    fi
+
+    log_info "Installing Zed editor..."
+
+    if ! command -v curl &>/dev/null; then
+        sudo apt install -y curl
+    fi
+
+    curl -f https://zed.dev/install.sh | sh
+
+    if command -v zed &>/dev/null; then
+        log_success "Zed installed successfully"
+    else
+        log_warn "Zed installer ran but 'zed' not found in PATH — may need to re-login or source ~/.bashrc"
+    fi
+}
+
+# remove_zed — removes the Zed installation written by install_zed.
+# The official install script places the binary at ~/.local/zed.app/bin/zed
+# and symlinks it to ~/.local/bin/zed.
+remove_zed() {
+    local zed_bin="$HOME/.local/bin/zed"
+
+    if [ -f "$zed_bin" ]; then
+        "$zed_bin" --uninstall >/dev/null 2>&1 || true
+        log_success "Zed installation removed"
+    else
+        log_info "Zed not found at $zed_bin — nothing to remove"
+    fi
+
+    # Remove the config directory written by Pimarchy (if present)
+    if [ -f "$HOME/.config/zed/settings.json" ]; then
+        rm -f "$HOME/.config/zed/settings.json"
+        log_info "Removed Zed config (~/.config/zed/settings.json)"
     fi
 }
 
@@ -920,49 +952,103 @@ revert_mako() {
 }
 
 # ============================================================================
-# OpenCode Installation
+# Ollama Installation
 # ============================================================================
 
-# install_opencode — installs the OpenCode AI coding agent using the official
-# install script from opencode.ai. Idempotent: skips if already installed.
-install_opencode() {
-    if command -v opencode &>/dev/null; then
-        log_info "OpenCode already installed ($(opencode --version 2>/dev/null || echo 'unknown version')) — skipping"
+# install_ollama — installs the Ollama inference server using the official
+# install script from ollama.com. Idempotent: skips if already installed.
+# Raven (the default AI coding agent) talks to Ollama at localhost:11434.
+install_ollama() {
+    if command -v ollama &>/dev/null; then
+        log_info "Ollama already installed ($(ollama --version 2>/dev/null || echo 'unknown version')) — skipping"
         return 0
     fi
 
-    log_info "Installing OpenCode..."
+    log_info "Installing Ollama..."
 
     if ! command -v curl &>/dev/null; then
         sudo apt install -y curl
     fi
 
-    curl -fsSL https://opencode.ai/install | bash
+    curl -fsSL https://ollama.com/install.sh | sh
 
-    if command -v opencode &>/dev/null; then
-        log_success "OpenCode installed successfully"
+    if command -v ollama &>/dev/null; then
+        log_success "Ollama installed successfully"
     else
-        log_warn "OpenCode installer ran but 'opencode' not found in PATH — may need to re-login or source ~/.bashrc"
+        log_warn "Ollama installer ran but 'ollama' not found in PATH — may need to re-login or source ~/.bashrc"
     fi
 }
 
-# remove_opencode — removes the OpenCode installation written by install_opencode.
-# The official install script places everything under ~/.opencode/ and adds
-# ~/.opencode/bin to PATH in ~/.bashrc.
-remove_opencode() {
-    local opencode_dir="$HOME/.opencode"
-
-    if [ -d "$opencode_dir" ]; then
-        rm -rf "$opencode_dir"
-        log_success "OpenCode installation removed ($opencode_dir)"
-    else
-        log_info "OpenCode not found at $opencode_dir — nothing to remove"
+# remove_ollama — removes the Ollama installation written by install_ollama.
+# The official install script places the binary at /usr/local/bin/ollama
+# (symlink to /usr/local/lib/ollama/ollama), creates an 'ollama' system user,
+# and installs a systemd service.
+remove_ollama() {
+    # Stop and disable the systemd service if present
+    if systemctl list-unit-files 2>/dev/null | grep -q '^ollama.service'; then
+        sudo systemctl stop ollama 2>/dev/null || true
+        sudo systemctl disable ollama 2>/dev/null || true
+        sudo rm -f /etc/systemd/system/ollama.service
+        sudo systemctl daemon-reload 2>/dev/null || true
+        log_info "Stopped and removed Ollama systemd service"
     fi
 
-    # Remove the PATH entry added by the installer to ~/.bashrc (if present)
-    if grep -q '\.opencode/bin' "$HOME/.bashrc" 2>/dev/null; then
-        sed -i '/\.opencode\/bin/d' "$HOME/.bashrc"
-        log_info "Removed OpenCode PATH entry from ~/.bashrc"
+    # Remove the binary and library directory
+    sudo rm -f /usr/local/bin/ollama
+    sudo rm -rf /usr/local/lib/ollama
+    log_success "Ollama installation removed"
+
+    # Remove the dedicated ollama system user (if present)
+    if id ollama &>/dev/null 2>&1; then
+        sudo userdel -r ollama 2>/dev/null || true
+        log_info "Removed ollama system user"
+    fi
+}
+
+# ============================================================================
+# Raven Installation
+# ============================================================================
+
+# install_raven — installs the Raven AI coding agent using the official
+# install script from github.com/raythurman2386/raven. Idempotent: skips if
+# already installed.
+install_raven() {
+    if command -v raven &>/dev/null; then
+        log_info "Raven already installed ($(raven --version 2>/dev/null || echo 'unknown version')) — skipping"
+        return 0
+    fi
+
+    log_info "Installing Raven..."
+
+    if ! command -v curl &>/dev/null; then
+        sudo apt install -y curl
+    fi
+
+    curl -fsSL https://raw.githubusercontent.com/raythurman2386/raven/master/install.sh | sh
+
+    if command -v raven &>/dev/null; then
+        log_success "Raven installed successfully"
+    else
+        log_warn "Raven installer ran but 'raven' not found in PATH — may need to re-login or source ~/.bashrc"
+    fi
+}
+
+# remove_raven — removes the Raven installation written by install_raven.
+# The official install script places the binary at ~/.cargo/bin/raven.
+remove_raven() {
+    local raven_bin="$HOME/.cargo/bin/raven"
+
+    if [ -f "$raven_bin" ]; then
+        rm -f "$raven_bin"
+        log_success "Raven installation removed ($raven_bin)"
+    else
+        log_info "Raven not found at $raven_bin — nothing to remove"
+    fi
+
+    # Remove the config directory written by Pimarchy (if present)
+    if [ -f "$HOME/.raven/config.toml" ]; then
+        rm -f "$HOME/.raven/config.toml"
+        log_info "Removed Raven config (~/.raven/config.toml)"
     fi
 }
 
@@ -1045,7 +1131,10 @@ remove_pimarchy_files() {
     
     # Terminal config
     rm -rf "$TERMINAL_DIR"
-    
+
+    # Zed editor config
+    rm -rf "$HOME/.config/zed"
+
     # Shell & Starship
     rm -f "$HOME/.bashrc.pimarchy"
     rm -f "$HOME/.config/starship.toml"
@@ -1061,8 +1150,8 @@ remove_pimarchy_files() {
     rm -f "$HOME/.config/btop/btop.conf"
     rm -f "$HOME/.config/btop/themes/ravenwood.theme"
 
-    # OpenCode config
-    rm -f "$HOME/.config/opencode/opencode.json"
+    # Raven config
+    rm -f "$HOME/.raven/config.toml"
 
     # Debian-specific
     sudo rm -f /etc/apt/sources.list.d/bookworm.list

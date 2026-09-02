@@ -23,10 +23,12 @@ Inspired by [Omarchy](https://github.com/basecamp/omarchy) by Basecamp, it focus
 | **Status bar** | Waybar | Highly customizable CSS-themed status bar. |
 | **App launcher** | Rofi | Wayland-native launcher with custom Ravenwood theme. |
 | **Notifications** | Mako | Lightweight notification daemon. |
-| **Terminal** | Alacritty | GPU-accelerated terminal emulator. |
+| **Terminal** | Foot | Fast, lightweight Wayland-native terminal emulator. |
 | **Login manager** | Greetd + Tuigreet | Sleek console-based login manager. |
 | **Containers** | Docker CE | Full containerization support with Docker Compose v2. |
-| **AI Agent** | OpenCode | Integrated AI coding agent for local development. |
+| **Code editor** | Zed | Modern, Rust-based code editor. |
+| **CLI tools** | fd, ripgrep | Fast, Rust-based file search and grep. |
+| **AI Agent** | Raven + Ollama | Integrated AI coding agent (Raven) with local inference (Ollama). |
 
 ---
 

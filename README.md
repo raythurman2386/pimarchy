@@ -14,14 +14,16 @@ Pimarchy provisions a barebones Pi OS Lite installation into a fully configured,
 | Status bar | Waybar |
 | App launcher | Rofi (+ power menu) |
 | Notifications | Mako |
-| Terminal | Alacritty |
+| Terminal | Foot |
 | Login manager | Greetd + Tuigreet |
 | Shell | Bash + Starship + custom aliases |
 | File manager | Thunar |
 | Containers | Docker CE + Docker Compose v2 |
 | Languages | Node.js (v22), Go (latest), Python 3 |
+| Code editor | Zed (Rust-based) |
 | Productivity | LibreOffice (Writer, Calc, Impress) |
-| AI coding agent | OpenCode |
+| CLI tools | fd, ripgrep (Rust-based) |
+| AI coding agent | Raven (with Ollama) |
 | Firewall | ufw (Default Deny Incoming) |
 | System monitor | btop (Ravenwood theme) |
 
@@ -123,9 +125,9 @@ The installer will:
    - Debian Sid (for the latest Hyprland)
    - Official Docker CE repository (for `docker-compose-plugin`)
    - NodeSource (for the latest Node.js)
-3. **Install all packages:** Hyprland, Waybar, Rofi, Mako, Alacritty, Greetd, Tuigreet, Starship, Thunar, btop, Docker CE, Node.js, Go, Python, LibreOffice, and more
+3. **Install all packages:** Hyprland, Waybar, Rofi, Mako, Foot, Greetd, Tuigreet, Starship, Thunar, btop, Docker CE, Node.js, Go, Python, LibreOffice, and more
 4. **Deploy all configuration files** using the Ravenwood theme
-5. **Install OpenCode** (AI coding agent) to `~/.opencode/`
+5. **Install Ollama + Raven** (AI inference server + coding agent) to `~/.cargo/bin/`
 6. **Configure Greetd** as the login manager, replacing the default console login
 7. **Prompt for CPU performance mode** (optional):
    - `g` — Governor only: keeps CPU at max clock, safe on all units, no reboot needed
@@ -165,7 +167,7 @@ This configures `greetd` to skip the login prompt and automatically start the de
 | Shortcut | Action |
 |----------|--------|
 | `SUPER + D` | App launcher (Rofi) |
-| `SUPER + Return` | Terminal (Alacritty) |
+| `SUPER + Return` | Terminal (Foot) |
 | `SUPER + E` | File manager (Thunar) |
 | `SUPER + M` | System monitor (btop) |
 | `SUPER + W` | Close window |
@@ -253,12 +255,12 @@ Checks script syntax, template variables, and file existence. Run this before ev
 │   ├── waybar/                 # Waybar config + CSS
 │   ├── rofi/                   # Rofi launcher + power menu
 │   ├── mako/                   # Notification daemon config
-│   ├── terminal/               # Alacritty config
+│   ├── terminal/               # Foot config
 │   ├── shell/                  # Bash aliases
 │   ├── starship/               # Starship prompt
 │   ├── gtk/                    # GTK2 / GTK3 theme settings
 │   ├── btop/                   # btop config + Ravenwood colour theme
-│   └── opencode/               # OpenCode agent config
+│   └── raven/                   # Raven agent config
 └── .github/workflows/          # CI — syntax + permission checks
 ```
 

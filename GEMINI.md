@@ -16,12 +16,14 @@ This file provides foundational context and instructions for AI agents working o
 | Status bar | Waybar |
 | App launcher | Rofi (Wayland build) |
 | Notifications | Mako |
-| Terminal | Alacritty |
+| Terminal | Foot |
 | Login manager | Greetd + Tuigreet |
 | Shell | Bash + Starship + custom aliases |
 | File manager | Thunar |
 | Containers | Docker CE + Docker Compose v2 (from download.docker.com) |
-| AI coding agent | OpenCode (installed via opencode.ai install script to `~/.opencode/`) |
+| Code editor | Zed (installed via zed.dev install script to `~/.local/zed.app/`) |
+| CLI tools | fd, ripgrep (Rust-based) |
+| AI coding agent | Raven (installed via raven install script to `~/.cargo/bin/`) + Ollama (local inference) |
 | System monitor | btop (themed with `config/btop/ravenwood.theme`) |
 | Wallpaper | swaybg (runs as a systemd user service, not exec-once) |
 | Theme engine | `{{VARIABLE}}` template system — see Template System below |
@@ -51,12 +53,12 @@ This file provides foundational context and instructions for AI agents working o
     - `waybar/` — Waybar config + CSS
     - `rofi/` — Launcher config, theme, power menu script
     - `mako/` — Notification daemon config
-    - `terminal/` — Alacritty config
+    - `terminal/` — Foot config
     - `shell/` — Bash aliases
     - `starship/` — Starship prompt config
     - `gtk/` — GTK2 / GTK3 theme settings
     - `btop/` — btop config (`btop.conf`) + Ravenwood colour theme (`ravenwood.theme`)
-    - `opencode/` — OpenCode agent config (`opencode.json`)
+    - `raven/` — Raven agent config (`config.toml`)
 
 ## Engineering Standards
 
@@ -92,12 +94,25 @@ Templates use double curly braces: `{{VARIABLE_NAME}}`.
 - `configure_docker_repo()` in `lib/functions.sh` handles GPG key, apt source, and pin — it is idempotent
 - Do **not** use `docker.io` from Debian repos — it lacks `docker-compose-plugin`
 
-### OpenCode
-- Installed by piping the official script: `curl -fsSL https://opencode.ai/install | bash`
-- Binary lands at `~/.opencode/bin/opencode`; the installer adds `~/.opencode/bin` to `PATH` in `~/.bashrc`
-- Config lives at `~/.config/opencode/opencode.json`
-- `install_opencode()` is idempotent — skips if `command -v opencode` succeeds
-- `remove_opencode()` removes `~/.opencode/` and cleans the PATH line from `~/.bashrc`
+### Raven
+- Installed by piping the official script: `curl -fsSL https://raw.githubusercontent.com/raythurman2386/raven/master/install.sh | sh`
+- Binary lands at `~/.cargo/bin/raven`
+- Config lives at `~/.raven/config.toml`
+- `install_raven()` is idempotent — skips if `command -v raven` succeeds
+- `remove_raven()` removes `~/.cargo/bin/raven` and the Pimarchy-written `~/.raven/config.toml`
+
+### Ollama
+- Installed by piping the official script: `curl -fsSL https://ollama.com/install.sh | sh`
+- Binary lands at `/usr/local/bin/ollama` (symlink to `/usr/local/lib/ollama/ollama`); runs as a systemd `ollama.service` on `127.0.0.1:11434`
+- `install_ollama()` is idempotent — skips if `command -v ollama` succeeds
+- `remove_ollama()` stops/disables the service, removes the binary + `/usr/local/lib/ollama`, and deletes the `ollama` system user
+
+### Zed
+- Installed by piping the official script: `curl -f https://zed.dev/install.sh | sh`
+- Binary lands at `~/.local/zed.app/bin/zed`, symlinked to `~/.local/bin/zed`
+- Config lives at `~/.config/zed/settings.json` (Pimarchy template: `config/zed/settings.json.template`)
+- `install_zed()` is idempotent — skips if `command -v zed` succeeds
+- `remove_zed()` runs `zed --uninstall` and removes the Pimarchy-written `~/.config/zed/settings.json`
 
 ### btop Theming
 - Theme file: `config/btop/ravenwood.theme` → installed to `~/.config/btop/themes/ravenwood.theme`

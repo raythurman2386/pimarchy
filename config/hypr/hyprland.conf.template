@@ -115,11 +115,11 @@ windowrule = match:class ^(pimarchy-update)$, float 1, size 800 500, center 1
 $mainMod = SUPER
 
 # Applications
-bindd = $mainMod, Return, Terminal, exec, alacritty
+bindd = $mainMod, Return, Terminal, exec, foot
 bindd = $mainMod, D, App Launcher, exec, rofi -show drun
 bindd = $mainMod SHIFT, B, Browser, exec, chromium
 bindd = $mainMod, E, File Manager, exec, thunar
-bindd = $mainMod, M, System Monitor, exec, alacritty --class btop -e btop
+bindd = $mainMod, M, System Monitor, exec, foot --app-id btop -e btop
 bindd = $mainMod, K, Show Keybindings, exec, pimarchy-keybindings
 
 # Window management

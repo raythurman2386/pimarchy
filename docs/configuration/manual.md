@@ -9,7 +9,7 @@ All configuration files are deployed to their standard locations in `~/.config/`
 |-----------|------|
 | **Hyprland** | `~/.config/hypr/hyprland.conf` |
 | **Waybar** | `~/.config/waybar/config.jsonc` |
-| **Alacritty** | `~/.config/alacritty/alacritty.toml` |
+| **Foot** | `~/.config/foot/foot.ini` |
 | **Rofi** | `~/.config/rofi/config.rasi` |
 | **Mako** | `~/.config/mako/config` |
 | **Starship** | `~/.config/starship.toml` |

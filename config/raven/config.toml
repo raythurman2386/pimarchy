@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# Raven configuration — Pimarchy default
+#
+# Installed to ~/.raven/config.toml (global, applies everywhere).
+# Raven is a privacy-first local coding-agent harness for Ollama /
+# OpenAI-compatible endpoints. See https://github.com/raythurman2386/raven
+# ---------------------------------------------------------------------------
+
+# Active provider — names a table from [providers.*] below.
+provider = "ollama"
+
+# TUI colour theme. "ravenwood" matches Pimarchy's Ravenwood palette.
+theme = "ravenwood"
+
+# --- Context management -----------------------------------------------------
+# Fraction of usable context at which compaction triggers (0.0–1.0).
+compact_threshold = 0.75
+
+# --- Agent loop -------------------------------------------------------------
+# Interaction mode: "agent" (default), "plan", or "chat".
+mode = "agent"
+
+# Sampling temperature for the model endpoint.
+temperature = 0.2
+
+# Enforce the verification gate — agent must run tests after editing files.
+verify = true
+
+# --- Providers --------------------------------------------------------------
+# A provider bundles an OpenAI-compatible /v1/chat/completions endpoint,
+# auth, and a default model. Override a preset or add your own.
+
+[providers.ollama]
+base_url = "http://localhost:11434/v1"
+default_model = "glm-5.3-flash:cloud"
+
+[providers.openrouter]
+base_url = "https://openrouter.ai/api/v1"
+default_model = "x-ai/grok-4.5"
+# api_key_env = "OPENROUTER_API_KEY"

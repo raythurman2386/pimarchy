@@ -70,7 +70,9 @@ read -p "Remove packages installed by Pimarchy? (hyprland, waybar, rofi, mako, e
 if [ "$remove_pkgs" = "y" ] || [ "$remove_pkgs" = "Y" ]; then
     echo "[4/5] Removing packages..."
     remove_packages
-    remove_opencode
+    remove_zed
+    remove_ollama
+    remove_raven
     echo "  Packages removed."
 else
     echo "[4/5] Keeping packages (skipped)."

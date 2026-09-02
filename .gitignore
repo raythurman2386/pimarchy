@@ -40,6 +40,10 @@ Thumbs.db
 *.tar.gz
 *.img
 
+# Raven runtime state (cargo registry, sessions, caches, tmp)
+# The config template lives in config/raven/ and is tracked separately.
+.raven/
+
 # Don't ignore the example configs
 !config/**/*.conf
 !config/**/*.template

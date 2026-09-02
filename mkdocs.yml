@@ -78,7 +78,7 @@ nav:
   - Advanced:
     - Overclocking: advanced/overclocking.md
     - Docker & Containers: advanced/docker.md
-    - OpenCode AI: advanced/opencode.md
+    - Raven AI: advanced/raven.md
   - Troubleshooting:
     - Common Issues: troubleshooting/common.md
     - Logging: troubleshooting/logs.md
