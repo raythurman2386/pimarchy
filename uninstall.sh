@@ -59,6 +59,9 @@ fi
 echo "[3/5] Restoring original configuration..."
 restore_configs
 
+# Remove Quattro user state (defaults, upgrade manifest) — same prompts below
+remove_pimarchy_state
+
 # Reset gsettings
 reset_gsettings
 

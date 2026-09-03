@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# pimarchy-agent — launch the default coding agent (Quattro-style).
+# Reads the agent default file, passes any extra args as the prompt.
+set -euo pipefail
+
+AGENT_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/pimarchy/defaults/agent"
+
+# Default: raven (ships pre-selected). Only allowlisted values are exec'd.
+agent="raven"
+if [ -f "$AGENT_FILE" ]; then
+    value=$(sed -n 's/^agent=//p' "$AGENT_FILE")
+    case "$value" in
+        raven) agent="$value" ;;
+        *) echo "Unknown agent in $AGENT_FILE: '$value' — falling back to raven" >&2 ;;
+    esac
+fi
+
+prompt="${*:-}"
+
+case "$agent" in
+    raven)
+        if ! command -v raven >/dev/null 2>&1; then
+            echo "Raven not installed. Run: pimarchy default agent raven" >&2
+            exit 1
+        fi
+        if [ -n "$prompt" ]; then
+            exec raven --yolo -p "$prompt"
+        else
+            exec raven --yolo
+        fi
+        ;;
+    *)
+        echo "Unknown agent: $agent" >&2
+        exit 1
+        ;;
+esac

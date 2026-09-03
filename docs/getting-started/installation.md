@@ -93,7 +93,8 @@ This configures `greetd` to skip the login prompt and automatically start the de
 Once installed, Pimarchy includes a global CLI tool to easily manage updates and configurations.
 
 ```bash
-# Fetch the latest version from GitHub and apply new configurations
+# Fetch the latest version from GitHub — safe upgrade:
+# pristine configs refresh, user-modified files are left untouched
 pimarchy update
 
 # Validate your current template configurations
@@ -102,9 +103,25 @@ pimarchy validate
 # Re-run the installer (e.g. to apply a new theme.conf)
 pimarchy install
 
+# Lazy package modules (not in the default install)
+pimarchy install dev      # Rust, Node.js, Go, Python, Docker CE
+pimarchy install office   # LibreOffice
+
+# Default app policy
+pimarchy defaults                       # show agent/browser/editor/terminal
+pimarchy default agent raven            # Raven is pre-selected
+pimarchy default editor zed
+pimarchy default terminal foot
+pimarchy default browser chromium
+
+# Launch the coding agent (Super+Shift+Ctrl+A does this too)
+pimarchy agent "write a hello world in rust"
+
 # Uninstall Pimarchy and restore original config backups
 pimarchy uninstall
 ```
+
+Upgrading from a pre-Quattro install? See the [migration note](../development/defaults.md#migration-for-pre-quattro-users).
 
 ---
 
@@ -124,8 +141,9 @@ bash install.sh
 ## What Happens During Installation?
 
 1.  **Backup:** Backs up your existing configs to `~/.config/Pimarchy-backup/`.
-2.  **Repo Setup:** Adds Debian Sid (for Hyprland) and Docker CE repositories.
-3.  **Package Management:** Installs over 30 packages including Wayland, Hyprland, and Foot.
-4.  **Theming:** Deploys configurations based on the Ravenwood palette in `config/theme.conf`.
-5.  **Services:** Enables and configures `greetd` as the system's login manager.
-6.  **AI Tools:** Installs the Ollama inference server and the Raven agent into `~/.cargo/bin/`.
+2.  **Repo Setup:** Adds Debian Sid (for Hyprland — pinned, see the [sid policy](../development/sid-policy.md)) and the Docker CE repository (used only by the dev module).
+3.  **Package Management:** Installs the **core module** from `config/packages/core.list` — the lean, always-installed set (Hyprland stack, Foot, Rofi, Chromium, Zed, Raven, Ollama). No LibreOffice, no Node/Go/Rust/Docker unless you install the dev/office modules.
+4.  **Defaults:** Writes the default app policy (`~/.config/pimarchy/defaults/`): agent=raven, editor=zed, terminal=foot, browser=chromium.
+5.  **Theming:** Deploys configurations based on the Ravenwood palette in `config/theme.conf`.
+6.  **Services:** Enables and configures `greetd` as the system's login manager.
+7.  **AI Tools:** Raven and Ollama are installed via their official scripts (Zed likewise; Raven's default backend is local Ollama).

@@ -2,18 +2,20 @@
 
 Pimarchy is built for a keyboard-driven workflow. Master these keybinds to navigate your system efficiently.
 
+Keybinds live in `~/.config/hypr/bindings.conf` (sourced by `hyprland.conf`) and respect the [default app policy](../development/defaults.md) — changing `pimarchy default browser` changes what Super+Shift+B launches after the next install/update.
+
 ## General Navigation
 
 | Shortcut | Action | Description |
 |----------|--------|-------------|
-| **SUPER + Return** | **Terminal** | Open **Foot** terminal. |
+| **SUPER + Return** | **Terminal** | Open the default terminal (**Foot**). |
 | **SUPER + D** | **Launcher** | Open **Rofi** app launcher. |
 | **SUPER + W** | **Close** | Close the focused window. |
 | **SUPER + E** | **File Manager** | Open **Thunar** file manager. |
 | **SUPER + M** | **System Monitor** | Open **btop** system monitor. |
-| **SUPER + SHIFT + B** | **Chromium** | Launch **Chromium** browser. |
+| **SUPER + SHIFT + B** | **Browser** | Launch the default browser (**Chromium**). |
+| **SUPER + SHIFT + CTRL + A** | **Coding Agent** | Launch the default coding agent (**Raven**, `pimarchy agent`) in a floating window. |
 | **SUPER + K** | **Keybind Viewer** | View all active keybinds in **Rofi**. |
-| **SUPER + Q** | **Lock** | Lock the screen (swaylock). |
 
 ## Window Management
 

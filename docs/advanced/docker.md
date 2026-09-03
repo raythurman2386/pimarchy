@@ -1,6 +1,10 @@
 # Docker & Containers
 
-Pimarchy comes pre-configured with **Docker CE** and **Docker Compose v2**. This makes it easy to deploy services directly to your Pi.
+Pimarchy can set up **Docker CE** and **Docker Compose v2** via the **dev module** — it is no longer part of the default install (memory efficiency first):
+
+```bash
+pimarchy install dev
+```
 
 ## Installation Process
 
@@ -25,7 +29,13 @@ docker ps
 
 ## Running as a User
 
-Pimarchy automatically adds your user to the `docker` group. This allows you to run Docker commands without prefixing them with `sudo`.
+Docker group membership is **opt-in** — Pimarchy does not add your user to the `docker` group automatically (the group is root-equivalent, so it should be a deliberate choice):
+
+```bash
+pimarchy install dev --with-docker-group
+# or manually:
+sudo usermod -aG docker $USER
+```
 
 !!! note "Group Update"
     If you find that you still need to use `sudo`, you can refresh your user group status:

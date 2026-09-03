@@ -1,0 +1,37 @@
+# Pimarchy dev module — lazy module, installed via `pimarchy install dev`.
+#
+# Development toolchain: Rust, Node.js, Go, Python, Docker CE, GitHub CLI.
+# None of these are installed by the default `install.sh` run.
+
+# --- Languages (official installers, not apt) --------------------------------
+# Rust via rustup (https://sh.rustup.rs) — keeps rustc/cargo upgradable
+script:rustup
+# Node.js v22 LTS via NodeSource
+script:node
+# Go (latest stable) from golang.org
+script:go
+# Python dev tools: python3-pip, python3-venv, pipx (PEP 668 compliant)
+script:python-dev
+
+# --- Containers --------------------------------------------------------------
+# Docker CE + Compose v2 + Buildx from the official download.docker.com repo
+# (NOT Debian's docker.io — it lacks docker-compose-plugin).
+apt:ca-certificates
+apt:gnupg
+apt:docker-ce
+apt:docker-ce-cli
+apt:containerd.io
+apt:docker-buildx-plugin
+apt:docker-compose-plugin
+
+# --- Docker group membership is OPT-IN --------------------------------------
+# Do not add `script:docker-group` here; use:
+#   sudo usermod -aG docker $USER
+# or: pimarchy install dev --with-docker-group
+
+# --- Extra dev CLI tools -----------------------------------------------------
+apt:build-essential
+apt:pkg-config
+apt:libssl-dev
+apt:git-lfs
+apt:shellcheck

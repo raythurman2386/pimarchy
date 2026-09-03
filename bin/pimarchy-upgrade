@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# pimarchy-upgrade — apply the Quattro safe upgrade after a git pull.
+# Called by `pimarchy update` once the new code is checked out.
+#
+# Policy (see lib/upgrade.sh):
+#   - missing files install
+#   - files matching a known Pimarchy hash refresh
+#   - user-modified files are left untouched and logged
+#   - new Quattro-only files always install
+#   - retired files (config/packages/retired.conf) are backed up then removed
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PIMARCHY_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+source "$PIMARCHY_ROOT/lib/functions.sh"
+
+# --snapshot-only: record pristine hashes pre-pull (called by pimarchy update
+# with the OLD code checked out). Default: apply the full safe upgrade.
+if [ "${1:-}" = "--snapshot-only" ]; then
+    load_config "$PIMARCHY_ROOT/config/theme.conf"
+    export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
+    export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
+    export COLOR_BASE_HEX="${COLOR_BASE#\#}"
+    export KEYBOARD_LAYOUT="$(detect_keyboard_layout)"
+    defaults_install_defaults
+    defaults_export_vars
+    snapshot_pristine_hashes
+    exit 0
+fi
+
+# Theme variables for template regeneration (same as install.sh)
+load_config "$PIMARCHY_ROOT/config/theme.conf"
+export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
+export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
+export COLOR_BASE_HEX="${COLOR_BASE#\#}"
+export KEYBOARD_LAYOUT="$(detect_keyboard_layout)"
+export PIMARCHY_ROOT
+
+# Refresh default apps (preserves existing user choices)
+defaults_install_defaults
+defaults_export_vars
+
+upgrade_full

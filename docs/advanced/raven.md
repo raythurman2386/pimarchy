@@ -2,11 +2,25 @@
 
 Pimarchy includes built-in support for the **Raven AI agent**. Raven is a small, privacy-first coding-agent harness written in Rust for Ollama and any OpenAI-compatible endpoint. It runs a full agent loop — tools, plan mode, verification, and workspace isolation — against a model endpoint you control.
 
-Pimarchy also installs **Ollama** by default as Raven's local inference backend. Raven talks to Ollama at `http://localhost:11434/v1`.
+Raven is the **pre-selected default coding agent** (`pimarchy default agent raven`) and installs as part of the core module. Pimarchy also installs **Ollama** by default as Raven's local inference backend; Raven talks to Ollama at `http://localhost:11434/v1`.
+
+## Launching Raven
+
+Quattro-style, from anywhere:
+
+```bash
+# From the keybind: SUPER + SHIFT + CTRL + A (floating, themed window class)
+pimarchy agent
+
+# With a prompt
+pimarchy agent "fix the failing test in lib/upgrade.sh"
+```
+
+`pimarchy agent` runs `raven --yolo` (skipping confirmations), passing any arguments as the prompt via `-p`. If the binary is missing, it points you at `pimarchy default agent raven`, which lazy-installs it via the official script.
 
 ## Installation Details
 
-Raven is installed by piping the official install script from `github.com/raythurman2386/raven`, and Ollama from `ollama.com`.
+Raven is installed by piping the official install script from `github.com/raythurman2386/raven`, and Ollama from `ollama.com` (both as `script:` entries in `config/packages/core.list`).
 - **Raven location:** `~/.cargo/bin/`
 - **Raven binary:** `~/.cargo/bin/raven`
 - **Raven config:** `~/.raven/config.toml`

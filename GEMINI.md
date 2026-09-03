@@ -12,28 +12,35 @@ This file provides foundational context and instructions for AI agents working o
 
 | Layer | Component |
 |-------|-----------|
-| Compositor | Hyprland (Wayland, launched via UWSM as a systemd session) |
+| Compositor | Hyprland (Wayland, launched via UWSM as a systemd session; Debian sid, pinned) |
 | Status bar | Waybar |
 | App launcher | Rofi (Wayland build) |
 | Notifications | Mako |
-| Terminal | Foot |
+| Terminal | Foot (default terminal) |
 | Login manager | Greetd + Tuigreet |
 | Shell | Bash + Starship + custom aliases |
 | File manager | Thunar |
-| Containers | Docker CE + Docker Compose v2 (from download.docker.com) |
-| Code editor | Zed (installed via zed.dev install script to `~/.local/zed.app/`) |
-| CLI tools | fd, ripgrep (Rust-based) |
-| AI coding agent | Raven (installed via raven install script to `~/.cargo/bin/`) + Ollama (local inference) |
+| Browser | Chromium (default browser) |
+| Containers | Docker CE + Docker Compose v2 (lazy dev module; from download.docker.com) |
+| Code editor | Zed (installed via zed.dev install script to `~/.local/zed.app/`; default editor) |
+| CLI tools | fd, ripgrep, gh (Rust-based where possible) |
+| AI coding agent | Raven (installed via raven install script to `~/.cargo/bin/`; default agent, `pimarchy agent`) + Ollama (local inference) |
 | System monitor | btop (themed with `config/btop/ravenwood.theme`) |
 | Wallpaper | swaybg (runs as a systemd user service, not exec-once) |
 | Theme engine | `{{VARIABLE}}` template system — see Template System below |
+| Package modules | `config/packages/{core,dev,office}.list` (apt:/sid:/script: tags); core always, dev/office lazy |
+| Default app policy | `pimarchy default <agent|browser|editor|terminal>` — files in `~/.config/pimarchy/defaults/`, allowlist-validated |
+| Safe upgrades | `pimarchy update` — sha256 manifest gates refresh; user-modified files untouched |
 
 ## Key Workflows
 
 ### Installation & Deployment
-- **Full install:** `bash install.sh`
+- **Full install:** `bash install.sh` (core module only; lean by default)
+- **Pre-Quattro full set:** `bash install.sh --legacy-packages` (adds dev + office)
+- **Lazy modules:** `pimarchy install dev` / `pimarchy install office`
 - **Preview changes:** `bash install.sh --dry-run`
 - **Uninstall:** `bash uninstall.sh` (reverts configs and optionally removes packages)
+- **Safe upgrade:** `pimarchy update` (hash-gated; user-modified configs preserved)
 
 ### Development & Validation
 - **Global validation:** `bash validate.sh` (checks script syntax and template variables)
@@ -42,13 +49,16 @@ This file provides foundational context and instructions for AI agents working o
 
 ## Project Structure
 
-- `install.sh` — Main entry point; orchestrates all install steps
+- `install.sh` — Thin orchestrator; all logic lives in `lib/*.sh`
 - `uninstall.sh` — Reverts system changes and restores backups
-- `validate.sh` — Verifies templates, configs, and script syntax before deployment
-- `lib/functions.sh` — Core logic library (logging, backup, template processing, package management, service configuration)
+- `validate.sh` — Verifies templates, configs, package lists, and script syntax (walks every lib module)
+- `lib/` — Library modules, sourced through the `lib/functions.sh` aggregator:
+    `common.sh` (paths), `log.sh`, `template.sh`, `backup.sh`, `repos.sh`, `packages.sh`, `services.sh`, `pi-perf.sh`, `apps.sh`, `defaults.sh` (default app policy), `upgrade.sh` (safe upgrade model)
+- `bin/` — `pimarchy` (main CLI), `pimarchy-agent`, `pimarchy-default-agent`, `pimarchy-install`, `pimarchy-upgrade`
 - `config/`
     - `theme.conf` — Centralised theme variables (colours, fonts, icons, spacing)
     - `modules.conf` — Registry mapping source files to target system paths
+    - `packages/` — `core.list` (always installed), `dev.list`, `office.list` (lazy), `retired.conf` (files removed on upgrade)
     - `hypr/` — Hyprland config, wallpaper, screenshot helper
     - `waybar/` — Waybar config + CSS
     - `rofi/` — Launcher config, theme, power menu script
@@ -76,7 +86,7 @@ This file provides foundational context and instructions for AI agents working o
 - **Locals:** `snake_case` (e.g., `target_path`, `var_name`)
 
 ### Logging
-Always use the provided logging functions from `lib/functions.sh`:
+Always use the provided logging functions from `lib/log.sh` (sourced via `lib/functions.sh`):
 - `log_info "message"` — General status
 - `log_success "message"` — Successful operations
 - `log_warn "message"` — Non-critical warnings
@@ -91,7 +101,7 @@ Templates use double curly braces: `{{VARIABLE_NAME}}`.
 
 ### Docker
 - Docker CE packages come from the official `download.docker.com` apt repo
-- `configure_docker_repo()` in `lib/functions.sh` handles GPG key, apt source, and pin — it is idempotent
+- `configure_docker_repo()` in `lib/repos.sh` handles GPG key, apt source, and pin — it is idempotent
 - Do **not** use `docker.io` from Debian repos — it lacks `docker-compose-plugin`
 
 ### Raven

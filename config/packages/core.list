@@ -1,0 +1,72 @@
+# Pimarchy core module — always installed by install.sh.
+#
+# Memory efficiency is the priority: no heavy GUI apps here. This set turns
+# a barebones Pi OS Lite install into the full Pimarchy desktop.
+#
+# Format:
+#   apt:<pkg>      — from the default (stable/Trixie) repositories
+#   sid:<pkg>      — from Debian sid (pinned; see docs/development/sid-policy.md)
+#   script:<label> — installed by an official-script hook (not apt)
+#
+# The order within a tag is preserved for readability; apt resolves order.
+
+# --- Terminal & shell --------------------------------------------------------
+apt:foot
+apt:starship
+
+# --- Fonts & theming ---------------------------------------------------------
+apt:fonts-font-awesome
+apt:fonts-jetbrains-mono
+apt:fonts-noto-color-emoji
+apt:arc-theme
+apt:papirus-icon-theme
+apt:fontconfig
+
+# --- Desktop components ------------------------------------------------------
+apt:rofi
+apt:greetd
+apt:tuigreet
+apt:thunar
+apt:lxpolkit
+apt:pavucontrol
+apt:network-manager-gnome
+apt:bluez
+apt:bluez-tools
+apt:alsa-utils
+apt:wireplumber
+
+# --- Screenshot & clipboard --------------------------------------------------
+apt:grim
+apt:slurp
+apt:wl-clipboard
+
+# --- System tools ------------------------------------------------------------
+apt:btop
+apt:ufw
+apt:jq
+apt:fd-find
+apt:ripgrep
+apt:unzip
+apt:wget
+apt:curl
+apt:gh
+
+# --- Browser (default browser = chromium, see `pimarchy default browser`) ----
+apt:chromium
+
+# --- Hyprland session stack (from Debian sid; pinned to priority 100) --------
+sid:hyprland
+sid:hyprland-guiutils
+sid:waybar
+sid:mako-notifier
+sid:swaybg
+sid:xdg-desktop-portal-hyprland
+sid:uwsm
+
+# --- Default apps via official install scripts (not in Debian repos) ---------
+# Zed editor (default editor) — ~/.local/zed.app, config ~/.config/zed
+script:zed
+# Raven AI coding agent (pre-selected default agent) — ~/.cargo/bin/raven
+script:raven
+# Ollama inference backend for Raven — /usr/local/bin/ollama
+script:ollama

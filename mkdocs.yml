@@ -85,6 +85,8 @@ nav:
   - Development:
     - Architecture: development/architecture.md
     - Roadmap: development/roadmap.md
+    - Defaults & Modules: development/defaults.md
+    - Sid Policy: development/sid-policy.md
     - Adding Modules: development/modules.md
     - Contributing: development/contributing.md
   - Uninstall: uninstall.md
