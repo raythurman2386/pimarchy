@@ -152,7 +152,7 @@ test_defaults_install_preserves_user_choice() {
 # ── Safe upgrade model ────────────────────────────────────────────────────────
 
 test_upgrade_hash_pristine_vs_modified() {
-    local target="$HOME/config/hypr/hyprland.conf"
+    local target="$HOME/config/hypr/hyprland.lua"
     mkdir -p "$(dirname "$target")"
 
     # 1. Install a pristine file and record its hash
@@ -161,23 +161,23 @@ test_upgrade_hash_pristine_vs_modified() {
     [ -n "$(manifest_lookup "$target")" ] || { fail "manifest_lookup empty after record"; return; }
 
     # 2. Pristine file (hash matches) → safe upgrade overwrites
-    install_module_target "hypr/hyprland.conf.template" "$target" "safe" >/dev/null 2>&1 || true
+    install_module_target "hypr/hyprland.lua.template" "$target" "safe" >/dev/null 2>&1 || true
     grep -q "Pimarchy Hyprland Configuration" "$target" || { fail "pristine file was not refreshed"; return; }
 
     # 3. User-modified file → safe upgrade leaves untouched.
     #    (The manifest still holds the install-time hash; user edits are
     #    never recorded — that mismatch is what marks the file as modified.)
     echo "# my custom edits" > "$target"
-    install_module_target "hypr/hyprland.conf.template" "$target" "safe" >/dev/null 2>&1 || true
+    install_module_target "hypr/hyprland.lua.template" "$target" "safe" >/dev/null 2>&1 || true
     grep -q "# my custom edits" "$target" || { fail "user-modified file was clobbered"; return; }
 
     # 4. File with no manifest entry (pre-Quattro / user file) → untouched in safe mode
     rm -f "$PIMARCHY_MANIFEST_FILE"
-    install_module_target "hypr/hyprland.conf.template" "$target" "safe" >/dev/null 2>&1 || true
+    install_module_target "hypr/hyprland.lua.template" "$target" "safe" >/dev/null 2>&1 || true
     grep -q "# my custom edits" "$target" || { fail "un-manifested file was clobbered in safe mode"; return; }
 
     # 5. Force mode (install.sh path) always overwrites and records the new hash
-    install_module_target "hypr/hyprland.conf.template" "$target" "force" >/dev/null 2>&1 || true
+    install_module_target "hypr/hyprland.lua.template" "$target" "force" >/dev/null 2>&1 || true
     grep -q "Pimarchy Hyprland Configuration" "$target" || { fail "force mode did not overwrite"; return; }
     [ -n "$(manifest_lookup "$target")" ] || { fail "force mode did not record hash"; return; }
     pass
@@ -255,7 +255,7 @@ test_bindings_template_renders() {
     # The bindings template must reference all four DEFAULT_* vars and render
     defaults_export_vars
     local out="$SANDBOX/bindings-rendered"
-    process_template "$PIMARCHY_DIR/config/hypr/bindings.conf.template" "$out" >/dev/null
+    process_template "$PIMARCHY_DIR/config/hypr/bindings.lua.template" "$out" >/dev/null
     for var in DEFAULT_TERMINAL DEFAULT_BROWSER DEFAULT_EDITOR DEFAULT_AGENT; do
         local value
         value="${!var}"
@@ -271,9 +271,11 @@ test_bindings_template_renders() {
 test_hyprland_conf_sources_bindings() {
     defaults_export_vars
     local out="$SANDBOX/hyprland-rendered"
-    process_template "$PIMARCHY_DIR/config/hypr/hyprland.conf.template" "$out" >/dev/null
-    grep -q "source = ~/.config/hypr/bindings.conf" "$out" || { fail "hyprland.conf no longer sources bindings.conf"; return; }
-    grep -qF "class ^(raven)$" "$out" || { fail "raven windowrule missing"; return; }
+    process_template "$PIMARCHY_DIR/config/hypr/hyprland.lua.template" "$out" >/dev/null
+    grep -q 'require("hypr.bindings")' "$out" || { fail "hyprland.lua no longer requires bindings.lua"; return; }
+    grep -qF '"^raven$"' "$out" || { fail "raven windowrule missing"; return; }
+    # Lua format sanity: no hyprlang-only syntax leaked in
+    grep -qE "^\s*(exec-once|source)\s*=" "$out" && { fail "hyprlang syntax found in Lua config"; return; }
     pass
 }
 

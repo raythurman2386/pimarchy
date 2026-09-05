@@ -1,0 +1,93 @@
+-- Pimarchy Keybinds (Lua)
+-- Required by hyprland.lua — edit there if you want to disable this file.
+--
+-- Defaults respect `pimarchy default <agent|browser|editor|terminal>`:
+--   {{DEFAULT_BROWSER}}, {{DEFAULT_EDITOR}}, {{DEFAULT_TERMINAL}}, {{DEFAULT_AGENT}}
+--
+-- Raw hl.bind signature: hl.bind(keys, dispatcher, opts) where opts carries
+-- { description = ... } (shown in the pimarchy-keybindings viewer, Super+K)
+-- plus { mouse = true } for pointer binds, { repeating = true } for repeats.
+
+local function exec(command)
+    return hl.dsp.exec_cmd(command)
+end
+
+-- ============================================================================
+-- Applications
+-- ============================================================================
+hl.bind("SUPER + RETURN", exec("{{DEFAULT_TERMINAL}}"), { description = "Terminal" })
+hl.bind("SUPER + D", exec("rofi -show drun"), { description = "App Launcher" })
+hl.bind("SUPER + SHIFT + B", exec("{{DEFAULT_BROWSER}}"), { description = "Browser" })
+hl.bind("SUPER + E", exec("thunar"), { description = "File Manager" })
+hl.bind("SUPER + M", exec("{{DEFAULT_TERMINAL}} --app-id btop -e btop"), { description = "System Monitor" })
+hl.bind("SUPER + K", exec("pimarchy-keybindings"), { description = "Show Keybindings" })
+
+-- ============================================================================
+-- Coding agent — Quattro-style, own window class for theming
+-- ============================================================================
+hl.bind("SUPER + SHIFT + CTRL + A", exec("pimarchy agent"), { description = "Coding Agent" })
+
+-- ============================================================================
+-- Window management
+-- ============================================================================
+hl.bind("SUPER + W", hl.dsp.window.close(), { description = "Close Window" })
+hl.bind("SUPER + SHIFT + W", hl.dsp.exit(), { description = "Exit Hyprland" })
+hl.bind("SUPER + V", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle Floating" })
+hl.bind("SUPER + F", hl.dsp.window.fullscreen({ mode = "fullscreen" }), { description = "Toggle Fullscreen" })
+hl.bind("SUPER + P", hl.dsp.window.pseudo(), { description = "Toggle Pseudo-tile" })
+hl.bind("SUPER + J", hl.dsp.layout("togglesplit"), { description = "Toggle Split" })
+
+-- ============================================================================
+-- Focus movement
+-- ============================================================================
+hl.bind("SUPER + LEFT", hl.dsp.focus({ direction = "l" }), { description = "Focus Left" })
+hl.bind("SUPER + RIGHT", hl.dsp.focus({ direction = "r" }), { description = "Focus Right" })
+hl.bind("SUPER + UP", hl.dsp.focus({ direction = "u" }), { description = "Focus Up" })
+hl.bind("SUPER + DOWN", hl.dsp.focus({ direction = "d" }), { description = "Focus Down" })
+
+-- ============================================================================
+-- Window movement
+-- ============================================================================
+hl.bind("SUPER + SHIFT + LEFT", hl.dsp.window.move({ direction = "l" }), { description = "Move Window Left" })
+hl.bind("SUPER + SHIFT + RIGHT", hl.dsp.window.move({ direction = "r" }), { description = "Move Window Right" })
+hl.bind("SUPER + SHIFT + UP", hl.dsp.window.move({ direction = "u" }), { description = "Move Window Up" })
+hl.bind("SUPER + SHIFT + DOWN", hl.dsp.window.move({ direction = "d" }), { description = "Move Window Down" })
+
+-- ============================================================================
+-- Workspaces
+-- ============================================================================
+for workspace = 1, 10 do
+    local label = workspace == 10 and "0" or tostring(workspace)
+    hl.bind("SUPER + " .. label, hl.dsp.focus({ workspace = tostring(workspace) }),
+        { description = "Workspace " .. workspace })
+    hl.bind("SUPER + SHIFT + " .. label, hl.dsp.window.move({ workspace = tostring(workspace) }),
+        { description = "Move to Workspace " .. workspace })
+end
+
+-- Cycle workspaces like the live desktop (Tab / Shift+Tab)
+hl.bind("SUPER + TAB", hl.dsp.focus({ workspace = "e+1" }), { description = "Next Workspace" })
+hl.bind("SUPER + SHIFT + TAB", hl.dsp.focus({ workspace = "e-1" }), { description = "Previous Workspace" })
+
+-- Scroll through existing workspaces with mainMod + scroll
+hl.bind("SUPER + mouse_down", hl.dsp.focus({ workspace = "e+1" }), { description = "Scroll Workspace Forward" })
+hl.bind("SUPER + mouse_up", hl.dsp.focus({ workspace = "e-1" }), { description = "Scroll Workspace Backward" })
+
+-- Move/resize windows with mainMod + LMB/RMB and dragging
+hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { description = "Move Window", mouse = true })
+hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { description = "Resize Window", mouse = true })
+
+-- ============================================================================
+-- Volume controls
+-- ============================================================================
+hl.bind("XF86AudioRaiseVolume", exec("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"),
+    { description = "Volume Up", repeating = true })
+hl.bind("XF86AudioLowerVolume", exec("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
+    { description = "Volume Down", repeating = true })
+hl.bind("XF86AudioMute", exec("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),
+    { description = "Toggle Mute" })
+
+-- ============================================================================
+-- Screenshots
+-- ============================================================================
+hl.bind("PRINT", exec("~/.config/hypr/screenshot.sh region"), { description = "Screenshot (Region)" })
+hl.bind("SHIFT + PRINT", exec("~/.config/hypr/screenshot.sh full"), { description = "Screenshot (Full Screen)" })

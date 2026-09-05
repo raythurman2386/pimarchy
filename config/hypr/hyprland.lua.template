@@ -1,0 +1,167 @@
+-- Pimarchy Hyprland Configuration (Lua)
+-- Raspberry Pi 500 Optimized
+--
+-- Lua is the supported config format since Hyprland 0.55; the legacy .conf
+-- format is removed in 0.57. Template variables ({{...}}) are rendered by
+-- install.sh from config/theme.conf.
+
+-- ============================================================================
+-- Monitor Settings
+-- ============================================================================
+hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
+
+-- ============================================================================
+-- Environment Variables (Pi 500 VideoCore VII)
+-- ============================================================================
+-- WLR_DRM_DEVICES/AQ_DRM_DEVICES is set at launch time by start-hyprland.sh
+-- (auto-detected). VC4 has no hardware cursor plane support in wlroots —
+-- software cursors are a deliberate Pi choice.
+hl.env("XCURSOR_SIZE", "{{CURSOR_SIZE}}")
+hl.env("XCURSOR_THEME", "{{CURSOR_THEME}}")
+hl.env("QT_QPA_PLATFORMTHEME", "qt5ct")
+hl.env("WLR_RENDERER", "gles2")
+hl.env("WLR_NO_HARDWARE_CURSORS", "1")
+hl.env("AQ_NO_HARDWARE_CURSORS", "1")
+hl.env("GDK_BACKEND", "wayland,x11")
+
+-- ============================================================================
+-- Autostart
+-- ============================================================================
+-- NOTE: waybar and mako are managed by systemd user services
+-- (graphical-session.target) and must NOT be started here — doing so causes
+-- duplicate instances under UWSM.
+
+-- Polkit agent — needed for GUI auth dialogs (e.g. sudo prompts from apps)
+hl.on("hyprland.start", function()
+    hl.exec_cmd("lxpolkit")
+end)
+
+-- ============================================================================
+-- Input (matches live Omarchy input.lua)
+-- ============================================================================
+hl.config({
+    input = {
+        kb_layout = "{{KEYBOARD_LAYOUT}}",
+        kb_variant = "",
+        kb_model = "",
+        kb_options = "",
+        kb_rules = "",
+
+        follow_mouse = 1,
+
+        touchpad = {
+            natural_scroll = false,
+        },
+
+        sensitivity = 0,
+
+        -- Live-parity typing feel
+        repeat_rate = 40,
+        repeat_delay = 250,
+        numlock_by_default = true,
+    },
+})
+
+-- ============================================================================
+-- General (gaps/borders match live looknfeel)
+-- ============================================================================
+hl.config({
+    general = {
+        gaps_in = {{GAPS_IN}},
+        gaps_out = {{GAPS_OUT}},
+        border_size = {{BORDER_SIZE}},
+        col = {
+            active_border = "{{BORDER_ACTIVE}}",
+            inactive_border = "{{BORDER_INACTIVE}}",
+        },
+        layout = "dwindle",
+    },
+})
+
+-- ============================================================================
+-- Decoration — zero cost on the Pi: no rounding, blur, or shadows
+-- ============================================================================
+hl.config({
+    decoration = {
+        rounding = {{CORNER_RADIUS}},
+        blur = { enabled = false },
+        shadow = { enabled = false },
+    },
+})
+
+-- ============================================================================
+-- Animations (live Omarchy tuning; workspace anim off — the expensive one)
+-- ============================================================================
+hl.curve("easeOutQuint", { type = "bezier", points = { { 0.23, 1 }, { 0.32, 1 } } })
+hl.curve("easeInOutCubic", { type = "bezier", points = { { 0.65, 0 }, { 0.35, 1 } } })
+hl.curve("linear", { type = "bezier", points = { { 0, 0 }, { 1, 1 } } })
+hl.curve("almostLinear", { type = "bezier", points = { { 0.5, 0.5 }, { 0.75, 1.0 } } })
+hl.curve("quick", { type = "bezier", points = { { 0.15, 0 }, { 0.1, 1 } } })
+
+hl.animation({ leaf = "global", enabled = true, speed = 10, bezier = "default" })
+hl.animation({ leaf = "windows", enabled = true, speed = 3.79, bezier = "easeOutQuint" })
+hl.animation({ leaf = "windowsIn", enabled = true, speed = 4.1, bezier = "quick", style = "popin 87%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.49, bezier = "linear", style = "popin 87%" })
+hl.animation({ leaf = "fadeIn", enabled = true, speed = 1.73, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 1.46, bezier = "almostLinear" })
+hl.animation({ leaf = "fade", enabled = true, speed = 3.03, bezier = "quick" })
+hl.animation({ leaf = "layers", enabled = true, speed = 3.81, bezier = "easeOutQuint" })
+hl.animation({ leaf = "fadeLayersIn", enabled = true, speed = 1.79, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = 1.39, bezier = "almostLinear" })
+hl.animation({ leaf = "workspaces", enabled = false })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3, bezier = "easeOutQuint", style = "slidevert" })
+
+-- ============================================================================
+-- Layouts
+-- ============================================================================
+hl.config({
+    dwindle = {
+        preserve_split = true,
+    },
+    master = {
+        new_status = "master",
+    },
+})
+
+-- ============================================================================
+-- Misc / Cursor (live parity)
+-- ============================================================================
+hl.config({
+    misc = {
+        disable_hyprland_logo = true,
+        disable_splash_rendering = true,
+        focus_on_activate = true,
+    },
+    cursor = {
+        hide_on_key_press = true,
+        warp_on_change_workspace = 1,
+    },
+})
+
+-- ============================================================================
+-- Window Rules
+-- ============================================================================
+-- Live opacity tuning: slightly transparent, browsers near-opaque
+hl.window_rule({ match = { class = ".*" }, opacity = "{{OPACITY_DEFAULT}}" })
+hl.window_rule({ match = { class = ".*(chromium|Chromium).*" }, opacity = "{{OPACITY_BROWSER}}" })
+-- Floating terminal for btop (launched by keybind / waybar clicks)
+hl.window_rule({ match = { class = "^btop$" }, float = true, size = { 900, 600 }, center = true })
+-- Floating terminal for pimarchy update (launched by waybar update widget)
+hl.window_rule({ match = { class = "^pimarchy-update$" }, float = true, size = { 800, 500 }, center = true })
+-- Coding agent — Quattro-style, own window class for theming
+hl.window_rule({ match = { class = "^raven$" }, float = true, size = { 900, 600 }, center = true })
+
+-- ============================================================================
+-- Keybinds
+-- ============================================================================
+-- Keybinds live in bindings.lua (required below) so app defaults can be
+-- templated from `pimarchy default <agent|browser|editor|terminal>`.
+-- Descriptions feed the pimarchy-keybindings viewer (Super+K) via
+-- hyprctl -j binds.
+
+-- Hyprland's default package.path doesn't include the config dir; extend it
+-- so require("hypr.bindings") resolves to ~/.config/hypr/bindings.lua.
+local home = os.getenv("HOME") or ""
+package.path = home .. "/.config/?.lua;" .. package.path
+
+require("hypr.bindings")
