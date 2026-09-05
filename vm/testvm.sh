@@ -52,6 +52,10 @@ MEM="${PIMARCHY_VM_MEM:-4G}"
 CPUS="${PIMARCHY_VM_CPUS:-4}"
 
 VM_USER="${PIMARCHY_VM_USER:-pim}"
+# Login password (greeter/ssh-with-password). Kept trivial on purpose — this
+# VM is a local test target, not a security boundary. SSH also always works
+# with the generated key, and sudo is passwordless.
+VM_PASS="${PIMARCHY_VM_PASS:-pimarchy}"
 SSH_PORT="${PIMARCHY_VM_SSH_PORT:-2222}"
 SPICE_PORT="${PIMARCHY_VM_SPICE_PORT:-5930}"
 
@@ -229,11 +233,15 @@ users:
   - name: $VM_USER
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
-    lock_passwd: true
+    lock_passwd: false
     ssh_authorized_keys:
       - $pubkey
 chpasswd:
   expire: false
+  users:
+    - name: $VM_USER
+      password: $VM_PASS
+      type: text
 packages:
   - sudo
   - rsync
@@ -242,7 +250,6 @@ hostname: pimarchy-vm
 # races our own apt calls; rsync is installed in the setup phase instead.
 package_update: false
 EOF
-
     cat > "$tmpd/meta-data" <<EOF
 instance-id: pimarchy-vm-001
 local-hostname: pimarchy-vm

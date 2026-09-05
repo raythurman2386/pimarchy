@@ -4,6 +4,17 @@ A throwaway Debian Trixie VM (the same base as Pi OS Lite) for testing
 Pimarchy installs without touching a physical Pi. Boots in a graphical
 window, so you can watch greetd and the Hyprland session come up.
 
+## Logging in
+
+Credentials (deliberately trivial — local test target only):
+
+- User: `pim` (password `pimarchy`, overridable via `PIMARCHY_VM_PASS`)
+- Passwordless sudo is enabled for `pim`
+- SSH (no password needed): `vm/testvm.sh ssh` — port 2222 on 127.0.0.1
+
+`vm/testvm.sh boot` opens the graphical window so you can log in at greetd
+and watch the Hyprland session start.
+
 ## One-time setup
 
 ```bash
