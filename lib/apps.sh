@@ -48,7 +48,10 @@ install_zed() {
         sudo apt install -y curl
     fi
 
-    curl -f https://zed.dev/install.sh | sh
+    if ! curl -f https://zed.dev/install.sh | bash; then
+        log_error "Zed installer failed — continuing without it"
+        return 0
+    fi
 
     if command -v zed &>/dev/null; then
         log_success "Zed installed successfully"
@@ -87,7 +90,10 @@ install_ollama() {
         sudo apt install -y curl
     fi
 
-    curl -fsSL https://ollama.com/install.sh | sh
+    if ! curl -fsSL https://ollama.com/install.sh | bash; then
+        log_error "Ollama installer failed — continuing without it"
+        return 0
+    fi
 
     if command -v ollama &>/dev/null; then
         log_success "Ollama installed successfully"
@@ -129,7 +135,12 @@ install_raven() {
         sudo apt install -y curl
     fi
 
-    curl -fsSL https://raw.githubusercontent.com/raythurman2386/raven/master/install.sh | sh
+    # The installer uses bash conditionals ([[ ]]) — piping it to sh breaks on
+    # Debian/Pi OS where /bin/sh is dash (silent failure, empty version tag).
+    if ! curl -fsSL https://raw.githubusercontent.com/raythurman2386/raven/master/install.sh | bash; then
+        log_error "Raven installer failed (network or release problem) — continuing without it"
+        return 0
+    fi
 
     if command -v raven &>/dev/null; then
         log_success "Raven installed successfully"
@@ -171,7 +182,7 @@ install_rustup() {
         sudo apt install -y curl
     fi
 
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
 
     # Make cargo/rustup available in this shell even before re-login
     if [ -f "$HOME/.cargo/env" ]; then

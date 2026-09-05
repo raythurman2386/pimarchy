@@ -44,6 +44,10 @@ Thumbs.db
 # The config template lives in config/raven/ and is tracked separately.
 .raven/
 
+# VM files for installing, testing, and tweaking in a local vm
+.vm/
+vm/.vm/
+
 # Don't ignore the example configs
 !config/**/*.conf
 !config/**/*.template
