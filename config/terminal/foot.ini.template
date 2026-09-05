@@ -1,10 +1,15 @@
 # Pimarchy Foot Configuration
 # Ravenwood theme matching the desktop (values match the live Omarchy foot)
 # Foot is a fast, lightweight Wayland-native terminal emulator.
+#
+# foot >=1.21 notes (all verified against Debian Trixie's foot 1.21):
+#   - color values must NOT have a leading '#' (stripped-hex vars below)
+#   - scrollback / cursor live in their own sections, not [main]
+#   - clipboard chords need primary-paste=none so Shift+Insert stays free
 
 [main]
 # Font family and size
-font={{FONT_FAMILY}}:size={{FONT_SIZE}}
+font={{FONT_NAME}}:size={{FONT_SIZE}}
 
 # Live padding (roomy, matches the desktop look)
 pad=14x14
@@ -12,15 +17,14 @@ pad=14x14
 # No render worker threads — lower latency and less CPU on the Pi (live perf setting)
 workers=0
 
-# Hide the window decorations (managed by Hyprland)
-hide-when-typing=yes
-
 # Scrollback lines
-scrollback=10000
+[scrollback]
+lines=10000
 
-# Cursor style: block, underline, or beam
-cursor-style=block
-cursor-blink=no
+# Cursor style: block, underline, beam, or hollow
+[cursor]
+style=block
+blink=no
 
 # ============================================================================
 # Colors (Ravenwood — live Omarchy palette)
@@ -28,32 +32,32 @@ cursor-blink=no
 
 [colors]
 # Foreground / background
-foreground={{TERM_FG_COLOR}}
-background={{TERM_BG_COLOR}}
+foreground={{TERM_FG_HEX}}
+background={{TERM_BG_HEX}}
 
 # Normal palette (16 colors)
-regular0={{TERM_PALETTE_0}}
-regular1={{TERM_PALETTE_1}}
-regular2={{TERM_PALETTE_2}}
-regular3={{TERM_PALETTE_3}}
-regular4={{TERM_PALETTE_4}}
-regular5={{TERM_PALETTE_5}}
-regular6={{TERM_PALETTE_6}}
-regular7={{TERM_PALETTE_7}}
+regular0={{TERM_PALETTE_0_HEX}}
+regular1={{TERM_PALETTE_1_HEX}}
+regular2={{TERM_PALETTE_2_HEX}}
+regular3={{TERM_PALETTE_3_HEX}}
+regular4={{TERM_PALETTE_4_HEX}}
+regular5={{TERM_PALETTE_5_HEX}}
+regular6={{TERM_PALETTE_6_HEX}}
+regular7={{TERM_PALETTE_7_HEX}}
 
 # Bright palette
-bright0={{TERM_PALETTE_8}}
-bright1={{TERM_PALETTE_9}}
-bright2={{TERM_PALETTE_10}}
-bright3={{TERM_PALETTE_11}}
-bright4={{TERM_PALETTE_12}}
-bright5={{TERM_PALETTE_13}}
-bright6={{TERM_PALETTE_14}}
-bright7={{TERM_PALETTE_15}}
+bright0={{TERM_PALETTE_8_HEX}}
+bright1={{TERM_PALETTE_9_HEX}}
+bright2={{TERM_PALETTE_10_HEX}}
+bright3={{TERM_PALETTE_11_HEX}}
+bright4={{TERM_PALETTE_12_HEX}}
+bright5={{TERM_PALETTE_13_HEX}}
+bright6={{TERM_PALETTE_14_HEX}}
+bright7={{TERM_PALETTE_15_HEX}}
 
 # Selection colors
-selection-foreground={{TERM_BG_COLOR}}
-selection-background={{TERM_PALETTE_6}}
+selection-foreground={{TERM_BG_HEX}}
+selection-background={{TERM_PALETTE_6_HEX}}
 
 # ============================================================================
 # Keybindings
@@ -61,8 +65,9 @@ selection-background={{TERM_PALETTE_6}}
 
 [key-bindings]
 # Copy / paste (Control+Insert / Shift+Insert match the live chords)
-copy=Control+Shift+C Control+Insert
-paste=Control+Shift+V Shift+Insert
+clipboard-copy=Control+Shift+c Control+Insert
+primary-paste=none
+clipboard-paste=Control+Shift+v Shift+Insert
 
 # Font size adjustments
 font-increase=Control+plus

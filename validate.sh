@@ -33,6 +33,15 @@ load_config "$PIMARCHY_ROOT/config/theme.conf"
 # Set derived variables
 export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
 export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
+export TERM_FG_HEX="${TERM_FG_COLOR#\#}"
+export TERM_BG_HEX="${TERM_BG_COLOR#\#}"
+for _i in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+    _palette_var="TERM_PALETTE_${_i}"
+    _hex_value="${!_palette_var}"
+    _hex_value="${_hex_value#\#}"
+    export "TERM_PALETTE_${_i}_HEX=$_hex_value"
+done
+unset _i _palette_var _hex_value
 
 # Detect keyboard layout (same as install.sh)
 export KEYBOARD_LAYOUT=$(detect_keyboard_layout)
@@ -189,7 +198,9 @@ while IFS='=' read -r var_name _; do
     if ! grep -rqF "{{${var_name}}}" "$PIMARCHY_ROOT/config" 2>/dev/null \
        && ! grep -rqw "$var_name" "$PIMARCHY_ROOT/lib" "$PIMARCHY_ROOT/bin" \
                         "$PIMARCHY_ROOT/install.sh" "$PIMARCHY_ROOT/uninstall.sh" \
-                        2>/dev/null; then
+                        "$PIMARCHY_ROOT/validate.sh" 2>/dev/null \
+       && ! grep -rqE "TERM_PALETTE_\\\$\{?_i" "$PIMARCHY_ROOT/install.sh" \
+                    "$PIMARCHY_ROOT/bin/pimarchy-upgrade" 2>/dev/null; then
         unused_theme_vars+=("$var_name")
     fi
 done < "$PIMARCHY_ROOT/config/theme.conf"

@@ -83,11 +83,11 @@
     },
 
     "custom/battery": {
-        "exec": "cat /sys/class/power_supply/BAT*/capacity 2>/dev/null || true",
+        "exec": "capacity=$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1); [ -n \"$capacity\" ] && echo $capacity",
         "exec-if": "[ -d /sys/class/power_supply/BAT0 ] || [ -d /sys/class/power_supply/BAT1 ]",
-        "format": "{}%",
+        "format": "󰁹 {}",
         "interval": 30,
-        "tooltip": false
+        "tooltip": true
     },
 
     "temperature": {
@@ -102,17 +102,18 @@
     },
 
     "memory": {
-        "format": "{{ICON_MEMORY}} {}%",
+        "format": "{{ICON_MEMORY}}",
         "interval": 5,
         "on-click": "{{DEFAULT_TERMINAL}} --app-id btop -e btop"
     },
 
     "pulseaudio": {
-        "format": "{icon} {volume}%",
-        "format-muted": "{{ICON_VOLUME_MUTED}} Muted",
+        "format": "{icon}",
+        "format-muted": "{{ICON_VOLUME_MUTED}}",
         "format-icons": {
             "default": ["{{ICON_VOLUME_LOW}}", "{{ICON_VOLUME_MEDIUM}}", "{{ICON_VOLUME_HIGH}}"]
         },
+        "tooltip-format": "Volume {volume}%",
         "on-click": "pavucontrol",
         "scroll-step": 5
     },

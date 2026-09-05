@@ -78,9 +78,19 @@ source "$PIMARCHY_ROOT/lib/functions.sh"
 # Load configurations
 load_config "$PIMARCHY_ROOT/config/theme.conf"
 
-# Set derived variables (hex-without-# forms used by legacy templates)
+# Set derived variables (hex-without-# forms used by templates;
+# foot >=1.21 and friends require colors without the leading '#')
 export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
 export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
+export TERM_FG_HEX="${TERM_FG_COLOR#\#}"
+export TERM_BG_HEX="${TERM_BG_COLOR#\#}"
+for _i in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+    _palette_var="TERM_PALETTE_${_i}"
+    _hex_value="${!_palette_var}"
+    _hex_value="${_hex_value#\#}"
+    export "TERM_PALETTE_${_i}_HEX=$_hex_value"
+done
+unset _i _palette_var _hex_value
 
 # Detect keyboard layout
 export KEYBOARD_LAYOUT=$(detect_keyboard_layout)
