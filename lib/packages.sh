@@ -133,19 +133,20 @@ install_legacy_packages() {
     install_module_packages office
 }
 
-# install_nerd_font — CaskaydiaCove Nerd Font, fetched from the upstream
+# install_nerd_font — JetBrainsMono Nerd Font, fetched from the upstream
 # release (needed by the Ravenwood theme; not packaged in Debian).
+# Matches the live Omarchy terminal font choice.
 install_nerd_font() {
-    if fc-list 2>/dev/null | grep -iq "CaskaydiaCove Nerd Font"; then
+    if fc-list 2>/dev/null | grep -iq "JetBrainsMono Nerd Font"; then
         return 0
     fi
 
-    log_info "Installing CaskaydiaCove Nerd Font..."
+    log_info "Installing JetBrainsMono Nerd Font..."
     mkdir -p "$HOME/.local/share/fonts"
-    wget -qO /tmp/CascadiaCode.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/CascadiaCode.zip
-    unzip -qo /tmp/CascadiaCode.zip -d "$HOME/.local/share/fonts/" || true
+    wget -qO /tmp/JetBrainsMono.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+    unzip -qo /tmp/JetBrainsMono.zip -d "$HOME/.local/share/fonts/" || true
     fc-cache -fv "$HOME/.local/share/fonts" > /dev/null
-    rm -f /tmp/CascadiaCode.zip
+    rm -f /tmp/JetBrainsMono.zip
 }
 
 remove_packages() {

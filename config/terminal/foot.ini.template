@@ -1,13 +1,16 @@
 # Pimarchy Foot Configuration
-# Ravenwood theme matching the desktop
+# Ravenwood theme matching the desktop (values match the live Omarchy foot)
 # Foot is a fast, lightweight Wayland-native terminal emulator.
 
 [main]
 # Font family and size
 font={{FONT_FAMILY}}:size={{FONT_SIZE}}
 
-# Padding (left, right, top, bottom)
-pad=6x6
+# Live padding (roomy, matches the desktop look)
+pad=14x14
+
+# No render worker threads — lower latency and less CPU on the Pi (live perf setting)
+workers=0
 
 # Hide the window decorations (managed by Hyprland)
 hide-when-typing=yes
@@ -20,7 +23,7 @@ cursor-style=block
 cursor-blink=no
 
 # ============================================================================
-# Colors (Ravenwood Dark)
+# Colors (Ravenwood — live Omarchy palette)
 # ============================================================================
 
 [colors]
@@ -57,9 +60,9 @@ selection-background={{TERM_PALETTE_6}}
 # ============================================================================
 
 [key-bindings]
-# Copy / paste
-copy=Control+Shift+C
-paste=Control+Shift+V
+# Copy / paste (Control+Insert / Shift+Insert match the live chords)
+copy=Control+Shift+C Control+Insert
+paste=Control+Shift+V Shift+Insert
 
 # Font size adjustments
 font-increase=Control+plus

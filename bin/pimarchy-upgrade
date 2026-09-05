@@ -21,7 +21,6 @@ if [ "${1:-}" = "--snapshot-only" ]; then
     load_config "$PIMARCHY_ROOT/config/theme.conf"
     export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
     export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
-    export COLOR_BASE_HEX="${COLOR_BASE#\#}"
     export KEYBOARD_LAYOUT="$(detect_keyboard_layout)"
     defaults_install_defaults
     defaults_export_vars
@@ -33,7 +32,6 @@ fi
 load_config "$PIMARCHY_ROOT/config/theme.conf"
 export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
 export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
-export COLOR_BASE_HEX="${COLOR_BASE#\#}"
 export KEYBOARD_LAYOUT="$(detect_keyboard_layout)"
 export PIMARCHY_ROOT
 

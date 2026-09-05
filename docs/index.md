@@ -19,7 +19,7 @@ Inspired by [Omarchy](https://github.com/basecamp/omarchy) by Basecamp, it focus
 
 | Layer | Component | Description |
 |-------|-----------|-------------|
-| **Compositor** | Hyprland | Dynamic tiling Wayland compositor with smooth animations. |
+| **Compositor** | Hyprland | Dynamic tiling Wayland compositor with live-tuned animations (workspace switching stays instant for Pi performance). |
 | **Status bar** | Waybar | Highly customizable CSS-themed status bar. |
 | **App launcher** | Rofi | Wayland-native launcher with custom Ravenwood theme. |
 | **Notifications** | Mako | Lightweight notification daemon. |

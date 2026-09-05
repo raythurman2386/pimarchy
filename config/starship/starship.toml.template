@@ -1,78 +1,42 @@
 #
 # Pimarchy Starship Configuration
+# Matches the live Omarchy prompt: minimal single line, cyan accents.
 #
 
-format = """
-[░▒▓]({{COLOR_PRIMARY}})\
-$os\
-$username\
-[](bg:{{COLOR_SURFACE}} fg:{{COLOR_PRIMARY}})\
-$directory\
-[](fg:{{COLOR_SURFACE}} bg:{{COLOR_OVERLAY}})\
-$git_branch\
-$git_status\
-[](fg:{{COLOR_OVERLAY}} bg:{{COLOR_BASE}})\
-$nodejs\
-$rust\
-$python\
-$docker_context\
-$lua\
-[ ](fg:{{COLOR_BASE}})\
-"""
+format = "[$directory$git_branch$git_status]($style)$character"
+command_timeout = 200
+add_newline = true
 
-[os]
-disabled = false
-style = "bg:{{COLOR_PRIMARY}} fg:{{COLOR_BASE}}"
-
-# Explicitly set symbols so Alacritty uses the exact glyphs from
-# CaskaydiaCove Nerd Font Mono rather than relying on Starship's defaults,
-# which can render as boxes if glyph lookup order differs at runtime.
-[os.symbols]
-Raspbian = " "
-Linux = " "
-
-[username]
-show_always = true
-style_user = "bg:{{COLOR_PRIMARY}} fg:{{COLOR_BASE}}"
-style_root = "bg:{{COLOR_PRIMARY}} fg:{{COLOR_BASE}}"
-format = '[$user]($style)'
+[character]
+success_symbol = "[❯](bold cyan)"
+error_symbol = "[✗](bold cyan)"
 
 [directory]
-style = "bg:{{COLOR_SURFACE}} fg:{{COLOR_TEXT}}"
-format = "[ $path ]($style)"
-truncation_length = 3
+truncation_length = 2
 truncation_symbol = "…/"
+style = "bold cyan"
+format = "[$path]($style)[$read_only]($read_only_style) "
+read_only_style = "cyan"
+repo_root_style = "bold cyan"
+before_repo_root_style = "cyan"
 
 [git_branch]
-symbol = ""
-style = "bg:{{COLOR_OVERLAY}} fg:{{COLOR_PRIMARY}}"
-format = '[[ $symbol $branch ]($style)]($style)'
+symbol = "⎇ "
+style = "italic cyan"
+format = "[$symbol$branch]($style) "
 
 [git_status]
-style = "bg:{{COLOR_OVERLAY}} fg:{{COLOR_PRIMARY}}"
-format = '[[($all_status$ahead_behind )]($style)]($style)'
-
-[nodejs]
-symbol = ""
-style = "bg:{{COLOR_BASE}} fg:{{COLOR_PRIMARY}}"
-format = '[[ $symbol ($version) ]($style)]($style)'
-
-[rust]
-symbol = ""
-style = "bg:{{COLOR_BASE}} fg:{{COLOR_PRIMARY}}"
-format = '[[ $symbol ($version) ]($style)]($style)'
-
-[python]
-symbol = ""
-style = "bg:{{COLOR_BASE}} fg:{{COLOR_PRIMARY}}"
-format = '[[ $symbol ($version) ]($style)]($style)'
-
-[docker_context]
-symbol = ""
-style = "bg:{{COLOR_BASE}} fg:{{COLOR_PRIMARY}}"
-format = '[[ $symbol $context ]($style)]($style)'
-
-[lua]
-symbol = ""
-style = "bg:{{COLOR_BASE}} fg:{{COLOR_PRIMARY}}"
-format = '[[ $symbol ($version) ]($style)]($style)'
+style = "italic cyan"
+format = '[$all_status$ahead_behind]($style) '
+# Blank most states like the live prompt (keep only ahead/behind + dirty)
+modified = ""
+staged = ""
+renamed = ""
+deleted = ""
+untracked = ""
+stashed = ""
+conflicted = ""
+ahead = "⇡${count} "
+behind = "⇣${count} "
+diverged = "⇕${ahead_count}${behind_count} "
+dirty = "*"

@@ -78,10 +78,9 @@ source "$PIMARCHY_ROOT/lib/functions.sh"
 # Load configurations
 load_config "$PIMARCHY_ROOT/config/theme.conf"
 
-# Set derived variables
+# Set derived variables (hex-without-# forms used by legacy templates)
 export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
 export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
-export COLOR_BASE_HEX="${COLOR_BASE#\#}"
 
 # Detect keyboard layout
 export KEYBOARD_LAYOUT=$(detect_keyboard_layout)
@@ -381,6 +380,8 @@ if [ "$DRY_RUN" = false ]; then
     echo "  Click workspaces     Cycle to next workspace"
     echo "  Right-click workspaces Cycle to previous workspace"
     echo "  Right-click WiFi     Open network settings"
+    echo "  Click network        Show IP / connection info"
+    echo "  Click bluetooth      Show bluetooth devices"
     echo "  Click volume         Open audio mixer"
     echo "  Scroll on volume     Adjust volume"
     echo "  Click CPU/Memory     Open system monitor (btop)"

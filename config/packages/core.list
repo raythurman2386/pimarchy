@@ -17,8 +17,10 @@ apt:starship
 # --- Fonts & theming ---------------------------------------------------------
 apt:fonts-font-awesome
 apt:fonts-jetbrains-mono
+apt:fonts-liberation
 apt:fonts-noto-color-emoji
-apt:arc-theme
+apt:gnome-themes-extra
+apt:yaru-theme-icon
 apt:papirus-icon-theme
 apt:fontconfig
 

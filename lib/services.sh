@@ -23,7 +23,8 @@ detect_keyboard_layout() {
 
     if command -v localectl &> /dev/null; then
         layout=$(localectl status --no-pager 2>/dev/null | awk -F': ' '/X11 Layout/{gsub(/^[[:space:]]+/,"",$2); print $2; exit}')
-        if [ -n "$layout" ]; then
+        # localectl prints the literal "(unset)" when no keymap is configured
+        if [ -n "$layout" ] && [ "$layout" != "(unset)" ]; then
             echo "$layout"
             return 0
         fi
@@ -41,8 +42,9 @@ detect_keyboard_layout() {
         local layout_file
         for layout_file in /etc/X11/xorg.conf.d/*; do
             if [ -f "$layout_file" ]; then
-                layout=$(grep -E "XkbLayout" "$layout_file" | head -1 | awk '{print $2}' | tr -d '"')
-                if [ -n "$layout" ]; then
+                # Option "XkbLayout" "us" → take the value (last quoted field)
+                layout=$(grep -E "XkbLayout" "$layout_file" | head -1 | grep -oE '"[^"]+"' | tail -1 | tr -d '"')
+                if [ -n "$layout" ] && [ "$layout" != "XkbLayout" ]; then
                     echo "$layout"
                     return 0
                 fi

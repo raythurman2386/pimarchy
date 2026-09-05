@@ -1,84 +1,91 @@
-# Ravenwood btop theme
-# Based on the Everforest Dark palette — matches the Pimarchy desktop theme.
+# All graphs and meters can be gradients
+# For single color graphs leave "mid" and "end" variable empty.
+# Use "start" and "end" variables for two color gradient
+# Use "start", "mid" and "end" for three color gradient
 
-# Main background (empty = use terminal background for transparency)
-theme[main_bg]="#282e33"
+# Main background, empty for terminal default, need to be empty if you want transparent background
+theme[main_bg]="#222822"
 
-# Main foreground text
-theme[main_fg]="#d3c6aa"
+# Main text color
+theme[main_fg]="#e8d5b7"
 
-# Box title text
-theme[title]="#7fbbb3"
+# Title color for boxes
+theme[title]="#e8d5b7"
 
-# Highlighted shortcut keys
+# Highlight color for keyboard shortcuts
 theme[hi_fg]="#e67e80"
 
-# Selected process row background / foreground
-theme[selected_bg]="#374145"
-theme[selected_fg]="#dbbc7f"
+# Background color of selected items
+theme[selected_bg]="#2d3830"
 
-# Inactive / disabled text
-theme[inactive_fg]="#495156"
+# Foreground color of selected items
+theme[selected_fg]="#4ade80"
 
-# Text drawn on top of graphs (uptime, network scale labels)
-theme[graph_text]="#9aa79d"
+# Color of inactive/disabled text
+theme[inactive_fg]="#3d4a40"
 
-# Background of percentage meters
-theme[meter_bg]="#495156"
+# Color of text appearing on top of graphs, i.e uptime and current network graph scaling
+theme[graph_text]="#e8d5b7"
 
-# Misc colors (mini cpu graphs, detail mem graph, status text in proc box)
-theme[proc_misc]="#83c092"
+# Misc colors for processes box including mini cpu graphs, details memory graph and details status text
+theme[proc_misc]="#4ade80"
 
-# Box outline colors
-theme[cpu_box]="#374145"
-theme[mem_box]="#374145"
-theme[net_box]="#374145"
-theme[proc_box]="#374145"
+# Cpu box outline color
+theme[cpu_box]="#2d3830"
 
-# Divider lines between sub-boxes
-theme[div_line]="#374145"
+# Memory/disks box outline color
+theme[mem_box]="#2d3830"
 
-# Temperature gradient: cool → warm → hot
-theme[temp_start]="#7fb38e"
-theme[temp_mid]="#dbbc7f"
+# Net up/down box outline color
+theme[net_box]="#2d3830"
+
+# Processes box outline color
+theme[proc_box]="#2d3830"
+
+# Box divider line and small boxes line color
+theme[div_line]="#2d3830"
+
+# Temperature graph colors
+theme[temp_start]="#4ade80"
+theme[temp_mid]="#fbbf24"
 theme[temp_end]="#e67e80"
 
-# CPU usage gradient: low → mid → high
-theme[cpu_start]="#7fb38e"
-theme[cpu_mid]="#dbbc7f"
+# CPU graph colors
+theme[cpu_start]="#4ade80"
+theme[cpu_mid]="#fbbf24"
 theme[cpu_end]="#e67e80"
 
-# Memory free meter (full = bad = red, empty = good = green)
+# Mem/Disk free meter
 theme[free_start]="#e67e80"
-theme[free_mid]="#dbbc7f"
-theme[free_end]="#7fb38e"
+theme[free_mid]="#fbbf24"
+theme[free_end]="#4ade80"
 
-# Memory cached meter
-theme[cached_start]="#7fbbb3"
-theme[cached_mid]="#83c092"
-theme[cached_end]="#7fb38e"
+# Mem/Disk cached meter
+theme[cached_start]="#22d3ee"
+theme[cached_mid]="#34d399"
+theme[cached_end]="#4ade80"
 
-# Memory available meter
+# Mem/Disk available meter
 theme[available_start]="#e67e80"
-theme[available_mid]="#dbbc7f"
-theme[available_end]="#7fb38e"
+theme[available_mid]="#fbbf24"
+theme[available_end]="#4ade80"
 
-# Memory used meter
-theme[used_start]="#7fb38e"
-theme[used_mid]="#dbbc7f"
+# Mem/Disk used meter
+theme[used_start]="#4ade80"
+theme[used_mid]="#fbbf24"
 theme[used_end]="#e67e80"
 
-# Network download gradient
-theme[download_start]="#7fb38e"
-theme[download_mid]="#83c092"
-theme[download_end]="#7fbbb3"
+# Download graph colors
+theme[download_start]="#4ade80"
+theme[download_mid]="#34d399"
+theme[download_end]="#22d3ee"
 
-# Network upload gradient
-theme[upload_start]="#dbbc7f"
+# Upload graph colors
+theme[upload_start]="#fbbf24"
 theme[upload_mid]="#e69875"
 theme[upload_end]="#e67e80"
 
-# Process list column gradient (threads, mem, cpu)
-theme[process_start]="#7fb38e"
-theme[process_mid]="#dbbc7f"
-theme[process_end]="#e67e80"
+# Process box color gradient for threads, mem and cpu usage
+theme[process_start]="#4ade80"
+theme[process_mid]="#e67e80"
+theme[process_end]="#da6362"

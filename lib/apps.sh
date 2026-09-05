@@ -260,21 +260,31 @@ install_python_dev() {
 apply_gsettings() {
     log_info "Applying desktop settings via dconf..."
 
+    # Live UI font (monospace stays for terminals via fontconfig)
+    local ui_font="Liberation Sans 11"
+    # Yaru-sage variant may be absent on some Debian releases — fall back
+    if [ ! -d "/usr/share/icons/$ICON_THEME" ] && [ -d /usr/share/icons/Papirus-Dark ]; then
+        log_warn "$ICON_THEME icons not found — using Papirus-Dark"
+        local icon_theme="Papirus-Dark"
+    else
+        local icon_theme="$ICON_THEME"
+    fi
+
     # Pi OS Lite ships dconf-cli but not the gsettings CLI; the xdg portal
     # reads dconf directly (that's how Chromium discovers the color scheme).
     if command -v dconf &>/dev/null; then
         dconf write /org/gnome/desktop/interface/gtk-theme "'$GTK_THEME'" 2>/dev/null || true
-        dconf write /org/gnome/desktop/interface/icon-theme "'$ICON_THEME'" 2>/dev/null || true
+        dconf write /org/gnome/desktop/interface/icon-theme "'$icon_theme'" 2>/dev/null || true
         dconf write /org/gnome/desktop/interface/cursor-theme "'$CURSOR_THEME'" 2>/dev/null || true
         dconf write /org/gnome/desktop/interface/cursor-size "$CURSOR_SIZE" 2>/dev/null || true
-        dconf write /org/gnome/desktop/interface/font-name "'$FONT_FAMILY $FONT_SIZE'" 2>/dev/null || true
+        dconf write /org/gnome/desktop/interface/font-name "'$ui_font'" 2>/dev/null || true
         dconf write /org/gnome/desktop/interface/color-scheme "'$COLOR_SCHEME'" 2>/dev/null || true
     elif command -v gsettings &>/dev/null; then
         gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" 2>/dev/null || true
-        gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
         gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME" 2>/dev/null || true
         gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE" 2>/dev/null || true
-        gsettings set org.gnome.desktop.interface font-name "$FONT_FAMILY $FONT_SIZE" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface font-name "$ui_font" 2>/dev/null || true
         gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME" 2>/dev/null || true
     else
         log_warn "Neither dconf nor gsettings found — skipping desktop settings"

@@ -33,7 +33,6 @@ load_config "$PIMARCHY_ROOT/config/theme.conf"
 # Set derived variables
 export COLOR_PRIMARY_HEX="${COLOR_PRIMARY#\#}"
 export COLOR_SURFACE_HEX="${COLOR_SURFACE#\#}"
-export COLOR_BASE_HEX="${COLOR_BASE#\#}"
 
 # Detect keyboard layout (same as install.sh)
 export KEYBOARD_LAYOUT=$(detect_keyboard_layout)
@@ -176,6 +175,32 @@ for var in "${required_vars[@]}"; do
         echo "  ✓ $var"
     fi
 done
+
+# Guard: every theme.conf variable must be consumed by at least one template.
+# Prevents dead drift like unused RGBA/HEIGHT vars that once accumulated here.
+echo ""
+echo "[5b/6] Checking for unused theme variables..."
+
+unused_theme_vars=()
+while IFS='=' read -r var_name _; do
+    var_name="$(echo "$var_name" | tr -d '[:space:]')"
+    # Skip comments and blank lines
+    [[ -z "$var_name" || "$var_name" == \#* ]] && continue
+    if ! grep -rqF "{{${var_name}}}" "$PIMARCHY_ROOT/config" 2>/dev/null \
+       && ! grep -rqw "$var_name" "$PIMARCHY_ROOT/lib" "$PIMARCHY_ROOT/bin" \
+                        "$PIMARCHY_ROOT/install.sh" "$PIMARCHY_ROOT/uninstall.sh" \
+                        2>/dev/null; then
+        unused_theme_vars+=("$var_name")
+    fi
+done < "$PIMARCHY_ROOT/config/theme.conf"
+
+if [ ${#unused_theme_vars[@]} -gt 0 ]; then
+    echo "  ✗ Unused theme variables (defined but referenced by no template):"
+    printf '    - %s\n' "${unused_theme_vars[@]}"
+    missing_vars+=("unused theme vars: ${unused_theme_vars[*]}")
+else
+    echo "  ✓ all theme variables in use"
+fi
 
 echo ""
 echo "[6/6] Running functional tests..."

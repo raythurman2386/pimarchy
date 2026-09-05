@@ -27,6 +27,8 @@ Keybinds live in `~/.config/hypr/bindings.conf` (sourced by `hyprland.conf`) and
 | **SUPER + SHIFT + Arrows** | **Move** | Move the focused window within the layout. |
 | **SUPER + 1–0** | **Workspace** | Switch to workspaces 1 through 10. |
 | **SUPER + SHIFT + 1–0** | **Move to Workspace** | Move the focused window to a specific workspace. |
+| **SUPER + TAB** | **Next Workspace** | Cycle to the next workspace. |
+| **SUPER + SHIFT + TAB** | **Previous Workspace** | Cycle to the previous workspace. |
 
 ## Screen Capture
 
@@ -42,18 +44,19 @@ Keybinds live in `~/.config/hypr/bindings.conf` (sourced by `hyprland.conf`) and
 
 | Shortcut | Action | Description |
 |----------|--------|-------------|
-| **F10** | **Mute** | Toggle audio mute. |
-| **F11** | **Volume Down** | Decrease system volume. |
-| **F12** | **Volume Up** | Increase system volume. |
+| **XF86AudioRaiseVolume** | **Volume Up** | Increase system volume by 5%. |
+| **XF86AudioLowerVolume** | **Volume Down** | Decrease system volume by 5%. |
+| **XF86AudioMute** | **Mute** | Toggle audio mute. |
+
+These are the standard laptop/media keyboard keys; most keyboards map them to F10–F12 with an Fn modifier.
 
 ---
 
 ## Power Menu
 
-Press **SUPER + SHIFT + E** or click the power icon in the **Waybar** to open the Rofi-based power menu:
+Click the power icon in the **Waybar** to open the Rofi-based power menu:
 
 -   **Shutdown:** Power off the system.
 -   **Reboot:** Restart the system.
 -   **Logout:** Exit the Hyprland session and return to Tuigreet.
--   **Lock:** Lock the screen.
 -   **Suspend:** Put the system to sleep.

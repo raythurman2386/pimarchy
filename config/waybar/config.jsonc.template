@@ -5,11 +5,11 @@
     "margin-top": 0,
     "margin-left": 0,
     "margin-right": 0,
-    "height": 32,
-    "spacing": 2,
+    "height": {{BAR_HEIGHT}},
+    "spacing": {{BAR_SPACING}},
     "modules-left": ["custom/launcher", "hyprland/workspaces"],
     "modules-center": ["clock", "custom/update"],
-    "modules-right": ["temperature", "memory", "pulseaudio", "tray", "custom/power"],
+    "modules-right": ["temperature", "memory", "pulseaudio", "network", "bluetooth", "custom/battery", "tray", "custom/power"],
 
     "custom/launcher": {
         "format": "{{ICON_LAUNCHER}}",
@@ -26,48 +26,85 @@
             "3": "3",
             "4": "4",
             "5": "5",
-            "active": "󰮯",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "10": "0",
+            "active": "󱓻",
             "default": "󰊠"
         },
         "sort-by-number": true,
         "persistent-workspaces": {
             "1": [],
             "2": [],
-            "3": []
+            "3": [],
+            "4": [],
+            "5": []
         }
     },
 
     "clock": {
-        "format": "{{ICON_CLOCK}} {:%I:%M %p}",
-        "format-alt": "{{ICON_CALENDAR}} {:%A, %B %d}",
+        "format": "{{ICON_CLOCK}} {:%A %H:%M}",
+        "format-alt": "{{ICON_CALENDAR}} {:%d %B %Y}",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
     },
 
     "custom/update": {
         "format": "󰚰",
         "exec": "pimarchy-update-available",
-        "on-click": "foot --app-id pimarchy-update -e bash -c 'pimarchy update; echo; read -n1 -p \"Press any key to close...\"'",
+        "on-click": "{{DEFAULT_TERMINAL}} --app-id pimarchy-update -e bash -c 'pimarchy update; echo; read -n1 -p \"Press any key to close...\"'",
         "tooltip-format": "{}",
         "signal": 8,
         "interval": 3600,
         "return-type": "text"
     },
 
+    "network": {
+        "format-wifi": "{{ICON_WIFI}}",
+        "format-ethernet": "{{ICON_ETHERNET}}",
+        "format-linked": "{{ICON_ETHERNET}}",
+        "format-disconnected": "{{ICON_DISCONNECTED}}",
+        "tooltip-format-wifi": "{essid} ({signalStrength}%)",
+        "tooltip-format-ethernet": "{ipaddr}/{cidr}",
+        "tooltip-format-disconnected": "Disconnected",
+        "on-click-right": "nm-connection-editor",
+        "interval": 5
+    },
+
+    "bluetooth": {
+        "format": "󰂯",
+        "format-disabled": "󰂲",
+        "format-connected": "󰂱",
+        "tooltip-format": "{controller_alias}\t{controller_address}",
+        "tooltip-format-connected": "{device_alias}\t{device_address}",
+        "on-click": "blueman-manager",
+        "on-click-right": "rfkill toggle bluetooth"
+    },
+
+    "custom/battery": {
+        "exec": "cat /sys/class/power_supply/BAT*/capacity 2>/dev/null || true",
+        "exec-if": "[ -d /sys/class/power_supply/BAT0 ] || [ -d /sys/class/power_supply/BAT1 ]",
+        "format": "{}%",
+        "interval": 30,
+        "tooltip": false
+    },
+
     "temperature": {
         "thermal-zone": 0,
         "hwmon-path": "/sys/class/thermal/thermal_zone0/temp",
         "critical-threshold": 80,
-        "format": "{{ICON_CPU}} {temperatureC}°C",
+        "format": "{{ICON_TEMP}} {temperatureC}°C",
         "format-critical": "{{ICON_CPU}} {temperatureC}°C",
         "interval": 5,
         "tooltip": false,
-        "on-click": "foot --app-id btop -e btop"
+        "on-click": "{{DEFAULT_TERMINAL}} --app-id btop -e btop"
     },
 
     "memory": {
         "format": "{{ICON_MEMORY}} {}%",
         "interval": 5,
-        "on-click": "foot --app-id btop -e btop"
+        "on-click": "{{DEFAULT_TERMINAL}} --app-id btop -e btop"
     },
 
     "pulseaudio": {

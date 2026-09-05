@@ -15,7 +15,7 @@ bindd = $mainMod, Return, Terminal, exec, {{DEFAULT_TERMINAL}}
 bindd = $mainMod, D, App Launcher, exec, rofi -show drun
 bindd = $mainMod SHIFT, B, Browser, exec, {{DEFAULT_BROWSER}}
 bindd = $mainMod, E, File Manager, exec, thunar
-bindd = $mainMod, M, System Monitor, exec, foot --app-id btop -e btop
+bindd = $mainMod, M, System Monitor, exec, {{DEFAULT_TERMINAL}} --app-id btop -e btop
 bindd = $mainMod, K, Show Keybindings, exec, pimarchy-keybindings
 
 # ============================================================================
@@ -31,7 +31,7 @@ bindd = $mainMod SHIFT, W, Exit Hyprland, exit,
 bindd = $mainMod, V, Toggle Floating, togglefloating,
 bindd = $mainMod, F, Toggle Fullscreen, fullscreen, 0
 bindd = $mainMod, P, Toggle Pseudo-tile, pseudo,
-bindd = $mainMod, J, Toggle Split, togglesplit,
+bindd = $mainMod, J, Toggle Split, layoutmsg, togglesplit
 
 # ============================================================================
 # Focus movement
@@ -40,6 +40,14 @@ bindd = $mainMod, left, Focus Left, movefocus, l
 bindd = $mainMod, right, Focus Right, movefocus, r
 bindd = $mainMod, up, Focus Up, movefocus, u
 bindd = $mainMod, down, Focus Down, movefocus, d
+
+# ============================================================================
+# Window movement
+# ============================================================================
+bindd = $mainMod SHIFT, left, Move Window Left, movewindow, l
+bindd = $mainMod SHIFT, right, Move Window Right, movewindow, r
+bindd = $mainMod SHIFT, up, Move Window Up, movewindow, u
+bindd = $mainMod SHIFT, down, Move Window Down, movewindow, d
 
 # ============================================================================
 # Workspaces
@@ -66,6 +74,10 @@ bindd = $mainMod SHIFT, 7, Move to Workspace 7, movetoworkspace, 7
 bindd = $mainMod SHIFT, 8, Move to Workspace 8, movetoworkspace, 8
 bindd = $mainMod SHIFT, 9, Move to Workspace 9, movetoworkspace, 9
 bindd = $mainMod SHIFT, 0, Move to Workspace 10, movetoworkspace, 10
+
+# Cycle workspaces like the live desktop (Tab / Shift+Tab)
+bindd = $mainMod, TAB, Next Workspace, workspace, e+1
+bindd = $mainMod SHIFT, TAB, Previous Workspace, workspace, e-1
 
 # Scroll through existing workspaces with mainMod + scroll
 bind = $mainMod, mouse_down, workspace, e+1
