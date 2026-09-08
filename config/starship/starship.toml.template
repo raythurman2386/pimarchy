@@ -28,7 +28,7 @@ format = "[$symbol$branch]($style) "
 [git_status]
 style = "italic cyan"
 format = '[$all_status$ahead_behind]($style) '
-# Blank most states like the live prompt (keep only ahead/behind + dirty)
+# Blank most states like the live prompt (keep only ahead/behind)
 modified = ""
 staged = ""
 renamed = ""
@@ -39,4 +39,3 @@ conflicted = ""
 ahead = "⇡${count} "
 behind = "⇣${count} "
 diverged = "⇕${ahead_count}${behind_count} "
-dirty = "*"
