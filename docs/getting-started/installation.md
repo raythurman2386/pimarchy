@@ -108,11 +108,12 @@ pimarchy install dev      # Rust, Node.js, Go, Python, Docker CE
 pimarchy install office   # LibreOffice
 
 # Default app policy
-pimarchy defaults                       # show agent/browser/editor/terminal
+pimarchy defaults                       # show agent/browser/editor/terminal/filemanager
 pimarchy default agent raven            # Raven is pre-selected
 pimarchy default editor zed
 pimarchy default terminal foot
 pimarchy default browser chromium
+pimarchy default filemanager pifile
 
 # Launch the coding agent (Super+Shift+Ctrl+A does this too)
 pimarchy agent "write a hello world in rust"
@@ -142,8 +143,8 @@ bash install.sh
 
 1.  **Backup:** Backs up your existing configs to `~/.config/Pimarchy-backup/`.
 2.  **Repo Setup:** Adds Debian Sid (for Hyprland — pinned, see the [sid policy](../development/sid-policy.md)) and the Docker CE repository (used only by the dev module).
-3.  **Package Management:** Installs the **core module** from `config/packages/core.list` — the lean, always-installed set (Hyprland stack, Foot, Rofi, Chromium, Zed, Raven, Ollama). No LibreOffice, no Node/Go/Rust/Docker unless you install the dev/office modules.
-4.  **Defaults:** Writes the default app policy (`~/.config/pimarchy/defaults/`): agent=raven, editor=zed, terminal=foot, browser=chromium.
+3.  **Package Management:** Installs the **core module** from `config/packages/core.list` — the lean, always-installed set (Hyprland stack, Foot, Rofi, Chromium, Zed, Pifile, Raven, Ollama). No LibreOffice, no Node/Go/Rust/Docker unless you install the dev/office modules.
+4.  **Defaults:** Writes the default app policy (`~/.config/pimarchy/defaults/`): agent=raven, editor=zed, terminal=foot, browser=chromium, filemanager=pifile.
 5.  **Theming:** Deploys configurations based on the Ravenwood palette in `config/theme.conf`.
 6.  **Services:** Enables and configures `greetd` as the system's login manager.
 7.  **AI Tools:** Raven and Ollama are installed via their official scripts (Zed likewise; Raven's default backend is local Ollama).

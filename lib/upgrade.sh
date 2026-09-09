@@ -249,6 +249,11 @@ upgrade_full() {
     defaults_install_defaults
     defaults_export_vars
     deploy_module_configs "safe"
+    # New core script apps (Pifile) and idempotent re-checks of Zed/Raven.
+    run_module_script_hooks core
+    configure_default_filemanager
+    # Drop Thunar only after Pifile is in place.
+    remove_replaced_apt_packages
 
     # Refresh user services so template changes take effect next login
     configure_swaybg

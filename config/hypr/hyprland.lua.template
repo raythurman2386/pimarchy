@@ -146,16 +146,26 @@ hl.window_rule({ match = { class = ".*" }, opacity = "{{OPACITY_DEFAULT}}" })
 hl.window_rule({ match = { class = ".*(chromium|Chromium).*" }, opacity = "{{OPACITY_BROWSER}}" })
 -- Floating terminal for btop (launched by keybind / waybar clicks)
 hl.window_rule({ match = { class = "^btop$" }, float = true, size = { 900, 600 }, center = true })
+-- Floating bluetoothctl (Waybar bluetooth left-click)
+hl.window_rule({ match = { class = "^bluetoothctl$" }, float = true, size = { 700, 500 }, center = true })
 -- Floating terminal for pimarchy update (launched by waybar update widget)
 hl.window_rule({ match = { class = "^pimarchy-update$" }, float = true, size = { 800, 500 }, center = true })
--- Coding agent — Quattro-style, own window class for theming
-hl.window_rule({ match = { class = "^raven$" }, float = true, size = { 900, 600 }, center = true })
+-- Coding agent — dedicated TUI class (pimarchy agent / Super+Shift+Ctrl+A)
+hl.window_rule({
+    match = { class = "^org\\.pimarchy\\.agent$" },
+    float = true, size = { 900, 600 }, center = true,
+})
+-- Picalc — compact floating calculator (Super+Ctrl+Q / XF86Calculator)
+hl.window_rule({
+    match = { class = "^(picalc|Picalc)$" },
+    float = true, size = { 400, 615 }, center = true,
+})
 
 -- ============================================================================
 -- Keybinds
 -- ============================================================================
 -- Keybinds live in bindings.lua (required below) so app defaults can be
--- templated from `pimarchy default <agent|browser|editor|terminal>`.
+-- templated from `pimarchy default <agent|browser|editor|terminal|filemanager>`.
 -- Descriptions feed the pimarchy-keybindings viewer (Super+K) via
 -- hyprctl -j binds.
 

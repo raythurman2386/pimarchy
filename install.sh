@@ -157,13 +157,12 @@ fi
 echo "[4/7] Installing module configurations..."
 
 if [ "$DRY_RUN" = false ]; then
-    # Quattro default app policy (raven/zed/foot/chromium) — only writes
-    # files that don't exist yet, so user choices survive reinstalls.
+    # Quattro default app policy — only writes files that don't exist yet.
     defaults_install_defaults
     defaults_export_vars
 else
     log_info "Would write default app policy files to $PIMARCHY_DEFAULTS_DIR"
-    log_info "  agent=raven editor=zed terminal=foot browser=chromium (if unset)"
+    log_info "  agent=raven editor=zed terminal=foot browser=chromium filemanager=pifile (if unset)"
     # Templates reference DEFAULT_* — export for the dry-run scan below
     defaults_export_vars
 fi
@@ -223,6 +222,7 @@ if [ "$DRY_RUN" = false ]; then
 
     # Apply gsettings
     apply_gsettings
+    configure_default_filemanager
 
     # Ensure Pictures directory exists for screenshots
     mkdir -p ~/Pictures
@@ -367,7 +367,7 @@ if [ "$DRY_RUN" = false ]; then
     echo "Keyboard shortcuts:"
     echo "  SUPER+D              App launcher (Rofi)"
     echo "  SUPER+Return         Terminal"
-    echo "  SUPER+E              File Manager"
+    echo "  SUPER+E              File Manager (Pifile)"
     echo "  SUPER+M              System monitor (btop)"
     echo "  SUPER+K              Keybindings viewer"
     echo "  SUPER+W              Close window"
@@ -400,7 +400,7 @@ if [ "$DRY_RUN" = false ]; then
     echo ""
     echo "To customize keybinds:   Press SUPER+K or edit ~/.config/hypr/bindings.conf"
     echo "To customize theme:      Edit config/theme.conf and run install.sh"
-    echo "To set default apps:     pimarchy default <agent|browser|editor|terminal> <name>"
+    echo "To set default apps:     pimarchy default <agent|browser|editor|terminal|filemanager> <name>"
     echo "To uninstall:            bash uninstall.sh"
     echo ""
 else

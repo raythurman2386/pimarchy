@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# pimarchy-workspace — Waybar workspace chips for Hyprland's Lua dispatcher.
+#
+# Waybar 0.15 still sends `dispatch workspace N`, which Hyprland 0.56
+# wraps as invalid Lua (`hl.dispatch(workspace N)`). Keyboard binds already
+# use hl.dsp.focus; this helper does the same for bar clicks.
+#
+#   pimarchy-workspace status <n>  → JSON for a custom Waybar module
+#   pimarchy-workspace focus <n>   → switch to workspace n
+#   pimarchy-workspace watch       → signal Waybar on Hyprland workspace events
+#
+# Waybar modules use signal 9 (SIGRTMIN+9). The update widget uses signal 8.
+set -euo pipefail
+
+WAYBAR_WS_SIGNAL=9
+
+usage() {
+    echo "Usage: pimarchy-workspace status|focus <1-10>" >&2
+    echo "       pimarchy-workspace watch" >&2
+    exit 1
+}
+
+refresh_waybar() {
+    pkill -RTMIN+"$WAYBAR_WS_SIGNAL" waybar 2>/dev/null || true
+}
+
+focus_workspace() {
+    local id="$1"
+    hyprctl dispatch "hl.dsp.focus({ workspace = \"${id}\" })" >/dev/null
+    # Instant chip update; the watcher also covers keyboard switches.
+    refresh_waybar
+}
+
+status_workspace() {
+    local id="$1"
+    local active=""
+    if command -v hyprctl >/dev/null 2>&1; then
+        active=$(hyprctl activeworkspace -j 2>/dev/null \
+            | sed -n 's/.*"id": *\([0-9][0-9]*\).*/\1/p' | head -1)
+    fi
+    if [ "$active" = "$id" ]; then
+        printf '{"text":"󱓻","class":"active","tooltip":"Workspace %s"}\n' "$id"
+    else
+        printf '{"text":"%s","class":"","tooltip":"Workspace %s"}\n' "$id" "$id"
+    fi
+}
+
+# Listen on Hyprland's event socket and poke Waybar whenever the active
+# workspace changes (keyboard binds, IPC, other monitors, etc.).
+watch_workspaces() {
+    local runtime sig sock
+    runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "pimarchy-workspace watch requires python3" >&2
+        exit 1
+    fi
+
+    while true; do
+        sig="${HYPRLAND_INSTANCE_SIGNATURE:-}"
+        if [ -z "$sig" ] && [ -d "$runtime/hypr" ]; then
+            sig=$(ls -1t "$runtime/hypr" 2>/dev/null | head -1 || true)
+        fi
+        sock="$runtime/hypr/${sig}/.socket2.sock"
+        if [ -n "$sig" ] && [ -S "$sock" ]; then
+            break
+        fi
+        sleep 0.5
+    done
+
+    exec python3 - "$sock" "$WAYBAR_WS_SIGNAL" <<'PY'
+import os, signal, socket, subprocess, sys, time
+
+sock_path, sig_n = sys.argv[1], int(sys.argv[2])
+rt_signal = signal.SIGRTMIN + sig_n
+
+def refresh():
+    try:
+        subprocess.run(
+            ["pkill", f"-RTMIN+{sig_n}", "waybar"],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError:
+        pass
+
+interesting = (
+    "workspace>>",
+    "workspacev2>>",
+    "focusedmon>>",
+    "createworkspace>>",
+    "createworkspacev2>>",
+    "destroyworkspace>>",
+    "destroyworkspacev2>>",
+    "activespecial>>",
+)
+
+while True:
+    try:
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.connect(sock_path)
+        buf = b""
+        while True:
+            chunk = sock.recv(4096)
+            if not chunk:
+                break
+            buf += chunk
+            while b"\n" in buf:
+                line, buf = buf.split(b"\n", 1)
+                text = line.decode("utf-8", "replace")
+                if text.startswith(interesting):
+                    refresh()
+        sock.close()
+    except OSError:
+        pass
+    time.sleep(1)
+PY
+}
+
+cmd="${1:-}"
+case "$cmd" in
+    watch)
+        [ $# -eq 1 ] || usage
+        watch_workspaces
+        ;;
+    status|focus)
+        [ $# -eq 2 ] || usage
+        id="$2"
+        case "$id" in
+            [1-9]|10) ;;
+            *) usage ;;
+        esac
+        if [ "$cmd" = "focus" ]; then
+            focus_workspace "$id"
+        else
+            status_workspace "$id"
+        fi
+        ;;
+    *)
+        usage
+        ;;
+esac

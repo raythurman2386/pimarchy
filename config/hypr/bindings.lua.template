@@ -1,8 +1,9 @@
 -- Pimarchy Keybinds (Lua)
 -- Required by hyprland.lua — edit there if you want to disable this file.
 --
--- Defaults respect `pimarchy default <agent|browser|editor|terminal>`:
---   {{DEFAULT_BROWSER}}, {{DEFAULT_EDITOR}}, {{DEFAULT_TERMINAL}}, {{DEFAULT_AGENT}}
+-- Defaults respect `pimarchy default <agent|browser|editor|terminal|filemanager>`:
+--   {{DEFAULT_BROWSER}}, {{DEFAULT_EDITOR}}, {{DEFAULT_TERMINAL}},
+--   {{DEFAULT_AGENT}}, {{DEFAULT_FILEMANAGER}}
 --
 -- Raw hl.bind signature: hl.bind(keys, dispatcher, opts) where opts carries
 -- { description = ... } (shown in the pimarchy-keybindings viewer, Super+K)
@@ -18,14 +19,20 @@ end
 hl.bind("SUPER + RETURN", exec("{{DEFAULT_TERMINAL}}"), { description = "Terminal" })
 hl.bind("SUPER + D", exec("rofi -show drun"), { description = "App Launcher" })
 hl.bind("SUPER + SHIFT + B", exec("{{DEFAULT_BROWSER}}"), { description = "Browser" })
-hl.bind("SUPER + E", exec("thunar"), { description = "File Manager" })
+hl.bind("SUPER + E", exec("{{DEFAULT_FILEMANAGER}}"), { description = "File Manager" })
 hl.bind("SUPER + M", exec("{{DEFAULT_TERMINAL}} --app-id btop -e btop"), { description = "System Monitor" })
 hl.bind("SUPER + K", exec("pimarchy-keybindings"), { description = "Show Keybindings" })
 
 -- ============================================================================
--- Coding agent — Quattro-style, own window class for theming
+-- Coding agent — dedicated org.pimarchy.agent TUI window (Omarchy-style)
 -- ============================================================================
 hl.bind("SUPER + SHIFT + CTRL + A", exec("pimarchy agent"), { description = "Coding Agent" })
+
+-- ============================================================================
+-- Calculator — Picalc as a floating calculator window
+-- ============================================================================
+hl.bind("SUPER + CTRL + Q", exec("picalc"), { description = "Calculator" })
+hl.bind("XF86Calculator", exec("picalc"), { description = "Calculator" })
 
 -- ============================================================================
 -- Window management

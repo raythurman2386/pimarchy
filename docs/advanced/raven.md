@@ -6,17 +6,21 @@ Raven is the **pre-selected default coding agent** (`pimarchy default agent rave
 
 ## Launching Raven
 
-Quattro-style, from anywhere:
+Omarchy-style, from anywhere:
 
 ```bash
-# From the keybind: SUPER + SHIFT + CTRL + A (floating, themed window class)
+# From the keybind: SUPER + SHIFT + CTRL + A
+# Opens Foot with app-id org.pimarchy.agent (floating 900×600)
 pimarchy agent
 
 # With a prompt
 pimarchy agent "fix the failing test in lib/upgrade.sh"
+
+# In the current terminal (also the `a` alias)
+pimarchy agent --inline
 ```
 
-`pimarchy agent` runs `raven --yolo` (skipping confirmations), passing any arguments as the prompt via `-p`. If the binary is missing, it points you at `pimarchy default agent raven`, which lazy-installs it via the official script.
+`pimarchy agent` runs `raven --yolo` (skipping confirmations), passing any arguments as the prompt via `-p`. Keybind/menu launches that start in `$HOME` `cd` into `~/Work` when that directory exists, so the agent can remember workspace trust. If the binary is missing, it points you at `pimarchy default agent raven`, which lazy-installs it via the official script.
 
 ## Installation Details
 

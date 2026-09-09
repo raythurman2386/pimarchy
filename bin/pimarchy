@@ -29,11 +29,12 @@ show_help() {
     echo "Commands:"
     echo "  install [module] Run install.sh, or a lazy package module (core|dev|office)."
     echo "               Module install accepts --with-docker-group (dev)."
-    echo "  defaults     Show default agent, browser, editor, and terminal."
-    echo "  default <what> [name]   Set a default: agent|browser|editor|terminal."
-    echo "               e.g. pimarchy default agent raven"
-    echo "  agent [prompt] Launch the default coding agent (Raven, Quattro-style)."
-    echo "               Any extra arguments are passed as the agent prompt."
+    echo "  defaults     Show default agent, browser, editor, terminal, filemanager."
+    echo "  default <what> [name]   Set a default: agent|browser|editor|terminal|filemanager."
+    echo "               e.g. pimarchy default filemanager pifile"
+    echo "  agent [prompt] Launch the default coding agent in its own TUI window."
+    echo "               --inline runs in the current terminal (alias: a)."
+    echo "               Extra arguments / --prompt seed the session."
     echo "  update       Safe upgrade: pull latest, refresh only pristine configs."
     echo "               User-modified files are left untouched and reported."
     echo "  uninstall    Run the uninstallation script to restore backups."
@@ -84,7 +85,7 @@ case "$COMMAND" in
             agent)
                 exec bash "$PIMARCHY_DIR/bin/pimarchy-default-agent" "$NAME"
                 ;;
-            browser|editor|terminal)
+            browser|editor|terminal|filemanager)
                 if [ -z "$NAME" ]; then
                     echo -e "${BLUE}$WHAT: $(defaults_read "$WHAT")${NC}"
                 else
@@ -93,7 +94,7 @@ case "$COMMAND" in
                 ;;
             *)
                 echo -e "${RED}[ERROR] Unknown default: ${WHAT:-<none>}${NC}"
-                echo -e "Usage: pimarchy default <agent|browser|editor|terminal> <name>"
+                echo -e "Usage: pimarchy default <agent|browser|editor|terminal|filemanager> <name>"
                 exit 1
                 ;;
         esac

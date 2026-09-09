@@ -13,6 +13,7 @@ run_module_script_hooks() {
         [ -z "$label" ] && continue
         case "$label" in
             zed)        install_zed ;;
+            pifile)     install_pifile ;;
             raven)      install_raven ;;
             ollama)     install_ollama ;;
             rustup)     install_rustup ;;
@@ -58,6 +59,59 @@ install_zed() {
     else
         log_warn "Zed installer ran but 'zed' not found in PATH — may need to re-login or source ~/.bashrc"
     fi
+}
+
+# install_pifile — default file manager via the official pifile netinstall.
+# Lands at ~/.local/bin/pifile and registers inode/directory.
+install_pifile() {
+    export PATH="$HOME/.local/bin:$PATH"
+
+    if command -v pifile &>/dev/null; then
+        log_info "Pifile already installed — skipping"
+        configure_default_filemanager
+        return 0
+    fi
+
+    log_info "Installing Pifile file manager..."
+
+    if ! command -v curl &>/dev/null; then
+        sudo apt install -y curl
+    fi
+
+    if ! curl -fsSL https://raw.githubusercontent.com/raythurman2386/pifile/main/scripts/netinstall.sh | bash; then
+        log_error "Pifile installer failed (network or release problem) — continuing without it"
+        return 0
+    fi
+
+    if command -v pifile &>/dev/null; then
+        log_success "Pifile installed successfully"
+        configure_default_filemanager
+    else
+        log_warn "Pifile installer ran but 'pifile' not found in PATH — may need to re-login"
+    fi
+}
+
+remove_pifile() {
+    local prefix="${HOME}/.local"
+
+    rm -f "$prefix/bin/pifile"
+    rm -f "$prefix/share/applications/pifile.desktop"
+    rm -f "$prefix/share/icons/hicolor/scalable/apps/pifile.svg"
+    rm -f "$prefix/share/icons/hicolor/128x128/apps/pifile.png"
+    rm -rf "$prefix/share/licenses/pifile"
+    log_success "Pifile installation removed"
+}
+
+# configure_default_filemanager — point inode/directory at Pifile so folder
+# opens (Rofi, xdg-open, other apps) use the default file manager.
+configure_default_filemanager() {
+    if ! command -v xdg-mime &>/dev/null; then
+        return 0
+    fi
+    if [ ! -f "$HOME/.local/share/applications/pifile.desktop" ]; then
+        return 0
+    fi
+    xdg-mime default pifile.desktop inode/directory 2>/dev/null || true
 }
 
 remove_zed() {

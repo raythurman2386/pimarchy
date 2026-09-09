@@ -190,7 +190,8 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 - Code Editor: Zed (installed to `~/.local/zed.app/`, config at `~/.config/zed/settings.json`) — default editor
 - CLI Tools: fd, ripgrep (Rust-based)
 - System Monitor: btop (themed with Ravenwood palette via `config/btop/ravenwood.theme`)
-- AI Coding Agent: Raven (installed to `~/.cargo/bin/`, config at `~/.raven/config.toml`) + Ollama (local inference backend at `localhost:11434`) — default agent, launched via `pimarchy agent` (Super+Shift+Ctrl+A); installs lazily
-- Default app policy: `pimarchy defaults` / `pimarchy default <agent|browser|editor|terminal> <name>` — files in `~/.config/pimarchy/defaults/`, values validated against an allowlist
+- AI Coding Agent: Raven (installed to `~/.cargo/bin/`, config at `~/.raven/config.toml`) + Ollama (local inference backend at `localhost:11434`) — default agent, launched via `pimarchy agent` (Super+Shift+Ctrl+A) in a Foot window class `org.pimarchy.agent`; `a` is `--inline`; installs lazily
+- File manager: Pifile (installed to `~/.local/bin/pifile`) — default file manager, Super+E; `inode/directory` MIME handler
+- Default app policy: `pimarchy defaults` / `pimarchy default <agent|browser|editor|terminal|filemanager> <name>` — files in `~/.config/pimarchy/defaults/`, values validated against an allowlist
 - Package modules: `config/packages/{core,dev,office}.list` — core is always installed; dev/office are lazy (`pimarchy install dev|office`); pre-Quattro full set behind `install.sh --legacy-packages`
 - Safe upgrades: `pimarchy update` — sha256 manifest at `~/.config/pimarchy/manifest` gates refreshes (user-modified files are left untouched); retired files come from `config/packages/retired.conf`

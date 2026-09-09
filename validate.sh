@@ -75,7 +75,8 @@ done
 
 for script in bin/pimarchy bin/pimarchy-agent bin/pimarchy-default-agent \
               bin/pimarchy-install bin/pimarchy-upgrade bin/pimarchy-keybindings \
-              bin/pimarchy-update-available bin/pimarchy-update-available-reset; do
+              bin/pimarchy-workspace bin/pimarchy-update-available \
+              bin/pimarchy-update-available-reset; do
     check_syntax "$PIMARCHY_ROOT/$script"
 done
 
@@ -111,7 +112,7 @@ for list in core dev office; do
 done
 
 # script: labels must be known to run_module_script_hooks
-KNOWN_SCRIPT_LABELS="zed raven ollama rustup node go python-dev docker-group"
+KNOWN_SCRIPT_LABELS="zed pifile raven ollama rustup node go python-dev docker-group"
 while IFS= read -r label; do
     [ -z "$label" ] && continue
     if ! grep -qw "$label" <<< "$KNOWN_SCRIPT_LABELS"; then
@@ -174,6 +175,7 @@ required_vars=(
     "DEFAULT_EDITOR"
     "DEFAULT_TERMINAL"
     "DEFAULT_BROWSER"
+    "DEFAULT_FILEMANAGER"
 )
 
 for var in "${required_vars[@]}"; do

@@ -10,9 +10,10 @@ Pimarchy ships a **default app policy**: a small set of pre-selected application
 | Editor | **Zed** | `pimarchy default editor zed` |
 | Terminal | **Foot** | `pimarchy default terminal foot` |
 | Browser | **Chromium** | `pimarchy default browser chromium` |
+| File manager | **Pifile** | `pimarchy default filemanager pifile` |
 
 ```bash
-pimarchy defaults                      # show all four
+pimarchy defaults                      # show all five
 pimarchy default browser chromium      # set one (validated against an allowlist)
 pimarchy default agent                 # show one
 ```
@@ -32,17 +33,18 @@ After changing a default, re-run `bash install.sh` (or `pimarchy update`) so tem
 
 ## The Agent Keybind (Quattro-style)
 
-**SUPER + SHIFT + CTRL + A** launches the default coding agent in its own Hyprland window class:
+**SUPER + SHIFT + CTRL + A** launches the default coding agent in a dedicated Foot window (`org.pimarchy.agent`), matching Omarchy's `omarchy agent` setup. If the session starts in `$HOME` and `~/Work` exists, the agent is started there so workspace trust sticks. `a` in a terminal is `pimarchy agent --inline`.
 
 ```text
-bindd = $mainMod SHIFT CTRL, A, Coding Agent, exec, pimarchy agent
-windowrule = match:class ^(raven)$, float 1, size 900 600, center 1
+hl.bind("SUPER + SHIFT + CTRL + A", exec("pimarchy agent"), { description = "Coding Agent" })
+hl.window_rule({ match = { class = "^org\\.pimarchy\\.agent$" }, float = true, size = { 900, 600 }, center = true })
 ```
 
 Any extra arguments are passed as the agent prompt:
 
 ```bash
 pimarchy agent "fix the failing test in lib/upgrade.sh"
+pimarchy agent --inline                        # current terminal (alias: a)
 ```
 
 Raven installs lazily on first selection — if the binary is missing, `pimarchy default agent raven` fetches it via Raven's official install script.
@@ -59,9 +61,9 @@ Packages are declared as data in `config/packages/*.list` with three tags:
 
 | Tag | Packages |
 |-----|----------|
-| apt | foot, starship, fonts-font-awesome, fonts-jetbrains-mono, fonts-noto-color-emoji, arc-theme, papirus-icon-theme, fontconfig, rofi, greetd, tuigreet, thunar, lxpolkit, pavucontrol, network-manager-gnome, bluez, bluez-tools, alsa-utils, wireplumber, grim, slurp, wl-clipboard, btop, ufw, jq, fd-find, ripgrep, unzip, wget, curl, gh, chromium |
+| apt | foot, starship, fonts-font-awesome, fonts-jetbrains-mono, fonts-liberation, fonts-dejavu-core, fonts-noto-color-emoji, gnome-themes-extra, yaru-theme-icon, papirus-icon-theme, fontconfig, dconf-cli, gsettings-desktop-schemas, qt5ct, rofi, greetd, tuigreet, lxpolkit, pavucontrol, network-manager-gnome, bluez, bluez-tools, libspa-0.2-bluetooth, alsa-utils, pipewire, pipewire-pulse, wireplumber, xdg-desktop-portal, xdg-desktop-portal-gtk, xdg-utils, xdg-user-dirs, libnotify-bin, grim, slurp, wl-clipboard, btop, ufw, jq, fd-find, ripgrep, unzip, wget, curl, ca-certificates, git, gh, libvulkan1, mesa-vulkan-drivers, chromium |
 | sid | hyprland, hyprland-guiutils, waybar, mako-notifier, swaybg, xdg-desktop-portal-hyprland, uwsm |
-| script | zed, raven, ollama |
+| script | zed, pifile, raven, ollama |
 
 **Not in core** (deliberately): LibreOffice, VS Code, OpenCode, Node, Go, Rust, Python dev tools, Docker. Memory efficiency on a 4 GB Pi is the priority — no heavy GUI apps in the default path.
 
@@ -70,7 +72,7 @@ Packages are declared as data in `config/packages/*.list` with three tags:
 | Tag | Packages |
 |-----|----------|
 | script | rustup (Rust, official rustup.rs — not apt), node (Node.js v22 LTS via NodeSource), go (latest stable from golang.org), python-dev (pip, venv, pipx) |
-| apt | ca-certificates, gnupg, docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin, build-essential, pkg-config, libssl-dev, git-lfs, shellcheck |
+| apt | ca-certificates, gnupg, docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin, build-essential, pkg-config, libssl-dev, git-lfs, shellcheck, clang, libclang-dev, libfontconfig-dev, libwayland-dev, libxkbcommon-dev, libxkbcommon-x11-dev, libx11-xcb-dev, libzstd-dev, libvulkan-dev |
 
 Docker CE comes from the official download.docker.com repository (pinned 1001), never Debian's `docker.io` — it lacks `docker-compose-plugin`. **Docker group membership is opt-in**:
 
@@ -115,7 +117,7 @@ If you installed Pimarchy before the Quattro overhaul:
 
 ## Where Defaults Are Consumed
 
-- `config/hypr/bindings.conf.template` — `{{DEFAULT_TERMINAL}}`, `{{DEFAULT_BROWSER}}`, `{{DEFAULT_EDITOR}}`, `{{DEFAULT_AGENT}}`
+- `config/hypr/bindings.lua.template` — `{{DEFAULT_TERMINAL}}`, `{{DEFAULT_BROWSER}}`, `{{DEFAULT_EDITOR}}`, `{{DEFAULT_AGENT}}`, `{{DEFAULT_FILEMANAGER}}`
 - `bin/pimarchy-agent` — reads `~/.config/pimarchy/defaults/agent` directly (no templates involved)
 - `pimarchy defaults` / `pimarchy default <what> [name]` — show/set
 

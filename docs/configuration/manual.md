@@ -26,7 +26,7 @@ Common aliases:
 - `grep`: `grep --color=auto` (Colored output)
 
 ## 3. GTK Theme
-Pimarchy sets a consistent GTK2 and GTK3 theme using the Ravenwood color palette. This ensures that applications like **Thunar** or **GIMP** look at home in your desktop environment.
+Pimarchy sets a consistent GTK2 and GTK3 theme using the Ravenwood color palette. This ensures that GTK applications look at home in your desktop environment.
 
 You can modify these settings in:
 - `~/.gtkrc-2.0`

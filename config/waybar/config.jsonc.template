@@ -7,9 +7,9 @@
     "margin-right": 0,
     "height": {{BAR_HEIGHT}},
     "spacing": {{BAR_SPACING}},
-    "modules-left": ["custom/launcher", "hyprland/workspaces"],
+    "modules-left": ["custom/launcher", "custom/ws1", "custom/ws2", "custom/ws3", "custom/ws4", "custom/ws5"],
     "modules-center": ["clock", "custom/update"],
-    "modules-right": ["temperature", "memory", "pulseaudio", "network", "bluetooth", "custom/battery", "tray", "custom/power"],
+    "modules-right": ["memory", "pulseaudio", "network", "bluetooth", "custom/battery", "tray", "custom/power"],
 
     "custom/launcher": {
         "format": "{{ICON_LAUNCHER}}",
@@ -17,31 +17,45 @@
         "tooltip": false
     },
 
-    "hyprland/workspaces": {
-        "format": "{icon}",
-        "on-click": "activate",
-        "format-icons": {
-            "1": "1",
-            "2": "2",
-            "3": "3",
-            "4": "4",
-            "5": "5",
-            "6": "6",
-            "7": "7",
-            "8": "8",
-            "9": "9",
-            "10": "0",
-            "active": "󱓻",
-            "default": "󰊠"
-        },
-        "sort-by-number": true,
-        "persistent-workspaces": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": []
-        }
+    "custom/ws1": {
+        "exec": "pimarchy-workspace status 1",
+        "on-click": "pimarchy-workspace focus 1",
+        "interval": 30,
+        "signal": 9,
+        "return-type": "json",
+        "format": "{}"
+    },
+    "custom/ws2": {
+        "exec": "pimarchy-workspace status 2",
+        "on-click": "pimarchy-workspace focus 2",
+        "interval": 30,
+        "signal": 9,
+        "return-type": "json",
+        "format": "{}"
+    },
+    "custom/ws3": {
+        "exec": "pimarchy-workspace status 3",
+        "on-click": "pimarchy-workspace focus 3",
+        "interval": 30,
+        "signal": 9,
+        "return-type": "json",
+        "format": "{}"
+    },
+    "custom/ws4": {
+        "exec": "pimarchy-workspace status 4",
+        "on-click": "pimarchy-workspace focus 4",
+        "interval": 30,
+        "signal": 9,
+        "return-type": "json",
+        "format": "{}"
+    },
+    "custom/ws5": {
+        "exec": "pimarchy-workspace status 5",
+        "on-click": "pimarchy-workspace focus 5",
+        "interval": 30,
+        "signal": 9,
+        "return-type": "json",
+        "format": "{}"
     },
 
     "clock": {
@@ -78,7 +92,7 @@
         "format-connected": "󰂱",
         "tooltip-format": "{controller_alias}\t{controller_address}",
         "tooltip-format-connected": "{device_alias}\t{device_address}",
-        "on-click": "blueman-manager",
+        "on-click": "{{DEFAULT_TERMINAL}} --app-id bluetoothctl -e bluetoothctl",
         "on-click-right": "rfkill toggle bluetooth"
     },
 
@@ -88,17 +102,6 @@
         "format": "󰁹 {}",
         "interval": 30,
         "tooltip": true
-    },
-
-    "temperature": {
-        "thermal-zone": 0,
-        "hwmon-path": "/sys/class/thermal/thermal_zone0/temp",
-        "critical-threshold": 80,
-        "format": "{{ICON_TEMP}} {temperatureC}°C",
-        "format-critical": "{{ICON_CPU}} {temperatureC}°C",
-        "interval": 5,
-        "tooltip": false,
-        "on-click": "{{DEFAULT_TERMINAL}} --app-id btop -e btop"
     },
 
     "memory": {

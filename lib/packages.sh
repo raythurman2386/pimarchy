@@ -64,12 +64,33 @@ install_packages() {
         sudo apt install -t sid -y "${sid_pkgs[@]}"
     fi
 
-    # Non-apt core apps declared in core.list (zed, raven, ollama) via
-    # their official install scripts — all idempotent.
+    # Non-apt core apps declared in core.list (zed, pifile, raven, ollama)
+    # via their official install scripts — all idempotent.
     run_module_script_hooks core
 
     install_nerd_font
+    remove_replaced_apt_packages
     log_success "Core packages installed"
+}
+
+# remove_replaced_apt_packages — purge packages that used to be in core
+# and have been replaced (e.g. Thunar → Pifile). Safe if already absent.
+remove_replaced_apt_packages() {
+    local retired=(thunar thunar-volman thunar-data)
+    local pkg to_remove=()
+
+    for pkg in "${retired[@]}"; do
+        if dpkg -s "$pkg" >/dev/null 2>&1; then
+            to_remove+=("$pkg")
+        fi
+    done
+
+    if [ ${#to_remove[@]} -eq 0 ]; then
+        return 0
+    fi
+
+    log_info "Removing replaced packages: ${to_remove[*]}"
+    sudo apt remove --purge -y "${to_remove[@]}" 2>/dev/null || true
 }
 
 # install_module_packages <module> — install a lazy module (dev, office).
@@ -163,11 +184,28 @@ remove_packages() {
         wl-clipboard
         fonts-font-awesome
         fonts-jetbrains-mono
+        fonts-liberation
+        fonts-dejavu-core
+        fonts-noto-color-emoji
+        gnome-themes-extra
+        yaru-theme-icon
+        papirus-icon-theme
+        fontconfig
+        dconf-cli
+        gsettings-desktop-schemas
+        qt5ct
         xdg-desktop-portal-hyprland
+        xdg-desktop-portal
+        xdg-desktop-portal-gtk
+        xdg-utils
+        xdg-user-dirs
+        libnotify-bin
         pavucontrol
         network-manager-gnome
-        arc-theme
-        papirus-icon-theme
+        libspa-0.2-bluetooth
+        pipewire
+        pipewire-pulse
+        wireplumber
         foot
         fd-find
         ripgrep
@@ -176,8 +214,7 @@ remove_packages() {
         tuigreet
         starship
         thunar
-        gsettings-desktop-schemas
-        dconf-cli
+        thunar-volman
         lxpolkit
         bluez
         bluez-tools
@@ -185,6 +222,10 @@ remove_packages() {
         chromium
         btop
         ufw
+        git
+        gh
+        libvulkan1
+        mesa-vulkan-drivers
         docker-ce
         docker-ce-cli
         containerd.io

@@ -27,6 +27,7 @@ Inspired by [Omarchy](https://github.com/basecamp/omarchy) by Basecamp, it focus
 | **Login manager** | Greetd + Tuigreet | Sleek console-based login manager. |
 | **Browser** | Chromium | Default browser, with Wayland flags pre-configured. |
 | **Code editor** | Zed | Modern, Rust-based code editor (default editor). |
+| **File manager** | Pifile | Keyboard-first default file manager (Super+E). |
 | **CLI tools** | fd, ripgrep, gh | Fast, Rust-based file search and grep. |
 | **AI Agent** | Raven + Ollama | Default coding agent (`pimarchy agent`, Super+Shift+Ctrl+A) with local inference. |
 

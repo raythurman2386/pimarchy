@@ -58,9 +58,13 @@ test_read_package_list_filters_comments() {
 test_list_apt_packages() {
     local pkgs
     pkgs=$(list_apt_packages core apt)
-    for expected in foot rofi chromium jq; do
+    for expected in foot rofi chromium jq fonts-dejavu-core mesa-vulkan-drivers \
+                    libspa-0.2-bluetooth dconf-cli gsettings-desktop-schemas \
+                    pipewire-pulse xdg-desktop-portal-gtk libnotify-bin qt5ct git; do
         echo "$pkgs" | grep -qx "$expected" || { fail "missing apt: package '$expected'"; return; }
     done
+    echo "$pkgs" | grep -qx "thunar" && { fail "thunar should not be in core apt"; return; }
+    echo "$pkgs" | grep -qx "blueman" && { fail "blueman should not be in core apt"; return; }
     pass
 }
 
@@ -78,7 +82,7 @@ test_list_sid_packages() {
 test_list_script_labels() {
     local labels
     labels=$(list_script_labels core)
-    for expected in zed raven ollama; do
+    for expected in zed pifile raven ollama; do
         echo "$labels" | grep -qx "$expected" || { fail "missing script: label '$expected'"; return; }
     done
     pass
@@ -93,6 +97,10 @@ test_dev_list_contents() {
     echo "$scripts" | grep -qx "node" || { fail "dev.list missing script:node"; return; }
     echo "$scripts" | grep -qx "go" || { fail "dev.list missing script:go"; return; }
     echo "$pkgs" | grep -qx "docker-ce" || { fail "dev.list missing apt:docker-ce"; return; }
+    for expected in libfontconfig-dev libwayland-dev libxkbcommon-dev clang libvulkan-dev; do
+        echo "$pkgs" | grep -qx "$expected" \
+            || { fail "dev.list missing GPUI build dep '$expected'"; return; }
+    done
     # rustup must NOT be an apt entry (it's not in Debian repos)
     echo "$pkgs" | grep -qx "rustup" && { fail "rustup should be script:, not apt:"; return; }
     # gh is a core package (always installed), so not required in dev
@@ -114,6 +122,7 @@ test_defaults_defaults() {
     [ "$(defaults_default_for editor)" = "zed" ] || { fail "editor default != zed"; return; }
     [ "$(defaults_default_for terminal)" = "foot" ] || { fail "terminal default != foot"; return; }
     [ "$(defaults_default_for browser)" = "chromium" ] || { fail "browser default != chromium"; return; }
+    [ "$(defaults_default_for filemanager)" = "pifile" ] || { fail "filemanager default != pifile"; return; }
     pass
 }
 
@@ -188,6 +197,9 @@ test_upgrade_missing_file_installs() {
     rm -f "$target"
     install_module_target "waybar/config.jsonc.template" "$target" "safe" >/dev/null 2>&1 || true
     [ -f "$target" ] || { fail "missing file was not installed"; return; }
+    grep -q '"temperature"' "$target" && { fail "waybar still ships a temperature module"; return; }
+    grep -q 'pimarchy-workspace' "$target" || { fail "waybar missing workspace helper"; return; }
+    grep -q 'hyprland/workspaces' "$target" && { fail "waybar still uses hyprland/workspaces"; return; }
     pass
 }
 
@@ -204,18 +216,17 @@ test_retired_files_cleanup() {
 # ── Wrappers (non-network paths only) ─────────────────────────────────────────
 
 test_agent_wrapper_reads_default() {
-    # raven IS on PATH on dev machines, and not on a fresh Pi — both fine:
-    # wrapper must exec raven with --yolo when installed, else print help.
-    if command -v raven >/dev/null 2>&1; then
-        # Can't exec in a subshell test; verify arg translation only via dry parse:
-        # (skip actual exec — the pimarchy-agent wrapper exec's, killing the test)
-        pass
-    else
-        local out
-        out=$(bash "$PIMARCHY_DIR/bin/pimarchy-agent" 2>&1) || true
-        echo "$out" | grep -q "Raven not installed" || { fail "missing-raven message wrong: $out"; return; }
-        pass
-    fi
+    # Restrict PATH so a machine-local raven cannot be exec'd (which would
+    # replace this test process). Missing-binary messaging is the contract.
+    local out
+    out=$(PATH="/usr/bin:/bin" bash "$PIMARCHY_DIR/bin/pimarchy-agent" --inline 2>&1) || true
+    echo "$out" | grep -q "Raven not installed" \
+        || { fail "missing-raven message wrong: $out"; return; }
+    grep -q "org.pimarchy.agent" "$PIMARCHY_DIR/bin/pimarchy-agent" \
+        || { fail "agent wrapper missing org.pimarchy.agent app-id"; return; }
+    grep -q -- "--inline" "$PIMARCHY_DIR/bin/pimarchy-agent" \
+        || { fail "agent wrapper missing --inline"; return; }
+    pass
 }
 
 test_default_agent_wrapper_validates() {
@@ -252,11 +263,11 @@ test_pimarchy_install_usage() {
 }
 
 test_bindings_template_renders() {
-    # The bindings template must reference all four DEFAULT_* vars and render
+    # The bindings template must reference all DEFAULT_* vars and render
     defaults_export_vars
     local out="$SANDBOX/bindings-rendered"
     process_template "$PIMARCHY_DIR/config/hypr/bindings.lua.template" "$out" >/dev/null
-    for var in DEFAULT_TERMINAL DEFAULT_BROWSER DEFAULT_EDITOR DEFAULT_AGENT; do
+    for var in DEFAULT_TERMINAL DEFAULT_BROWSER DEFAULT_EDITOR DEFAULT_AGENT DEFAULT_FILEMANAGER; do
         local value
         value="${!var}"
         grep -q "$value" "$out" || { fail "rendered bindings missing $var value"; return; }
@@ -265,6 +276,9 @@ test_bindings_template_renders() {
     grep -q "{{" "$out" && { fail "unresolved {{VARS}} left in rendered bindings"; return; }
     # Agent binding present
     grep -q "Coding Agent" "$out" || { fail "agent binding missing"; return; }
+    grep -q "Calculator" "$out" || { fail "calculator binding missing"; return; }
+    grep -q "picalc" "$out" || { fail "picalc launch missing from bindings"; return; }
+    grep -q "thunar" "$out" && { fail "bindings still launch thunar"; return; }
     pass
 }
 
@@ -273,7 +287,9 @@ test_hyprland_conf_sources_bindings() {
     local out="$SANDBOX/hyprland-rendered"
     process_template "$PIMARCHY_DIR/config/hypr/hyprland.lua.template" "$out" >/dev/null
     grep -q 'require("hypr.bindings")' "$out" || { fail "hyprland.lua no longer requires bindings.lua"; return; }
-    grep -qF '"^raven$"' "$out" || { fail "raven windowrule missing"; return; }
+    grep -qF 'org\\.pimarchy\\.agent' "$out" || { fail "agent windowrule missing"; return; }
+    grep -qF 'picalc' "$out" || { fail "picalc windowrule missing"; return; }
+    grep -qF 'bluetoothctl' "$out" || { fail "bluetoothctl windowrule missing"; return; }
     # Lua format sanity: no hyprlang-only syntax leaked in
     grep -qE "^\s*(exec-once|source)\s*=" "$out" && { fail "hyprlang syntax found in Lua config"; return; }
     pass

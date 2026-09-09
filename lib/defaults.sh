@@ -3,10 +3,11 @@
 # Pimarchy Library — Default App Policy (Quattro)
 #
 # Default apps are recorded as key=value files in ~/.config/pimarchy/defaults/:
-#   agent   → raven    (pre-selected; launcher: `pimarchy agent`)
-#   editor  → zed      (Zed, official script install)
-#   terminal→ foot     (Foot, apt)
-#   browser → chromium (Chromium, apt)
+#   agent       → raven    (pre-selected; launcher: `pimarchy agent`)
+#   editor      → zed      (Zed, official script install)
+#   terminal    → foot     (Foot, apt)
+#   browser     → chromium (Chromium, apt)
+#   filemanager → pifile   (Pifile, official script install)
 #
 # Files are consumed by launchers and templates, so values are validated
 # against a fixed allowlist — an arbitrary value must never be exec'd.
@@ -15,22 +16,24 @@
 # defaults_allowlist — <key> <allowed values...>
 defaults_allowlist() {
     case "$1" in
-        agent)   echo "raven" ;;
-        editor)  echo "zed" ;;
-        terminal) echo "foot" ;;
-        browser) echo "chromium" ;;
-        *)       echo "" ;;
+        agent)        echo "raven" ;;
+        editor)       echo "zed" ;;
+        terminal)     echo "foot" ;;
+        browser)      echo "chromium" ;;
+        filemanager)  echo "pifile" ;;
+        *)            echo "" ;;
     esac
 }
 
 # defaults_default_for <key> — the shipped default when nothing is set yet.
 defaults_default_for() {
     case "$1" in
-        agent)    echo "raven" ;;
-        editor)   echo "zed" ;;
-        terminal) echo "foot" ;;
-        browser)  echo "chromium" ;;
-        *)        echo "" ;;
+        agent)        echo "raven" ;;
+        editor)       echo "zed" ;;
+        terminal)     echo "foot" ;;
+        browser)      echo "chromium" ;;
+        filemanager)  echo "pifile" ;;
+        *)            echo "" ;;
     esac
 }
 
@@ -88,7 +91,7 @@ EOF
 # (only writes files that don't exist yet, so user choices survive reinstalls).
 defaults_install_defaults() {
     local key
-    for key in agent editor terminal browser; do
+    for key in agent editor terminal browser filemanager; do
         if [ ! -f "$PIMARCHY_DEFAULTS_DIR/$key" ]; then
             defaults_set "$key" "$(defaults_default_for "$key")"
         fi
@@ -98,7 +101,7 @@ defaults_install_defaults() {
 # defaults_show — print all defaults and their sources.
 defaults_show() {
     local key value source
-    for key in agent editor terminal browser; do
+    for key in agent editor terminal browser filemanager; do
         if [ -f "$PIMARCHY_DEFAULTS_DIR/$key" ]; then
             value=$(sed -n "s/^${key}=//p" "$PIMARCHY_DEFAULTS_DIR/$key" 2>/dev/null)
             source="set"
@@ -106,17 +109,19 @@ defaults_show() {
             value=$(defaults_default_for "$key")
             source="built-in"
         fi
-        printf '%-10s %-12s (%s)\n' "$key" "$value" "$source"
+        printf '%-12s %-12s (%s)\n' "$key" "$value" "$source"
     done
 }
 
 # defaults_file_value — export template-friendly variables for install.sh:
-# DEFAULT_AGENT, DEFAULT_EDITOR, DEFAULT_TERMINAL, DEFAULT_BROWSER.
+# DEFAULT_AGENT, DEFAULT_EDITOR, DEFAULT_TERMINAL, DEFAULT_BROWSER,
+# DEFAULT_FILEMANAGER.
 defaults_export_vars() {
     export DEFAULT_AGENT=$(defaults_read agent)
     export DEFAULT_EDITOR=$(defaults_read editor)
     export DEFAULT_TERMINAL=$(defaults_read terminal)
     export DEFAULT_BROWSER=$(defaults_read browser)
+    export DEFAULT_FILEMANAGER=$(defaults_read filemanager)
 }
 
 # defaults_remove_files — uninstall hook.

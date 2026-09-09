@@ -29,7 +29,9 @@ Only the compositor/session stack, all installed explicitly with `-t sid`:
 
 hyprland, hyprland-guiutils, waybar, mako-notifier, swaybg, xdg-desktop-portal-hyprland, uwsm
 
-Everything else — including Chromium, Foot, Rofi, Thunar — comes from Trixie.
+Everything else — including Chromium, Foot, Rofi — comes from Trixie.
+
+The Hyprland stack currently pulls **Python 3.14** from sid as a dependency. Trixie `blueman` requires `python3 << 3.14`, so it cannot be installed. Sid `blueman` *would* install, but `-t sid` also upgrades NetworkManager and fontconfig off Pi OS — we do not do that. Waybar's Bluetooth click opens `bluetoothctl` instead.
 
 ## Risks & Mitigations
 

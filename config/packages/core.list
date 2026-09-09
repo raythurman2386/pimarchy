@@ -18,24 +18,51 @@ apt:starship
 apt:fonts-font-awesome
 apt:fonts-jetbrains-mono
 apt:fonts-liberation
+# GPUI (Zed, Picalc, Piwrite, Pifile) hard-codes DejaVu as the fallback face.
+# fonts-liberation already satisfies fontconfig-config, so DejaVu is NOT
+# pulled as a dependency — it must be listed here.
+apt:fonts-dejavu-core
 apt:fonts-noto-color-emoji
 apt:gnome-themes-extra
 apt:yaru-theme-icon
 apt:papirus-icon-theme
 apt:fontconfig
+# dconf + schemas: apply_gsettings writes org.gnome.desktop.interface
+# (gtk-theme, color-scheme). Pi OS Lite often has dconf-cli via raspi-config,
+# but Debian Lite does not — install both so dark theme actually sticks.
+apt:dconf-cli
+apt:gsettings-desktop-schemas
+# Matches QT_QPA_PLATFORMTHEME=qt5ct in hyprland.lua / start-hyprland.sh.
+apt:qt5ct
 
 # --- Desktop components ------------------------------------------------------
 apt:rofi
 apt:greetd
 apt:tuigreet
-apt:thunar
 apt:lxpolkit
 apt:pavucontrol
 apt:network-manager-gnome
 apt:bluez
 apt:bluez-tools
+# PipeWire Bluetooth audio. blueman is NOT listed: Trixie's package
+# requires python3 << 3.14, and the sid Hyprland stack already pulled
+# python3 3.14. Sid blueman would also upgrade NetworkManager off Pi OS.
+# Waybar left-click opens bluetoothctl instead.
+apt:libspa-0.2-bluetooth
 apt:alsa-utils
+# pipewire is a Depends of wireplumber; pipewire-pulse is only a Recommends,
+# and pavucontrol Recommends `pulseaudio | pipewire-pulse`. Listing
+# pipewire-pulse explicitly keeps PulseAudio from being pulled instead.
+apt:pipewire
+apt:pipewire-pulse
 apt:wireplumber
+# File pickers / screen share for Chromium and Zed. The Hyprland portal
+# only Recommends the GTK backend — without it, Open/Save dialogs fail.
+apt:xdg-desktop-portal
+apt:xdg-desktop-portal-gtk
+apt:xdg-utils
+apt:xdg-user-dirs
+apt:libnotify-bin
 
 # --- Screenshot & clipboard --------------------------------------------------
 apt:grim
@@ -51,7 +78,16 @@ apt:ripgrep
 apt:unzip
 apt:wget
 apt:curl
+apt:ca-certificates
+apt:git
 apt:gh
+
+# --- GPUI / Vulkan runtime (Zed is a core app; Picalc/Piwrite/Pifile too) ----
+# wgpu/GPUI dlopen Vulkan. libvulkan1 is only a Recommends of GTK/Mesa, and
+# mesa-vulkan-drivers is only a Recommends of libvulkan1 — on Pi OS Lite
+# that chain is easy to miss. The VC7 driver lives in mesa-vulkan-drivers.
+apt:libvulkan1
+apt:mesa-vulkan-drivers
 
 # --- Browser (default browser = chromium, see `pimarchy default browser`) ----
 apt:chromium
@@ -68,6 +104,8 @@ sid:uwsm
 # --- Default apps via official install scripts (not in Debian repos) ---------
 # Zed editor (default editor) — ~/.local/zed.app, config ~/.config/zed
 script:zed
+# Pifile file manager (default file manager) — ~/.local/bin/pifile
+script:pifile
 # Raven AI coding agent (pre-selected default agent) — ~/.cargo/bin/raven
 script:raven
 # Ollama inference backend for Raven — /usr/local/bin/ollama

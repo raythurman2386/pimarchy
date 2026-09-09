@@ -35,3 +35,16 @@ apt:pkg-config
 apt:libssl-dev
 apt:git-lfs
 apt:shellcheck
+
+# --- GPUI / wgpu compile (Picalc, Piwrite, Pifile, Zed-from-source) ----------
+# Matching scripts/ci-linux-deps.sh in those repos. bindgen needs clang;
+# cosmic-text needs fontconfig headers. Runtime Vulkan/DejaVu live in core.
+apt:clang
+apt:libclang-dev
+apt:libfontconfig-dev
+apt:libwayland-dev
+apt:libxkbcommon-dev
+apt:libxkbcommon-x11-dev
+apt:libx11-xcb-dev
+apt:libzstd-dev
+apt:libvulkan-dev

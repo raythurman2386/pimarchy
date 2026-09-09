@@ -2,7 +2,7 @@
 
 Pimarchy is built for a keyboard-driven workflow. Master these keybinds to navigate your system efficiently.
 
-Keybinds live in `~/.config/hypr/bindings.conf` (sourced by `hyprland.conf`) and respect the [default app policy](../development/defaults.md) — changing `pimarchy default browser` changes what Super+Shift+B launches after the next install/update.
+Keybinds live in `~/.config/hypr/bindings.lua` (required by `hyprland.lua`) and respect the [default app policy](../development/defaults.md) — changing `pimarchy default browser` or `pimarchy default filemanager` changes Super+Shift+B / Super+E after the next install/update.
 
 ## General Navigation
 
@@ -11,10 +11,12 @@ Keybinds live in `~/.config/hypr/bindings.conf` (sourced by `hyprland.conf`) and
 | **SUPER + Return** | **Terminal** | Open the default terminal (**Foot**). |
 | **SUPER + D** | **Launcher** | Open **Rofi** app launcher. |
 | **SUPER + W** | **Close** | Close the focused window. |
-| **SUPER + E** | **File Manager** | Open **Thunar** file manager. |
+| **SUPER + E** | **File Manager** | Open the default file manager (**Pifile**). |
 | **SUPER + M** | **System Monitor** | Open **btop** system monitor. |
 | **SUPER + SHIFT + B** | **Browser** | Launch the default browser (**Chromium**). |
-| **SUPER + SHIFT + CTRL + A** | **Coding Agent** | Launch the default coding agent (**Raven**, `pimarchy agent`) in a floating window. |
+| **SUPER + SHIFT + CTRL + A** | **Coding Agent** | Launch the default coding agent (**Raven**, `pimarchy agent`) in a floating TUI window (`org.pimarchy.agent`). |
+| **SUPER + CTRL + Q** | **Calculator** | Open **Picalc** as a floating calculator window. |
+| **XF86Calculator** | **Calculator** | Same as Super+Ctrl+Q (calculator key, if present). |
 | **SUPER + K** | **Keybind Viewer** | View all active keybinds in **Rofi**. |
 
 ## Window Management

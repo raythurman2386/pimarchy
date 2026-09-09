@@ -1,22 +1,41 @@
 /* Pimarchy Waybar Theme — live Omarchy bar look: opaque bg, flat modules */
 
 * {
-    font-family: "{{FONT_FAMILY}}", "Noto Color Emoji", "FontAwesome", sans-serif;
+    /* Sans for letters/digits, Propo only for Nerd Font icons. Color-emoji
+       in this stack makes glyphs paint as bitmaps and look muddy. */
+    font-family: "{{FONT_UI}}", "{{FONT_ICON}}", sans-serif;
     font-size: {{FONT_SIZE_PX}}px;
+    font-weight: normal;
+    letter-spacing: 0;
     border: none;
     border-radius: 0;
     min-height: 0;
+    text-shadow: none;
+    box-shadow: none;
+    background-image: none;
+    -gtk-icon-shadow: none;
 }
 
 window#waybar {
-    background: {{BAR_BG_COLOR}};
+    background-color: {{BAR_BG_COLOR}};
+    background-image: none;
     color: {{BAR_FG_COLOR}};
     border-bottom: 1px solid {{BAR_BORDER_COLOR}};
 }
 
+button {
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+label {
+    text-shadow: none;
+}
+
 /* All modules base style — flat, no radii, live spacing */
 #clock,
-#temperature,
 #memory,
 #pulseaudio,
 #network,
@@ -25,7 +44,11 @@ window#waybar {
 #custom-launcher,
 #custom-power,
 #custom-update,
-#workspaces,
+#custom-ws1,
+#custom-ws2,
+#custom-ws3,
+#custom-ws4,
+#custom-ws5,
 #tray {
     padding: 0 8px;
     margin: 0;
@@ -36,7 +59,6 @@ window#waybar {
 }
 
 /* Module Hover states */
-#temperature:hover,
 #memory:hover,
 #pulseaudio:hover,
 #network:hover,
@@ -55,38 +77,49 @@ window#waybar {
     background-color: {{LAUNCHER_HOVER_BG_COLOR}};
 }
 
-/* Workspaces */
-#workspaces button {
-    padding: 0 6px;
+/* Workspaces — custom chips (hyprland/workspaces click uses a dispatch
+   syntax Hyprland 0.56's Lua IPC rejects). */
+#custom-ws1,
+#custom-ws2,
+#custom-ws3,
+#custom-ws4,
+#custom-ws5 {
+    padding: 0 8px;
+    min-width: 24px;
+    min-height: {{BAR_HEIGHT}}px;
     font-size: 12px;
-    font-weight: bold;
+    font-weight: normal;
     border-radius: 0;
+    background-color: {{MODULE_BG_COLOR}};
     color: {{COLOR_INACTIVE}};
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
 }
-#workspaces button.active {
+#custom-ws1:hover,
+#custom-ws2:hover,
+#custom-ws3:hover,
+#custom-ws4:hover,
+#custom-ws5:hover {
+    background-color: {{MODULE_HOVER_BG_COLOR}};
+}
+#custom-ws1.active,
+#custom-ws2.active,
+#custom-ws3.active,
+#custom-ws4.active,
+#custom-ws5.active {
     color: {{COLOR_ACTIVE}};
 }
 
 /* Clock */
 #clock {
-    font-weight: bold;
+    font-family: "{{FONT_UI}}", "{{FONT_ICON}}", sans-serif;
+    letter-spacing: 0;
     color: {{COLOR_TEXT}};
     background-color: {{CLOCK_BG_COLOR}};
 }
 
 /* Hardware Info */
-#temperature {
-    color: {{COLOR_TEMP}};
-}
-#temperature.critical {
-    color: {{COLOR_ERROR}};
-}
 #memory.warning {
     color: {{COLOR_WARNING}};
-}
-#cpu {
-    color: {{COLOR_CPU}};
 }
 
 #memory {
@@ -161,11 +194,15 @@ window#waybar {
 /* Tooltips */
 tooltip {
     background-color: {{BAR_BG_COLOR}};
+    background-image: none;
     border: 1px solid {{ROFI_BORDER_COLOR}};
     border-radius: 0;
     padding: 4px 2px;
+    text-shadow: none;
+    box-shadow: none;
 }
 tooltip label {
     color: {{BAR_FG_COLOR}};
     padding: 4px 8px;
+    text-shadow: none;
 }

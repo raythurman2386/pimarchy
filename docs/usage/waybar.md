@@ -6,15 +6,15 @@ The status bar is interactive. Use these actions to manage your system quickly.
 
 | Module | Action | Result |
 |--------|--------|--------|
-| **Workspaces** | **Click** | Switch to the clicked workspace. |
-| **Workspaces** | **Right-click** | Toggle window overview (if configured). |
-| **Workspaces** | **Scroll** | Cycle through workspaces (Next/Previous). |
+| **Workspaces** | **Click** | Switch to the clicked workspace (updates immediately via Hyprland events). |
 | **Clock** | **Click** | Toggle the date and time format. |
 | **Update Icon** | **Click** | Open update terminal (visible only when updates are available). |
-| **WiFi** | **Right-click** | Open the NetworkManager terminal UI (`nmtui`). |
+| **WiFi** | **Right-click** | Open NetworkManager connection editor. |
+| **Bluetooth** | **Click** | Open **bluetoothctl** in a floating terminal. |
+| **Bluetooth** | **Right-click** | Toggle Bluetooth radio (`rfkill`). |
 | **Volume** | **Click** | Mute or unmute the audio output. |
 | **Volume** | **Scroll** | Increase or decrease the volume level. |
-| **CPU / RAM** | **Click** | Open the **btop** system monitor. |
+| **Memory** | **Click** | Open the **btop** system monitor. |
 | **Power Icon** | **Click** | Open the **Rofi Power Menu**. |
 
 ## Customizing Waybar

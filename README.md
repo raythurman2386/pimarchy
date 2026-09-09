@@ -17,7 +17,7 @@ Pimarchy provisions a barebones Pi OS Lite installation into a fully configured,
 | Terminal | Foot (default terminal) |
 | Login manager | Greetd + Tuigreet |
 | Shell | Bash + Starship + custom aliases |
-| File manager | Thunar |
+| File manager | Pifile (default file manager) |
 | Browser | Chromium (default browser) |
 | Code editor | Zed (Rust-based, default editor) |
 | AI coding agent | Raven (default agent, with Ollama) — `pimarchy agent`, Super+Shift+Ctrl+A |
@@ -109,6 +109,7 @@ pimarchy default agent raven            # set the coding agent
 pimarchy default browser chromium       # set the browser
 pimarchy default editor zed             # set the editor
 pimarchy default terminal foot          # set the terminal
+pimarchy default filemanager pifile     # set the file manager
 
 # Launch the default coding agent (Quattro-style)
 pimarchy agent "refactor the auth module"
@@ -144,7 +145,7 @@ The installer will:
 2. **Update the system** and add the required apt repositories:
    - Debian Sid (for the latest Hyprland — pinned; see the [sid policy](docs/development/sid-policy.md))
    - Official Docker CE repository (only used if you later install the dev module)
-3. **Install the core module** (data-driven from `config/packages/core.list`): the Hyprland session stack, Foot, Rofi, Mako, Greetd, Tuigreet, Starship, Thunar, btop, Chromium, plus Zed, Raven, and Ollama via their official install scripts
+3. **Install the core module** (data-driven from `config/packages/core.list`): the Hyprland session stack, Foot, Rofi, Mako, Greetd, Tuigreet, Starship, btop, Chromium, plus Zed, Pifile, Raven, and Ollama via their official install scripts
 4. **Deploy all configuration files** using the Ravenwood theme, honoring the default app policy (`pimarchy default ...`)
 5. **Configure Greetd** as the login manager, replacing the default console login
 6. **Prompt for CPU performance mode** (optional):
@@ -188,11 +189,12 @@ This configures `greetd` to skip the login prompt and automatically start the de
 |----------|--------|
 | `SUPER + D` | App launcher (Rofi) |
 | `SUPER + Return` | Terminal (default terminal: Foot) |
-| `SUPER + E` | File manager (Thunar) |
+| `SUPER + E` | File manager (Pifile) |
 | `SUPER + M` | System monitor (btop) |
 | `SUPER + W` | Close window |
 | `SUPER + SHIFT + B` | Open browser (default: Chromium) |
 | `SUPER + SHIFT + CTRL + A` | Coding agent (default: Raven, `pimarchy agent`) |
+| `SUPER + CTRL + Q` | Calculator (Picalc, floating) |
 | `SUPER + F` | Toggle fullscreen |
 | `SUPER + V` | Toggle floating window |
 | `SUPER + K` | View all keybinds (Rofi) |
@@ -213,7 +215,7 @@ This configures `greetd` to skip the login prompt and automatically start the de
 | Right-click WiFi | Open network settings |
 | Click volume | Open audio mixer (pavucontrol) |
 | Scroll on volume | Adjust volume |
-| Click CPU / Memory | Open system monitor (btop) |
+| Click Memory | Open system monitor (btop) |
 | Click power icon | Power menu (shutdown / reboot / logout) |
 
 ---

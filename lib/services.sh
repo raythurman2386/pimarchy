@@ -161,8 +161,28 @@ RestartSec=1
 WantedBy=graphical-session.target
 EOF
 
+    # Instant workspace-chip refresh: Hyprland events → SIGRTMIN+9 → Waybar.
+    # Companion to custom/ws* modules (see bin/pimarchy-workspace).
+    cat << 'EOF' > "$systemd_dir/pimarchy-workspace-watch.service"
+[Unit]
+Description=Pimarchy Waybar workspace refresh
+PartOf=waybar.service
+After=waybar.service
+BindsTo=waybar.service
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/pimarchy-workspace watch
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=waybar.service
+EOF
+
     systemctl --user daemon-reload
     systemctl --user enable waybar.service
+    systemctl --user enable pimarchy-workspace-watch.service
 }
 
 configure_mako() {
@@ -196,6 +216,7 @@ revert_swaybg() {
 }
 
 revert_waybar() {
+    remove_user_service "pimarchy-workspace-watch.service" "workspace watch service"
     remove_user_service "waybar.service" "waybar service"
 }
 

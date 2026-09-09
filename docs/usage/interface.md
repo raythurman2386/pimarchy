@@ -16,7 +16,7 @@ Hyprland is a dynamic tiling window manager.
 Located at the top of your screen, Waybar shows:
 -   **Workspaces:** Current active and occupied workspaces.
 -   **Clock & Date:** Click to toggle format.
--   **System Stats:** CPU, Memory, and Disk usage.
+-   **System Stats:** Memory (click to open btop).
 -   **Networking:** Current Wi-Fi or Ethernet status.
 -   **Volume:** Audio level and mute status.
 
@@ -26,8 +26,8 @@ When you press **SUPER + D**, the Rofi launcher appears. Simply start typing to 
 ### 4. Mako (Notifications)
 Notifications appear in the top-right corner. You can dismiss them by clicking.
 
-### 5. Thunar (File Manager)
-A lightweight but powerful file manager that supports icons, thumbnails, and network drives.
+### 5. Pifile (File Manager)
+Keyboard-first file manager. **SUPER + E** opens it; folders opened from other apps use Pifile via the `inode/directory` MIME default.
 
 ---
 
