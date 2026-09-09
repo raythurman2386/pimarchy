@@ -72,6 +72,8 @@ apt:wl-clipboard
 # --- System tools ------------------------------------------------------------
 apt:btop
 apt:ufw
+# sshfs: mount network drives over SSH (user requirement)
+apt:sshfs
 apt:jq
 apt:fd-find
 apt:ripgrep

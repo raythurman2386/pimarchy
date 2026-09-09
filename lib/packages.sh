@@ -226,6 +226,7 @@ remove_packages() {
         gh
         libvulkan1
         mesa-vulkan-drivers
+        sshfs
         docker-ce
         docker-ce-cli
         containerd.io
