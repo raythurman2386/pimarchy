@@ -6,6 +6,8 @@
 # --- Languages (official installers, not apt) --------------------------------
 # Rust via rustup (https://sh.rustup.rs) — keeps rustc/cargo upgradable
 script:rustup
+# Cargo build config: mold linker + shared target dir (~/.cache/cargo-target)
+script:cargo-config
 # Node.js v22 LTS via NodeSource
 script:node
 # Go (latest stable) from golang.org
@@ -30,21 +32,29 @@ apt:docker-compose-plugin
 # or: pimarchy install dev --with-docker-group
 
 # --- Extra dev CLI tools -----------------------------------------------------
+# mold: fast drop-in linker, ~2-5x faster than GNU ld on arm64 Rust builds.
+# Referenced by the cargo config shipped via script:cargo-config above.
 apt:build-essential
 apt:pkg-config
 apt:libssl-dev
 apt:git-lfs
 apt:shellcheck
+apt:mold
 
 # --- GPUI / wgpu compile (Picalc, Piwrite, Pifile, Zed-from-source) ----------
 # Matching scripts/ci-linux-deps.sh in those repos. bindgen needs clang;
 # cosmic-text needs fontconfig headers. Runtime Vulkan/DejaVu live in core.
+# The X11 dev headers are sid: — core installs the Hyprland stack with -t sid,
+# which brings sid's libxcb1/libxkbcommon runtimes with it; the matching -dev
+# headers must come from sid too or apt hits strict (=) version conflicts
+# against Trixie/RPi repos (verified: apt-get -s resolves clean with -t sid).
 apt:clang
 apt:libclang-dev
 apt:libfontconfig-dev
 apt:libwayland-dev
-apt:libxkbcommon-dev
-apt:libxkbcommon-x11-dev
-apt:libx11-xcb-dev
+sid:libxkbcommon-dev
+sid:libxkbcommon-x11-dev
+sid:libxcb1-dev
+sid:libx11-xcb-dev
 apt:libzstd-dev
 apt:libvulkan-dev

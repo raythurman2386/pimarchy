@@ -189,6 +189,7 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 - Containers: Docker CE + Docker Compose v2 (from download.docker.com — NOT docker.io) — lazy `dev` module only; docker group membership is opt-in
 - Code Editor: Zed (installed to `~/.local/zed.app/`, config at `~/.config/zed/settings.json`) — default editor
 - CLI Tools: fd, ripgrep (Rust-based)
+- Rust builds (dev module): mold linker + shared target dir `~/.cache/cargo-target` via `~/.cargo/config.toml` (template `config/cargo/config.toml.template`, hook `script:cargo-config`); absolute paths only — cargo does not expand `~` in config files
 - System Monitor: btop (themed with Ravenwood palette via `config/btop/ravenwood.theme`)
 - AI Coding Agent: Raven (installed to `~/.cargo/bin/`, config at `~/.raven/config.toml`) + Ollama (local inference backend at `localhost:11434`) — default agent, launched via `pimarchy agent` (Super+Shift+Ctrl+A) in a Foot window class `org.pimarchy.agent`; `a` is `--inline`; installs lazily
 - File manager: Pifile (installed to `~/.local/bin/pifile`) — default file manager, Super+E; `inode/directory` MIME handler

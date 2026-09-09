@@ -71,8 +71,13 @@ Packages are declared as data in `config/packages/*.list` with three tags:
 
 | Tag | Packages |
 |-----|----------|
-| script | rustup (Rust, official rustup.rs — not apt), node (Node.js v22 LTS via NodeSource), go (latest stable from golang.org), python-dev (pip, venv, pipx) |
-| apt | ca-certificates, gnupg, docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin, build-essential, pkg-config, libssl-dev, git-lfs, shellcheck, clang, libclang-dev, libfontconfig-dev, libwayland-dev, libxkbcommon-dev, libxkbcommon-x11-dev, libx11-xcb-dev, libzstd-dev, libvulkan-dev |
+| script | rustup (Rust, official rustup.rs — not apt), cargo-config (mold linker + shared target dir, see below), node (Node.js v22 LTS via NodeSource), go (latest stable from golang.org), python-dev (pip, venv, pipx) |
+| apt | ca-certificates, gnupg, docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin, build-essential, pkg-config, libssl-dev, git-lfs, shellcheck, mold, clang, libclang-dev, libfontconfig-dev, libwayland-dev, libzstd-dev, libvulkan-dev |
+| sid | libxkbcommon-dev, libxkbcommon-x11-dev, libxcb1-dev, libx11-xcb-dev |
+
+The four sid X11 headers match how core installs the Hyprland stack (`-t sid`): sid's runtimes (`libxcb1`, `libxkbcommon0`, …) land on the system then, and `-dev` packages pin their exact runtime version with `=` — Trixie or Raspberry-Pi-repo headers conflict with sid runtimes and break the whole dev-module transaction.
+
+Rust builds are tuned for the Pi 5 via `~/.cargo/config.toml`: **mold** links (the arm64 GNU `ld` is the slowest part of a Rust build) and a **shared target dir** at `~/.cache/cargo-target` so dependencies compile once across all crates, not per-project. Re-run `pimarchy install dev` to refresh the file if it's still pristine; user edits are left untouched.
 
 Docker CE comes from the official download.docker.com repository (pinned 1001), never Debian's `docker.io` — it lacks `docker-compose-plugin`. **Docker group membership is opt-in**:
 

@@ -94,16 +94,84 @@ test_dev_list_contents() {
     scripts=$(list_script_labels dev)
     pkgs=$(list_apt_packages dev apt)
     echo "$scripts" | grep -qx "rustup" || { fail "dev.list missing script:rustup"; return; }
+    echo "$scripts" | grep -qx "cargo-config" || { fail "dev.list missing script:cargo-config"; return; }
     echo "$scripts" | grep -qx "node" || { fail "dev.list missing script:node"; return; }
     echo "$scripts" | grep -qx "go" || { fail "dev.list missing script:go"; return; }
     echo "$pkgs" | grep -qx "docker-ce" || { fail "dev.list missing apt:docker-ce"; return; }
-    for expected in libfontconfig-dev libwayland-dev libxkbcommon-dev clang libvulkan-dev; do
+    echo "$pkgs" | grep -qx "mold" || { fail "dev.list missing apt:mold (cargo linker)"; return; }
+    for expected in libfontconfig-dev libwayland-dev clang libvulkan-dev; do
         echo "$pkgs" | grep -qx "$expected" \
             || { fail "dev.list missing GPUI build dep '$expected'"; return; }
+    done
+    # X11 headers must be sid: — core's Hyprland stack (-t sid) installs sid's
+    # libxcb1/libxkbcommon runtimes; -dev packages strictly version-match (=)
+    # their runtime, so Trixie/RPi-repo headers break the apt transaction.
+    local sid_pkgs
+    sid_pkgs=$(list_apt_packages dev sid)
+    for expected in libxkbcommon-dev libxkbcommon-x11-dev libxcb1-dev libx11-xcb-dev; do
+        echo "$sid_pkgs" | grep -qx "$expected" \
+            || { fail "dev.list missing sid:X11 header '$expected'"; return; }
     done
     # rustup must NOT be an apt entry (it's not in Debian repos)
     echo "$pkgs" | grep -qx "rustup" && { fail "rustup should be script:, not apt:"; return; }
     # gh is a core package (always installed), so not required in dev
+    pass
+}
+
+test_cargo_config_template_renders_absolute_home() {
+    # cargo does not expand '~' in config files; the shipped template must
+    # render to an absolute target-dir path.
+    local tmp
+    tmp=$(mktemp)
+    process_template "$PIMARCHY_ROOT/config/cargo/config.toml.template" "$tmp" >/dev/null 2>&1 \
+        || { fail "cargo config template failed to render"; rm -f "$tmp"; return; }
+    if grep -q 'target-dir = "~' "$tmp"; then
+        fail "cargo target-dir must be absolute (cargo does not expand ~)"
+    elif ! grep -qE "target-dir = \"$HOME/.cache/cargo-target\"" "$tmp"; then
+        fail "rendered target-dir != $HOME/.cache/cargo-target"
+    fi
+    rm -f "$tmp"
+    pass
+}
+
+test_cargo_config_hook_installs_and_preserves_user_edits() {
+    local cargo_config="$HOME/.cargo/config.toml"
+    local rendered
+    rendered=$(mktemp)
+    process_template "$PIMARCHY_ROOT/config/cargo/config.toml.template" "$rendered" >/dev/null
+
+    # Stub mold on PATH: the hook refuses to install the config without it
+    # (a mold-pointing config with no mold binary breaks every build).
+    local stub_dir="$SANDBOX/stub-bin"
+    mkdir -p "$stub_dir"
+    printf '#!/bin/sh\nexit 0\n' > "$stub_dir/mold"
+    chmod +x "$stub_dir/mold"
+    local saved_path="$PATH"
+    PATH="$stub_dir:$PATH"
+
+    # First run installs
+    configure_cargo_build_config >/dev/null 2>&1 \
+        || { fail "configure_cargo_build_config failed on first run"; PATH="$saved_path"; return; }
+    if ! diff -q "$cargo_config" "$rendered" >/dev/null; then
+        fail "installed config does not match rendered template"
+        PATH="$saved_path"
+        return
+    fi
+
+    # Second run refreshes a pristine file
+    configure_cargo_build_config >/dev/null 2>&1 \
+        || { fail "configure_cargo_build_config failed on pristine re-run"; PATH="$saved_path"; return; }
+    grep -q "mold" "$cargo_config" || { fail "pristine re-run lost mold linker config"; PATH="$saved_path"; return; }
+
+    # User edit is left untouched
+    echo "# my tweak" >> "$cargo_config"
+    if configure_cargo_build_config 2>&1 | grep -q "User-modified, leaving untouched"; then
+        grep -q "my tweak" "$cargo_config" || { fail "user edit was clobbered"; PATH="$saved_path"; return; }
+    else
+        fail "user-modified cargo config was overwritten"
+    fi
+    PATH="$saved_path"
+    rm -f "$rendered"
     pass
 }
 
@@ -303,6 +371,8 @@ run_test "core apt list"                             test_list_apt_packages
 run_test "core sid list"                             test_list_sid_packages
 run_test "core script labels"                        test_list_script_labels
 run_test "dev list contents (rustup/node/go/docker)" test_dev_list_contents
+run_test "cargo config renders absolute home"        test_cargo_config_template_renders_absolute_home
+run_test "cargo config hook install + user-edit guard" test_cargo_config_hook_installs_and_preserves_user_edits
 run_test "unknown module errors"                     test_unknown_module_errors
 run_test "defaults: shipped defaults"                test_defaults_defaults
 run_test "defaults: set + read"                      test_defaults_set_and_read

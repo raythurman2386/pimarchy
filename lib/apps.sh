@@ -17,6 +17,7 @@ run_module_script_hooks() {
             raven)      install_raven ;;
             ollama)     install_ollama ;;
             rustup)     install_rustup ;;
+            cargo-config) configure_cargo_build_config ;;
             node)       configure_nodejs ;;
             go)         install_go ;;
             python-dev) install_python_dev ;;
@@ -251,6 +252,47 @@ install_rustup() {
     fi
 }
 
+# configure_cargo_build_config — ship the dev-module cargo config: mold as
+# the linker and one shared target dir (~/.cache/cargo-target) so every
+# crate reuses a compiled dependency tree instead of recompiling it.
+# Rendered from a template because cargo does not expand '~' in config
+# files — the path must be absolute. Managed like other shipped configs:
+# a pristine file refreshes on re-run, a user-edited one is left alone.
+configure_cargo_build_config() {
+    local cargo_config_dir="$HOME/.cargo"
+    local cargo_config="$cargo_config_dir/config.toml"
+    local template="$CONFIG_DIR/cargo/config.toml.template"
+
+    if [ ! -f "$template" ]; then
+        log_error "Missing template: $template"
+        return 1
+    fi
+
+    # Order guard: the shipped config points every link at mold, so without
+    # the binary all Rust builds (Raven's upgrades included) fail at link
+    # time. Hook order in dev.list guarantees apt:mold installs first.
+    if ! command -v mold &>/dev/null; then
+        log_error "mold not found — refusing to install $HOME/.cargo/config.toml"
+        log_error "(apt:mold should have been installed earlier in the dev module)"
+        return 1
+    fi
+
+    mkdir -p "$cargo_config_dir"
+
+    if [ -f "$cargo_config" ]; then
+        local current_hash expected_hash
+        current_hash=$(hash_file "$cargo_config")
+        expected_hash=$(render_template_hash "cargo/config.toml.template")
+        if [ "$current_hash" != "$expected_hash" ]; then
+            log_info "User-modified, leaving untouched: $cargo_config"
+            return 0
+        fi
+    fi
+
+    process_template "$template" "$cargo_config"
+    log_success "Cargo build config installed (mold linker + shared target dir)"
+}
+
 # configure_nodejs — Node.js v22 LTS from NodeSource (dev module only).
 configure_nodejs() {
     if command -v node &> /dev/null; then
@@ -417,6 +459,10 @@ remove_pimarchy_files() {
     rm -f "$HOME/.config/btop/themes/ravenwood.theme"
 
     rm -f "$HOME/.raven/config.toml"
+
+    # Dev module artifacts (safe if absent)
+    rm -f "$HOME/.cargo/config.toml"
+    rm -rf "$HOME/.cache/cargo-target"
 
     sudo rm -f /etc/apt/sources.list.d/bookworm.list
     sudo rm -f /etc/apt/sources.list.d/sid.list

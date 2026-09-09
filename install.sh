@@ -383,6 +383,8 @@ if [ "$DRY_RUN" = false ]; then
     echo ""
     echo "Lazy package modules (not installed by default):"
     echo "  pimarchy install dev      Node, Go, Python, Rust, Docker, build tools"
+    echo "                            (Rust builds use the mold linker + a shared"
+    echo "                             target dir in ~/.cargo/config.toml)"
     echo "  pimarchy install office   LibreOffice (Writer, Calc, Impress)"
     echo ""
     echo "Bar actions:"
