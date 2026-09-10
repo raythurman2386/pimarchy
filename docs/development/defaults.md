@@ -61,7 +61,7 @@ Packages are declared as data in `config/packages/*.list` with three tags:
 
 | Tag | Packages |
 |-----|----------|
-| apt | foot, starship, fonts-font-awesome, fonts-jetbrains-mono, fonts-liberation, fonts-dejavu-core, fonts-noto-color-emoji, gnome-themes-extra, yaru-theme-icon, papirus-icon-theme, fontconfig, dconf-cli, gsettings-desktop-schemas, qt5ct, rofi, greetd, tuigreet, lxpolkit, pavucontrol, network-manager-gnome, bluez, bluez-tools, libspa-0.2-bluetooth, alsa-utils, pipewire, pipewire-pulse, wireplumber, xdg-desktop-portal, xdg-desktop-portal-gtk, xdg-utils, xdg-user-dirs, libnotify-bin, grim, slurp, wl-clipboard, btop, ufw, jq, fd-find, ripgrep, unzip, wget, curl, ca-certificates, git, gh, libvulkan1, mesa-vulkan-drivers, chromium |
+| apt | foot, starship, fonts-font-awesome, fonts-jetbrains-mono, fonts-liberation, fonts-dejavu-core, fonts-noto-color-emoji, gnome-themes-extra, yaru-theme-icon, papirus-icon-theme, fontconfig, dconf-cli, gsettings-desktop-schemas, qt5ct, rofi, greetd, tuigreet, lxpolkit, pavucontrol, network-manager-gnome, bluez, bluez-tools, libspa-0.2-bluetooth, alsa-utils, pipewire, pipewire-pulse, wireplumber, xdg-desktop-portal, xdg-desktop-portal-gtk, xdg-utils, xdg-user-dirs, libnotify-bin, grim, slurp, wl-clipboard, btop, ufw, sshfs, rpi-imager, jq, fd-find, ripgrep, unzip, wget, curl, ca-certificates, git, gh, libvulkan1, mesa-vulkan-drivers, chromium |
 | sid | hyprland, hyprland-guiutils, waybar, mako-notifier, swaybg, xdg-desktop-portal-hyprland, uwsm |
 | script | zed, pifile, raven, ollama |
 
