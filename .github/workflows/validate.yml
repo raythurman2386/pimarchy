@@ -17,8 +17,10 @@ jobs:
       run: |
         bash -n install.sh
         bash -n uninstall.sh
-        bash -n lib/functions.sh
         bash -n validate.sh
+        for lib in lib/*.sh; do bash -n "$lib"; done
+        for script in bin/*; do bash -n "$script"; done
+        for test in tests/*.sh; do bash -n "$test"; done
     
     - name: Check executable permissions
       run: |
@@ -30,6 +32,10 @@ jobs:
       run: |
         test -f config/theme.conf || (echo "theme.conf missing" && exit 1)
         test -f config/modules.conf || (echo "modules.conf missing" && exit 1)
+        test -f config/packages/core.list || (echo "core.list missing" && exit 1)
+        test -f config/packages/dev.list || (echo "dev.list missing" && exit 1)
+        test -f config/packages/office.list || (echo "office.list missing" && exit 1)
+        test -f config/packages/retired.conf || (echo "retired.conf missing" && exit 1)
     
     - name: Check for template syntax errors
       run: |

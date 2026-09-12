@@ -10,20 +10,27 @@ Pimarchy provisions a barebones Pi OS Lite installation into a fully configured,
 
 | Component | Tool |
 |-----------|------|
-| Window manager | Hyprland (Wayland) |
+| Window manager | Hyprland (Wayland, from Debian sid — pinned; see [docs](docs/development/sid-policy.md)) |
 | Status bar | Waybar |
 | App launcher | Rofi (+ power menu) |
 | Notifications | Mako |
-| Terminal | Alacritty |
+| Terminal | Foot (default terminal) |
 | Login manager | Greetd + Tuigreet |
 | Shell | Bash + Starship + custom aliases |
-| File manager | Thunar |
-| Containers | Docker CE + Docker Compose v2 |
-| Languages | Node.js (v22), Go (latest), Python 3 |
-| Productivity | LibreOffice (Writer, Calc, Impress) |
-| AI coding agent | OpenCode |
-| Firewall | ufw (Default Deny Incoming) |
+| File manager | Pifile (default file manager) |
+| Browser | Chromium (default browser) |
+| Code editor | Zed (Rust-based, default editor) |
+| AI coding agent | Raven (default agent, with Ollama) — `pimarchy agent`, Super+Shift+Ctrl+A |
+| CLI tools | fd, ripgrep, gh (Rust-based where possible) |
 | System monitor | btop (Ravenwood theme) |
+| Firewall | ufw (Default Deny Incoming) |
+
+**Lazy modules** (not installed by default — memory efficiency first):
+
+```bash
+pimarchy install dev      # Rust (rustup), Node.js, Go, Python, Docker CE, build tools
+pimarchy install office   # LibreOffice (Writer, Calc, Impress)
+```
 
 All components are themed with the **Ravenwood** palette — a refined dark forest aesthetic based on Everforest.
 
@@ -82,7 +89,8 @@ The web installer accepts arguments by passing them at the end of the command:
 Once installed, Pimarchy includes a global CLI tool to easily manage updates and configurations.
 
 ```bash
-# Fetch the latest version from GitHub and apply new configurations
+# Fetch the latest version from GitHub — safe upgrade:
+# pristine configs refresh, user-modified files are left untouched
 pimarchy update
 
 # Validate your current template configurations
@@ -90,6 +98,21 @@ pimarchy validate
 
 # Re-run the installer (e.g. to apply a new theme.conf)
 pimarchy install
+
+# Install lazy package modules
+pimarchy install dev      # Rust, Node.js, Go, Python, Docker
+pimarchy install office   # LibreOffice
+
+# Default app policy
+pimarchy defaults                       # show all defaults
+pimarchy default agent raven            # set the coding agent
+pimarchy default browser chromium       # set the browser
+pimarchy default editor zed             # set the editor
+pimarchy default terminal foot          # set the terminal
+pimarchy default filemanager pifile     # set the file manager
+
+# Launch the default coding agent (Quattro-style)
+pimarchy agent "refactor the auth module"
 
 # Uninstall Pimarchy and restore original config backups
 pimarchy uninstall
@@ -120,17 +143,17 @@ The installer will:
 
 1. **Back up** your existing configs to `~/.config/Pimarchy-backup/`
 2. **Update the system** and add the required apt repositories:
-   - Debian Sid (for the latest Hyprland)
-   - Official Docker CE repository (for `docker-compose-plugin`)
-   - NodeSource (for the latest Node.js)
-3. **Install all packages:** Hyprland, Waybar, Rofi, Mako, Alacritty, Greetd, Tuigreet, Starship, Thunar, btop, Docker CE, Node.js, Go, Python, LibreOffice, and more
-4. **Deploy all configuration files** using the Ravenwood theme
-5. **Install OpenCode** (AI coding agent) to `~/.opencode/`
-6. **Configure Greetd** as the login manager, replacing the default console login
-7. **Prompt for CPU performance mode** (optional):
+   - Debian Sid (for the latest Hyprland — pinned; see the [sid policy](docs/development/sid-policy.md))
+   - Official Docker CE repository (only used if you later install the dev module)
+3. **Install the core module** (data-driven from `config/packages/core.list`): the Hyprland session stack, Foot, Rofi, Mako, Greetd, Tuigreet, Starship, btop, Chromium, plus Zed, Pifile, Raven, and Ollama via their official install scripts
+4. **Deploy all configuration files** using the Ravenwood theme, honoring the default app policy (`pimarchy default ...`)
+5. **Configure Greetd** as the login manager, replacing the default console login
+6. **Prompt for CPU performance mode** (optional):
    - `g` — Governor only: keeps CPU at max clock, safe on all units, no reboot needed
    - `o` — Overclock: `arm_freq=2600` (2.6 GHz, up from 2.4 GHz) — requires active cooling and a reboot
    - `N` — Skip: leave CPU settings unchanged
+
+Upgrading from a pre-Quattro install? See the [migration note](docs/development/defaults.md#migration-for-pre-quattro-users) — your packages are preserved (behind `--legacy-packages`) and `pimarchy update` will not clobber files you've edited.
 
 Or pass flags directly to skip the interactive prompt:
 
@@ -165,11 +188,13 @@ This configures `greetd` to skip the login prompt and automatically start the de
 | Shortcut | Action |
 |----------|--------|
 | `SUPER + D` | App launcher (Rofi) |
-| `SUPER + Return` | Terminal (Alacritty) |
-| `SUPER + E` | File manager (Thunar) |
+| `SUPER + Return` | Terminal (default terminal: Foot) |
+| `SUPER + E` | File manager (Pifile) |
 | `SUPER + M` | System monitor (btop) |
 | `SUPER + W` | Close window |
-| `SUPER + SHIFT + B` | Open Chromium |
+| `SUPER + SHIFT + B` | Open browser (default: Chromium) |
+| `SUPER + SHIFT + CTRL + A` | Coding agent (default: Raven, `pimarchy agent`) |
+| `SUPER + CTRL + Q` | Calculator (Picalc, floating) |
 | `SUPER + F` | Toggle fullscreen |
 | `SUPER + V` | Toggle floating window |
 | `SUPER + K` | View all keybinds (Rofi) |
@@ -190,7 +215,7 @@ This configures `greetd` to skip the login prompt and automatically start the de
 | Right-click WiFi | Open network settings |
 | Click volume | Open audio mixer (pavucontrol) |
 | Scroll on volume | Adjust volume |
-| Click CPU / Memory | Open system monitor (btop) |
+| Click Memory | Open system monitor (btop) |
 | Click power icon | Power menu (shutdown / reboot / logout) |
 
 ---
@@ -241,24 +266,47 @@ Checks script syntax, template variables, and file existence. Run this before ev
 ## Project Structure
 
 ```
-├── install.sh                  # Main provisioning script
+├── install.sh                  # Main provisioning script (thin orchestrator)
 ├── uninstall.sh                # Reverts everything
 ├── validate.sh                 # Pre-commit validator
-├── lib/
-│   └── functions.sh            # All shared library functions
+├── lib/                        # Library modules (sourced via functions.sh)
+│   ├── functions.sh            #   aggregator — sources all modules below
+│   ├── common.sh               #   shared paths & constants
+│   ├── log.sh                  #   logging
+│   ├── template.sh             #   {{VARIABLE}} template engine
+│   ├── backup.sh               #   config backup/restore
+│   ├── repos.sh                #   apt repositories (sid, Docker CE)
+│   ├── packages.sh             #   list-driven package modules
+│   ├── services.sh             #   systemd/greetd/firewall/keyboard
+│   ├── pi-perf.sh              #   Pi 5 governor / overclock
+│   ├── apps.sh                 #   app installs, gsettings, cleanup
+│   ├── defaults.sh             #   default app policy (Quattro)
+│   └── upgrade.sh              #   safe upgrade model (Quattro)
+├── bin/                        # CLI + wrapper scripts
+│   ├── pimarchy                #   main CLI (install/defaults/agent/update/...)
+│   ├── pimarchy-agent          #   default agent launcher
+│   ├── pimarchy-default-agent  #   default agent setter
+│   ├── pimarchy-install        #   lazy module installer
+│   └── pimarchy-upgrade        #   safe upgrade applier
 ├── config/
 │   ├── theme.conf              # Centralised theme variables
 │   ├── modules.conf            # Module registry (template → target)
-│   ├── hypr/                   # Hyprland + wallpaper + screenshot helper
+│   ├── packages/               # Package lists as data
+│   │   ├── core.list           #   always installed
+│   │   ├── dev.list            #   lazy: Rust/Node/Go/Python/Docker
+│   │   ├── office.list         #   lazy: LibreOffice
+│   │   └── retired.conf        #   files removed on upgrade
+│   ├── hypr/                   # Hyprland config, keybinds, wallpaper, screenshots
 │   ├── waybar/                 # Waybar config + CSS
 │   ├── rofi/                   # Rofi launcher + power menu
-│   ├── mako/                   # Notification daemon config
-│   ├── terminal/               # Alacritty config
+│   ├── mako/                   # Mako notification daemon config
+│   ├── terminal/               # Foot config
 │   ├── shell/                  # Bash aliases
 │   ├── starship/               # Starship prompt
 │   ├── gtk/                    # GTK2 / GTK3 theme settings
 │   ├── btop/                   # btop config + Ravenwood colour theme
-│   └── opencode/               # OpenCode agent config
+│   └── raven/                  # Raven agent config
+├── tests/                      # Functional tests (run by validate.sh)
 └── .github/workflows/          # CI — syntax + permission checks
 ```
 

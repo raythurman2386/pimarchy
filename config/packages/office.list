@@ -1,0 +1,10 @@
+# Pimarchy office module — lazy module, installed via `pimarchy install office`.
+#
+# Office/productivity suite. Deliberately NOT part of the default install:
+# LibreOffice is heavy on a 4 GB Pi and most users don't need it daily.
+
+apt:libreoffice-writer
+apt:libreoffice-calc
+apt:libreoffice-impress
+apt:libreoffice-gtk3
+apt:libreoffice-help-en-us

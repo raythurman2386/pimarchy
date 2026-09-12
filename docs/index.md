@@ -19,14 +19,19 @@ Inspired by [Omarchy](https://github.com/basecamp/omarchy) by Basecamp, it focus
 
 | Layer | Component | Description |
 |-------|-----------|-------------|
-| **Compositor** | Hyprland | Dynamic tiling Wayland compositor with smooth animations. |
+| **Compositor** | Hyprland | Dynamic tiling Wayland compositor with live-tuned animations (workspace switching stays instant for Pi performance). |
 | **Status bar** | Waybar | Highly customizable CSS-themed status bar. |
 | **App launcher** | Rofi | Wayland-native launcher with custom Ravenwood theme. |
 | **Notifications** | Mako | Lightweight notification daemon. |
-| **Terminal** | Alacritty | GPU-accelerated terminal emulator. |
+| **Terminal** | Foot | Fast, lightweight Wayland-native terminal emulator (default terminal). |
 | **Login manager** | Greetd + Tuigreet | Sleek console-based login manager. |
-| **Containers** | Docker CE | Full containerization support with Docker Compose v2. |
-| **AI Agent** | OpenCode | Integrated AI coding agent for local development. |
+| **Browser** | Chromium | Default browser, with Wayland flags pre-configured. |
+| **Code editor** | Zed | Modern, Rust-based code editor (default editor). |
+| **File manager** | Pifile | Keyboard-first default file manager (Super+E). |
+| **CLI tools** | fd, ripgrep, gh | Fast, Rust-based file search and grep. |
+| **AI Agent** | Raven + Ollama | Default coding agent (`pimarchy agent`, Super+Shift+Ctrl+A) with local inference. |
+
+**Lazy modules:** Docker/Rust/Node/Go (`pimarchy install dev`) and LibreOffice (`pimarchy install office`) are opt-in — the base install stays lean. See [Default Apps & Package Modules](development/defaults.md).
 
 ---
 

@@ -1,0 +1,16 @@
+# Cargo build configuration — managed by Pimarchy (dev module).
+#
+# mold: the arm64 default GNU ld is the slowest part of every Rust build;
+# routing link steps through mold cuts rebuild times dramatically on the
+# Pi 5's 4 cores. Required: without the mold binary, links fail hard —
+# the dev module installs it (apt:mold) before writing this file.
+#
+# target-dir: one shared target directory across all crates so dependencies
+# compile once, not per-project. Must be an absolute path — cargo does NOT
+# expand '~' in config files.
+
+[target.aarch64-unknown-linux-gnu]
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[build]
+target-dir = "{{HOME}}/.cache/cargo-target"

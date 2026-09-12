@@ -93,6 +93,9 @@ alias orphans='sudo apt autoremove -y'
 # Pimarchy Commands
 alias pimarchy-edit='cd {{PIMARCHY_ROOT}}'
 
+# Default coding agent in the current terminal (Omarchy's `a` alias)
+alias a='pimarchy agent --inline'
+
 # Legacy aliases pointing to the new CLI tool
 alias pimarchy-update='pimarchy update'
 alias pimarchy-refresh-hyprland='pimarchy reload'

@@ -29,12 +29,18 @@ If your new module uses new variables, add them to `config/theme.conf`.
 export MY_VAR="#ff00ff"
 ```
 
-## 4. Update the Installer (If Necessary)
-If your module requires a new package to be installed, you can add it to the `REQUIRED_PACKAGES` array in `install.sh`.
+## 4. Update the Package Lists (If Necessary)
+If your module requires a new package, add it to the right list in `config/packages/`:
 
 ```bash
-REQUIRED_PACKAGES+=( "myapp-package" )
+# Core (always installed) — keep this lean; memory efficiency is the priority
+echo "apt:myapp-package" >> config/packages/core.list
+
+# Or a lazy module
+echo "apt:myapp-package" >> config/packages/dev.list
 ```
+
+For apps not in Debian repos, add a `script:<label>` line and register the installer in `run_module_script_hooks` (in `lib/apps.sh`).
 
 ## 5. Test with the Validator
 Before committing your changes, run `validate.sh` to ensure:

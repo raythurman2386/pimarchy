@@ -20,7 +20,7 @@ window {
     background-color: @bg-col;
     border:           2px solid;
     border-color:     @border-col;
-    border-radius:    {{ROFI_BORDER_RADIUS}}px;
+    border-radius:    {{CORNER_RADIUS}}px;
     /* Ensure no system theme leaks through */
     color:            @fg-col;
 }
@@ -35,7 +35,7 @@ inputbar {
     background-color: @bg-col-light;
     border:           1px solid;
     border-color:     {{ROFI_INPUT_FOCUS_BORDER_COLOR}};
-    border-radius:    8px;
+    border-radius:    {{CORNER_RADIUS}}px;
     padding:          2px;
     margin:           0px 0px 10px 0px;
 }

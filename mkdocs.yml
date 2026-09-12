@@ -78,13 +78,15 @@ nav:
   - Advanced:
     - Overclocking: advanced/overclocking.md
     - Docker & Containers: advanced/docker.md
-    - OpenCode AI: advanced/opencode.md
+    - Raven AI: advanced/raven.md
   - Troubleshooting:
     - Common Issues: troubleshooting/common.md
     - Logging: troubleshooting/logs.md
   - Development:
     - Architecture: development/architecture.md
     - Roadmap: development/roadmap.md
+    - Defaults & Modules: development/defaults.md
+    - Sid Policy: development/sid-policy.md
     - Adding Modules: development/modules.md
     - Contributing: development/contributing.md
   - Uninstall: uninstall.md

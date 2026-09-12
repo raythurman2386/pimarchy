@@ -9,7 +9,7 @@ All configuration files are deployed to their standard locations in `~/.config/`
 |-----------|------|
 | **Hyprland** | `~/.config/hypr/hyprland.conf` |
 | **Waybar** | `~/.config/waybar/config.jsonc` |
-| **Alacritty** | `~/.config/alacritty/alacritty.toml` |
+| **Foot** | `~/.config/foot/foot.ini` |
 | **Rofi** | `~/.config/rofi/config.rasi` |
 | **Mako** | `~/.config/mako/config` |
 | **Starship** | `~/.config/starship.toml` |
@@ -26,7 +26,7 @@ Common aliases:
 - `grep`: `grep --color=auto` (Colored output)
 
 ## 3. GTK Theme
-Pimarchy sets a consistent GTK2 and GTK3 theme using the Ravenwood color palette. This ensures that applications like **Thunar** or **GIMP** look at home in your desktop environment.
+Pimarchy sets a consistent GTK2 and GTK3 theme using the Ravenwood color palette. This ensures that GTK applications look at home in your desktop environment.
 
 You can modify these settings in:
 - `~/.gtkrc-2.0`

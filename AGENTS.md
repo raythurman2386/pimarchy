@@ -15,10 +15,14 @@ bash validate.sh
 # Dry run (preview changes without installing)
 bash install.sh --dry-run
 
+# Lazy package modules
+pimarchy install dev
+pimarchy install office
+
 # Syntax check a specific script
 bash -n install.sh
 bash -n uninstall.sh
-bash -n lib/functions.sh
+bash -n lib/common.sh
 
 # Full install/uninstall test cycle
 bash install.sh    # Install Pimarchy
@@ -86,24 +90,48 @@ Templates use `{{VARIABLE}}` syntax. Variables are defined in:
 ## Project Structure
 
 ```
-├── install.sh              # Main installer script
+├── install.sh              # Thin orchestrator
 ├── uninstall.sh            # Uninstaller (restores backups)
 ├── validate.sh             # Configuration validator
 ├── lib/
-│   └── functions.sh        # Shared library functions
+│   ├── functions.sh        # Aggregator — sources all modules below
+│   ├── common.sh           # Shared paths & constants
+│   ├── log.sh              # Logging
+│   ├── template.sh         # {{VARIABLE}} template engine
+│   ├── backup.sh           # Config backup/restore
+│   ├── repos.sh            # External apt repos (sid, Docker CE)
+│   ├── packages.sh         # List-driven package modules
+│   ├── services.sh         # systemd/greetd/firewall/keyboard
+│   ├── pi-perf.sh          # Pi 5 governor/overclock
+│   ├── apps.sh             # App installs, gsettings, cleanup
+│   ├── defaults.sh         # Default app policy (Quattro)
+│   └── upgrade.sh          # Safe upgrade model (Quattro)
+├── bin/
+│   ├── pimarchy            # Main CLI (install/defaults/agent/update/...)
+│   ├── pimarchy-agent      # Default agent launcher
+│   ├── pimarchy-default-agent  # Default agent setter
+│   ├── pimarchy-install    # Lazy module installer
+│   └── pimarchy-upgrade    # Safe upgrade applier
 ├── config/
 │   ├── theme.conf          # Theme configuration (Ravenwood/Everforest palette)
 │   ├── modules.conf        # Module registry (source → target mappings)
-│   ├── hypr/               # Hyprland config, wallpaper, screenshot helper
+│   ├── packages/           # Package lists as data
+│   │   ├── core.list       #   Always installed (lean; no heavy GUI apps)
+│   │   ├── dev.list        #   Lazy: rustup/node/go/python/docker
+│   │   ├── office.list     #   Lazy: LibreOffice
+│   │   └── retired.conf    #   Files removed on upgrade
+│   ├── hypr/               # Hyprland config, keybinds, wallpaper, screenshot helper
 │   ├── waybar/             # Waybar config + CSS
 │   ├── rofi/               # Launcher config, theme, power menu
 │   ├── mako/               # Notification daemon config
-│   ├── terminal/           # Alacritty config
+│   ├── terminal/           # Foot config
 │   ├── shell/              # Bash aliases
 │   ├── starship/           # Starship prompt config
 │   ├── gtk/                # GTK2 / GTK3 theme settings
 │   ├── btop/               # btop.conf + ravenwood.theme
-│   └── opencode/           # opencode.json (AI agent config)
+│   ├── zed/                # zed/settings.json.template (editor config)
+│   └── raven/              # raven/config.toml (AI agent config)
+├── tests/                  # Functional tests (run by validate.sh)
 └── .github/workflows/      # CI/CD automation
 ```
 
@@ -151,13 +179,20 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 ## Platform Notes
 
 - Target: Raspberry Pi 5 / Pi 500 running Pi OS Lite (Debian Trixie, arm64)
-- Window Manager: Hyprland (Wayland, launched via UWSM as a systemd session)
+- Window Manager: Hyprland (Wayland, launched via UWSM as a systemd session; from Debian sid, pinned — see docs/development/sid-policy.md)
 - Status Bar: Waybar
 - App Launcher: Rofi
 - Shell: Bash + Pimarchy Aliases + Starship
 - Notifications: Mako
-- Terminal: Alacritty
+- Terminal: Foot (default terminal; `pimarchy default terminal`)
 - Wallpaper: swaybg (systemd user service — not exec-once)
-- Containers: Docker CE + Docker Compose v2 (from download.docker.com — NOT docker.io)
+- Containers: Docker CE + Docker Compose v2 (from download.docker.com — NOT docker.io) — lazy `dev` module only; docker group membership is opt-in
+- Code Editor: Zed (installed to `~/.local/zed.app/`, config at `~/.config/zed/settings.json`) — default editor
+- CLI Tools: fd, ripgrep (Rust-based)
+- Rust builds (dev module): mold linker + shared target dir `~/.cache/cargo-target` via `~/.cargo/config.toml` (template `config/cargo/config.toml.template`, hook `script:cargo-config`); absolute paths only — cargo does not expand `~` in config files
 - System Monitor: btop (themed with Ravenwood palette via `config/btop/ravenwood.theme`)
-- AI Coding Agent: OpenCode (installed to `~/.opencode/`, config at `~/.config/opencode/opencode.json`)
+- AI Coding Agent: Raven (installed to `~/.cargo/bin/`, config at `~/.raven/config.toml`) + Ollama (local inference backend at `localhost:11434`) — default agent, launched via `pimarchy agent` (Super+Shift+Ctrl+A) in a Foot window class `org.pimarchy.agent`; `a` is `--inline`; installs lazily
+- File manager: Pifile (installed to `~/.local/bin/pifile`) — default file manager, Super+E; `inode/directory` MIME handler
+- Default app policy: `pimarchy defaults` / `pimarchy default <agent|browser|editor|terminal|filemanager> <name>` — files in `~/.config/pimarchy/defaults/`, values validated against an allowlist
+- Package modules: `config/packages/{core,dev,office}.list` — core is always installed; dev/office are lazy (`pimarchy install dev|office`); pre-Quattro full set behind `install.sh --legacy-packages`
+- Safe upgrades: `pimarchy update` — sha256 manifest at `~/.config/pimarchy/manifest` gates refreshes (user-modified files are left untouched); retired files come from `config/packages/retired.conf`

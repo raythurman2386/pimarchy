@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# pimarchy-agent — launch the default coding agent (Omarchy-style).
+# Reads the agent default file. Extra args / --prompt are the initial prompt.
+# --inline runs in the current terminal; otherwise a dedicated TUI window
+# with app-id org.pimarchy.agent (shared class for window rules).
+set -euo pipefail
+
+AGENT_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/pimarchy/defaults/agent"
+TERM_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/pimarchy/defaults/terminal"
+
+# Hyprland keybinds inherit a slim PATH; cargo/local installs live here.
+export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
+
+inline=false
+prompt=""
+
+while (($#)); do
+    case "$1" in
+        --inline)
+            inline=true
+            shift
+            ;;
+        --prompt)
+            prompt=${2:?--prompt needs a value}
+            shift 2
+            ;;
+        --)
+            shift
+            if [ -n "${*:-}" ]; then
+                prompt="$*"
+            fi
+            break
+            ;;
+        *)
+            # Remaining args are the prompt (Quattro-compatible).
+            prompt="$*"
+            break
+            ;;
+    esac
+done
+
+# Agents refuse to remember trust for $HOME, so launches from the keybinding
+# start in ~/Work instead of re-asking on every session.
+if [ "${PWD:-}" = "$HOME" ] && [ -d "$HOME/Work" ]; then
+    cd "$HOME/Work"
+fi
+
+# Default: raven (ships pre-selected). Only allowlisted values are exec'd.
+agent="raven"
+if [ -f "$AGENT_FILE" ]; then
+    value=$(sed -n 's/^agent=//p' "$AGENT_FILE")
+    case "$value" in
+        raven) agent="$value" ;;
+        *) echo "Unknown agent in $AGENT_FILE: '$value' — falling back to raven" >&2 ;;
+    esac
+fi
+
+case "$agent" in
+    raven)
+        if ! command -v raven >/dev/null 2>&1; then
+            echo "Raven not installed. Run: pimarchy default agent raven" >&2
+            exit 1
+        fi
+        if [ -n "$prompt" ]; then
+            command=(raven --yolo -p "$prompt")
+        else
+            command=(raven --yolo)
+        fi
+        ;;
+    *)
+        echo "Unknown agent: $agent" >&2
+        exit 1
+        ;;
+esac
+
+if [ "$inline" = true ]; then
+    exec "${command[@]}"
+fi
+
+terminal="foot"
+if [ -f "$TERM_FILE" ]; then
+    value=$(sed -n 's/^terminal=//p' "$TERM_FILE")
+    case "$value" in
+        foot) terminal="$value" ;;
+    esac
+fi
+
+if ! command -v "$terminal" >/dev/null 2>&1; then
+    echo "Default terminal '$terminal' not found" >&2
+    exit 1
+fi
+
+# Fixed app-id so every agent window shares one class for window rules.
+exec "$terminal" --app-id org.pimarchy.agent -e "${command[@]}"

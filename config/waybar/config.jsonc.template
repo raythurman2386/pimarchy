@@ -5,11 +5,11 @@
     "margin-top": 0,
     "margin-left": 0,
     "margin-right": 0,
-    "height": 32,
-    "spacing": 2,
-    "modules-left": ["custom/launcher", "hyprland/workspaces"],
+    "height": {{BAR_HEIGHT}},
+    "spacing": {{BAR_SPACING}},
+    "modules-left": ["custom/launcher", "custom/ws1", "custom/ws2", "custom/ws3", "custom/ws4", "custom/ws5"],
     "modules-center": ["clock", "custom/update"],
-    "modules-right": ["temperature", "memory", "pulseaudio", "tray", "custom/power"],
+    "modules-right": ["memory", "pulseaudio", "network", "bluetooth", "custom/battery", "tray", "custom/power"],
 
     "custom/launcher": {
         "format": "{{ICON_LAUNCHER}}",
@@ -17,65 +17,106 @@
         "tooltip": false
     },
 
-    "hyprland/workspaces": {
-        "format": "{icon}",
-        "on-click": "activate",
-        "format-icons": {
-            "1": "1",
-            "2": "2",
-            "3": "3",
-            "4": "4",
-            "5": "5",
-            "active": "󰮯",
-            "default": "󰊠"
-        },
-        "sort-by-number": true,
-        "persistent-workspaces": {
-            "1": [],
-            "2": [],
-            "3": []
-        }
+    "custom/ws1": {
+        "exec": "pimarchy-workspace status 1",
+        "on-click": "pimarchy-workspace focus 1",
+        "interval": 30,
+        "signal": 9,
+        "return-type": "json",
+        "format": "{}"
+    },
+    "custom/ws2": {
+        "exec": "pimarchy-workspace status 2",
+        "on-click": "pimarchy-workspace focus 2",
+        "interval": 30,
+        "signal": 9,
+        "return-type": "json",
+        "format": "{}"
+    },
+    "custom/ws3": {
+        "exec": "pimarchy-workspace status 3",
+        "on-click": "pimarchy-workspace focus 3",
+        "interval": 30,
+        "signal": 9,
+        "return-type": "json",
+        "format": "{}"
+    },
+    "custom/ws4": {
+        "exec": "pimarchy-workspace status 4",
+        "on-click": "pimarchy-workspace focus 4",
+        "interval": 30,
+        "signal": 9,
+        "return-type": "json",
+        "format": "{}"
+    },
+    "custom/ws5": {
+        "exec": "pimarchy-workspace status 5",
+        "on-click": "pimarchy-workspace focus 5",
+        "interval": 30,
+        "signal": 9,
+        "return-type": "json",
+        "format": "{}"
     },
 
     "clock": {
-        "format": "{{ICON_CLOCK}} {:%I:%M %p}",
-        "format-alt": "{{ICON_CALENDAR}} {:%A, %B %d}",
+        "format": "{{ICON_CLOCK}} {:%A %H:%M}",
+        "format-alt": "{{ICON_CALENDAR}} {:%d %B %Y}",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
     },
 
     "custom/update": {
         "format": "󰚰",
         "exec": "pimarchy-update-available",
-        "on-click": "alacritty --class pimarchy-update -e bash -c 'pimarchy update; echo; read -n1 -p \"Press any key to close...\"'",
+        "on-click": "{{DEFAULT_TERMINAL}} --app-id pimarchy-update -e bash -c 'pimarchy update; echo; read -n1 -p \"Press any key to close...\"'",
         "tooltip-format": "{}",
         "signal": 8,
         "interval": 3600,
         "return-type": "text"
     },
 
-    "temperature": {
-        "thermal-zone": 0,
-        "hwmon-path": "/sys/class/thermal/thermal_zone0/temp",
-        "critical-threshold": 80,
-        "format": "{{ICON_CPU}} {temperatureC}°C",
-        "format-critical": "{{ICON_CPU}} {temperatureC}°C",
-        "interval": 5,
-        "tooltip": false,
-        "on-click": "alacritty --class btop -e btop"
+    "network": {
+        "format-wifi": "{{ICON_WIFI}}",
+        "format-ethernet": "{{ICON_ETHERNET}}",
+        "format-linked": "{{ICON_ETHERNET}}",
+        "format-disconnected": "{{ICON_DISCONNECTED}}",
+        "tooltip-format-wifi": "{essid} ({signalStrength}%)",
+        "tooltip-format-ethernet": "{ipaddr}/{cidr}",
+        "tooltip-format-disconnected": "Disconnected",
+        "on-click-right": "nm-connection-editor",
+        "interval": 5
+    },
+
+    "bluetooth": {
+        "format": "󰂯",
+        "format-disabled": "󰂲",
+        "format-connected": "󰂱",
+        "tooltip-format": "{controller_alias}\t{controller_address}",
+        "tooltip-format-connected": "{device_alias}\t{device_address}",
+        "on-click": "{{DEFAULT_TERMINAL}} --app-id bluetoothctl -e bluetoothctl",
+        "on-click-right": "rfkill toggle bluetooth"
+    },
+
+    "custom/battery": {
+        "exec": "capacity=$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1); [ -n \"$capacity\" ] && echo $capacity",
+        "exec-if": "[ -d /sys/class/power_supply/BAT0 ] || [ -d /sys/class/power_supply/BAT1 ]",
+        "format": "󰁹 {}",
+        "interval": 30,
+        "tooltip": true
     },
 
     "memory": {
-        "format": "{{ICON_MEMORY}} {}%",
+        "format": "{{ICON_MEMORY}}",
         "interval": 5,
-        "on-click": "alacritty --class btop -e btop"
+        "on-click": "{{DEFAULT_TERMINAL}} --app-id btop -e btop"
     },
 
     "pulseaudio": {
-        "format": "{icon} {volume}%",
-        "format-muted": "{{ICON_VOLUME_MUTED}} Muted",
+        "format": "{icon}",
+        "format-muted": "{{ICON_VOLUME_MUTED}}",
         "format-icons": {
             "default": ["{{ICON_VOLUME_LOW}}", "{{ICON_VOLUME_MEDIUM}}", "{{ICON_VOLUME_HIGH}}"]
         },
+        "tooltip-format": "Volume {volume}%",
         "on-click": "pavucontrol",
         "scroll-step": 5
     },

@@ -4,7 +4,7 @@ Pimarchy features a unique, template-driven theming engine. Instead of manually 
 
 ## The `theme.conf` File
 
-The `theme.conf` file contains variables that control the appearance of **every** component in the system, including Waybar, Rofi, Alacritty, and Hyprland.
+The `theme.conf` file contains variables that control the appearance of **every** component in the system, including Waybar, Rofi, Foot, and Hyprland.
 
 ```bash
 # Ravenwood Theme Variables

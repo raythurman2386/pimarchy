@@ -27,10 +27,17 @@ show_help() {
     echo "Usage: pimarchy <command> [options]"
     echo ""
     echo "Commands:"
-    echo "  install      Run the installation script to apply configurations."
-    echo "               Accepts installer options like --dry-run, --performance, --overclock."
+    echo "  install [module] Run install.sh, or a lazy package module (core|dev|office)."
+    echo "               Module install accepts --with-docker-group (dev)."
+    echo "  defaults     Show default agent, browser, editor, terminal, filemanager."
+    echo "  default <what> [name]   Set a default: agent|browser|editor|terminal|filemanager."
+    echo "               e.g. pimarchy default filemanager pifile"
+    echo "  agent [prompt] Launch the default coding agent in its own TUI window."
+    echo "               --inline runs in the current terminal (alias: a)."
+    echo "               Extra arguments / --prompt seed the session."
+    echo "  update       Safe upgrade: pull latest, refresh only pristine configs."
+    echo "               User-modified files are left untouched and reported."
     echo "  uninstall    Run the uninstallation script to restore backups."
-    echo "  update       Fetch the latest version of Pimarchy from GitHub and re-apply configs."
     echo "  validate     Run the configuration validation script."
     echo "  reload       Hot-reload the Hyprland compositor and Waybar configurations."
     echo "  wallpaper    Set a new background wallpaper and restart the daemon."
@@ -48,15 +55,92 @@ ensure_git_repo() {
     fi
 }
 
+# Source the shared library (defaults, upgrade, etc.)
+source "$PIMARCHY_DIR/lib/functions.sh"
+
 # Parse command
-COMMAND=$1
+COMMAND="${1:-}"
 shift || true
 
 case "$COMMAND" in
     install)
-        echo -e "${BLUE}[*] Running Pimarchy Installer...${NC}"
+        # `pimarchy install` (no args) → full install.sh
+        # `pimarchy install <module>` → lazy package module
+        if [ -z "${1:-}" ] || [[ "${1:-}" == --* ]]; then
+            echo -e "${BLUE}[*] Running Pimarchy Installer...${NC}"
+            cd "$PIMARCHY_DIR"
+            exec bash install.sh "$@"
+        else
+            echo -e "${BLUE}[*] Installing module: $1${NC}"
+            exec bash "$PIMARCHY_DIR/bin/pimarchy-install" "$@"
+        fi
+        ;;
+    defaults)
+        defaults_show
+        ;;
+    default)
+        WHAT="${1:-}"
+        NAME="${2:-}"
+        case "$WHAT" in
+            agent)
+                exec bash "$PIMARCHY_DIR/bin/pimarchy-default-agent" "$NAME"
+                ;;
+            browser|editor|terminal|filemanager)
+                if [ -z "$NAME" ]; then
+                    echo -e "${BLUE}$WHAT: $(defaults_read "$WHAT")${NC}"
+                else
+                    defaults_set "$WHAT" "$NAME" || exit 1
+                fi
+                ;;
+            *)
+                echo -e "${RED}[ERROR] Unknown default: ${WHAT:-<none>}${NC}"
+                echo -e "Usage: pimarchy default <agent|browser|editor|terminal|filemanager> <name>"
+                exit 1
+                ;;
+        esac
+        ;;
+    agent)
+        exec bash "$PIMARCHY_DIR/bin/pimarchy-agent" "$@"
+        ;;
+    update)
+        echo -e "${BLUE}[*] Updating Pimarchy (safe upgrade)...${NC}"
+        ensure_git_repo
+
         cd "$PIMARCHY_DIR"
-        exec bash install.sh "$@"
+
+        if ! git diff-index --quiet HEAD --; then
+            echo -e "${YELLOW}[!] You have uncommitted changes in $PIMARCHY_DIR.${NC}"
+            echo -e "Please stash or commit your changes before updating."
+            echo -e "Run: cd $PIMARCHY_DIR && git stash"
+            exit 1
+        fi
+
+        echo -e "${YELLOW}[*] Fetching latest changes from GitHub...${NC}"
+        git fetch origin
+
+        LOCAL=$(git rev-parse @)
+        REMOTE=$(git rev-parse @{u})
+        BASE=$(git merge-base @ @{u})
+
+        if [ "$LOCAL" = "$REMOTE" ]; then
+            echo -e "${GREEN}[OK] Pimarchy is already up-to-date!${NC}"
+        elif [ "$LOCAL" = "$BASE" ]; then
+            # Snapshot pristine hashes BEFORE pulling, with the old code
+            # checked out, so unchanged-since-install files are refreshable.
+            echo -e "${YELLOW}[*] Snapshotting pristine config hashes...${NC}"
+            bash "$PIMARCHY_DIR/bin/pimarchy-upgrade" --snapshot-only || true
+            echo -e "${YELLOW}[*] Pulling latest updates...${NC}"
+            git pull --ff-only
+            echo -e "${GREEN}[OK] Update downloaded. Applying safe upgrade...${NC}"
+            # Safe upgrade: hash-gated config refresh (user edits preserved)
+            bash "$PIMARCHY_DIR/bin/pimarchy-upgrade"
+            # Tell Waybar to hide the update icon immediately (SIGRTMIN+8)
+            pimarchy-update-available-reset 2>/dev/null || true
+        else
+            echo -e "${RED}[ERROR] Your local branch has diverged from the remote.${NC}"
+            echo -e "Please resolve this manually in $PIMARCHY_DIR."
+            exit 1
+        fi
         ;;
     uninstall)
         echo -e "${BLUE}[*] Running Pimarchy Uninstaller...${NC}"
@@ -70,7 +154,7 @@ case "$COMMAND" in
         ;;
     reload)
         echo -e "${BLUE}[*] Reloading Pimarchy Configurations...${NC}"
-        
+
         # Reload Hyprland
         if command -v hyprctl &> /dev/null; then
             if hyprctl reload 2>/dev/null; then
@@ -101,7 +185,7 @@ case "$COMMAND" in
         echo -e "${BLUE}[*] Setting new wallpaper...${NC}"
         mkdir -p ~/.config/hypr
         cp "$1" ~/.config/hypr/background.jpg
-        
+
         if systemctl --user restart swaybg 2>/dev/null; then
             echo -e "${GREEN}[OK] Background updated and swaybg restarted.${NC}"
         else
@@ -110,43 +194,6 @@ case "$COMMAND" in
             sleep 0.3
             swaybg -i ~/.config/hypr/background.jpg -m fill > /dev/null 2>&1 & disown
             echo -e "${GREEN}[OK] Background updated (fallback).${NC}"
-        fi
-        ;;
-    update)
-        echo -e "${BLUE}[*] Updating Pimarchy...${NC}"
-        ensure_git_repo
-        
-        cd "$PIMARCHY_DIR"
-        
-        # Check if working directory is clean
-        if ! git diff-index --quiet HEAD --; then
-            echo -e "${YELLOW}[!] You have uncommitted changes in $PIMARCHY_DIR.${NC}"
-            echo -e "Please stash or commit your changes before updating."
-            echo -e "Run: cd $PIMARCHY_DIR && git stash"
-            exit 1
-        fi
-        
-        echo -e "${YELLOW}[*] Fetching latest changes from GitHub...${NC}"
-        git fetch origin
-        
-        LOCAL=$(git rev-parse @)
-        REMOTE=$(git rev-parse @{u})
-        BASE=$(git merge-base @ @{u})
-        
-        if [ "$LOCAL" = "$REMOTE" ]; then
-            echo -e "${GREEN}[OK] Pimarchy is already up-to-date!${NC}"
-        elif [ "$LOCAL" = "$BASE" ]; then
-            echo -e "${YELLOW}[*] Pulling latest updates...${NC}"
-            git pull --ff-only
-            echo -e "${GREEN}[OK] Update downloaded. Re-applying configurations...${NC}"
-            # Re-run the installer silently (or with default options) to process new templates
-            bash install.sh
-            # Tell Waybar to hide the update icon immediately (SIGRTMIN+8)
-            pimarchy-update-available-reset 2>/dev/null || true
-        else
-            echo -e "${RED}[ERROR] Your local branch has diverged from the remote.${NC}"
-            echo -e "Please resolve this manually in $PIMARCHY_DIR."
-            exit 1
         fi
         ;;
     help|-h|--help|"")

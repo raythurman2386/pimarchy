@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# pimarchy-install — install a package module from config/packages/*.list.
+# Called as: pimarchy install <core|dev|office> [--with-docker-group]
+#
+# Delegates to lib/packages.sh so the list-parsing logic stays in the library
+# (testable, shared with install.sh).
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+usage() {
+    echo "Usage: pimarchy install <module> [--with-docker-group]"
+    echo "Modules: $(cd "$REPO_ROOT/config/packages" && ls *.list | sed 's/\.list$//' | tr '\n' ' ')"
+    exit 1
+}
+
+MODULE="${1:-}"
+[ -z "$MODULE" ] && usage
+shift || true
+
+if [ ! -f "$REPO_ROOT/config/packages/$MODULE.list" ]; then
+    echo "No list for module: $MODULE"
+    usage
+fi
+
+# Optional, opt-in: docker group membership (see dev.list)
+if [ "${1:-}" = "--with-docker-group" ]; then
+    source "$REPO_ROOT/lib/functions.sh"
+    if ! id -nG "$USER" | grep -qw docker 2>/dev/null; then
+        sudo usermod -aG docker "$USER"
+        log_success "Added $USER to docker group (re-login required to take effect)"
+    fi
+fi
+
+# install_module_packages handles apt/sid packages and script: hooks
+# (zed, raven, ollama for core; rustup, node, go, ... for dev).
+source "$REPO_ROOT/lib/functions.sh"
+install_module_packages "$MODULE"
+
+if [ "$MODULE" = "core" ]; then
+    # Pre-select the shipped default agent on fresh installs
+    defaults_install_defaults
+fi
+
+echo "Module '$MODULE' installed."
