@@ -1,0 +1,12 @@
+# Pimarchy Ravenwood theme — key=value form read by pifile as a fallback.
+# Generated from config/theme.conf. Do not edit in place — re-run install.sh.
+COLOR_BASE={{COLOR_BASE}}
+COLOR_SURFACE={{COLOR_SURFACE}}
+COLOR_OVERLAY={{COLOR_OVERLAY}}
+COLOR_TEXT={{COLOR_TEXT}}
+COLOR_SUBTEXT={{COLOR_SUBTEXT}}
+COLOR_PRIMARY={{COLOR_PRIMARY}}
+COLOR_WARNING={{COLOR_WARNING}}
+COLOR_ERROR={{COLOR_ERROR}}
+COLOR_INFO={{COLOR_INFO}}
+COLOR_ORANGE={{COLOR_ORANGE}}

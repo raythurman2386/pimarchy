@@ -147,6 +147,6 @@ bash install.sh
 2.  **Repo Setup:** Adds Debian Sid (for Hyprland — pinned, see the [sid policy](../development/sid-policy.md)) and the Docker CE repository (used only by the dev module).
 3.  **Package Management:** Installs the **core module** from `config/packages/core.list` — the lean, always-installed set (Hyprland stack, Foot, Rofi, Chromium, Zed, Pifile, Raven, Ollama). No LibreOffice, no Node/Go/Rust/Docker unless you install the dev/office modules.
 4.  **Defaults:** Writes the default app policy (`~/.config/pimarchy/defaults/`): agent=raven, editor=zed, terminal=foot, browser=chromium, filemanager=pifile.
-5.  **Theming:** Deploys configurations based on the Ravenwood palette in `config/theme.conf`.
+5.  **Theming:** Deploys configurations based on the Ravenwood palette in `config/theme.conf`, including GPUI Kit `colors.toml` under `~/.local/state/{omarchy,pimarchy}/current/theme/`.
 6.  **Services:** Enables and configures `greetd` as the system's login manager.
 7.  **AI Tools:** Raven and Ollama are installed via their official scripts (Zed likewise; Raven's default backend is local Ollama).

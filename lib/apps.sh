@@ -531,6 +531,10 @@ remove_pimarchy_files() {
     rm -f "$HOME/.config/btop/btop.conf"
     rm -f "$HOME/.config/btop/themes/ravenwood.theme"
 
+    # GPUI Kit theme state (Omarchy-compatible + Pimarchy paths)
+    rm -rf "$HOME/.local/state/omarchy/current/theme"
+    rm -rf "$HOME/.local/state/pimarchy/current/theme"
+
     rm -f "$HOME/.raven/config.toml"
 
     # Dev module artifacts (safe if absent)
