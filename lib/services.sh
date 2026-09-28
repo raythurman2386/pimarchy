@@ -13,9 +13,64 @@ remove_user_service() {
         systemctl --user disable "$service_name" 2>/dev/null || true
         systemctl --user stop "$service_name" 2>/dev/null || true
         rm -f "$service_file"
-        systemctl --user daemon-reload
+        systemctl --user daemon-reload 2>/dev/null || true
         log_success "${display_name:-$service_name} removed"
     fi
+}
+
+# link_user_unit — enable a user unit from its WantedBy lines.
+# systemctl --user needs a session bus. The first-boot service has none.
+link_user_unit() {
+    local unit="$1"
+    local dir="$HOME/.config/systemd/user"
+    local file="$dir/$unit"
+    local wanted="" dest=""
+
+    if [ ! -f "$file" ]; then
+        log_warn "User unit not found: $file"
+        return 0
+    fi
+    wanted=$(awk -F= '/^WantedBy=/ { print $2 }' "$file")
+    if [ -z "$wanted" ]; then
+        log_warn "No WantedBy in $file"
+        return 0
+    fi
+    for dest in $wanted; do
+        mkdir -p "$dir/${dest}.wants"
+        ln -sfn "../$unit" "$dir/${dest}.wants/$unit"
+    done
+}
+
+# user_systemctl — run systemctl --user, or write enable symlinks
+# when this process has no session bus.
+user_systemctl() {
+    local runtime=""
+
+    runtime="/run/user/$(id -u)"
+    if [ -z "${XDG_RUNTIME_DIR:-}" ] && [ -S "$runtime/bus" ]; then
+        export XDG_RUNTIME_DIR="$runtime"
+        export DBUS_SESSION_BUS_ADDRESS="unix:path=${runtime}/bus"
+    fi
+    if [ -n "${XDG_RUNTIME_DIR:-}" ] && [ -S "${XDG_RUNTIME_DIR}/bus" ]; then
+        systemctl --user "$@"
+        return
+    fi
+
+    case "$1" in
+        daemon-reload)
+            return 0
+            ;;
+        enable)
+            shift
+            local unit
+            for unit in "$@"; do
+                link_user_unit "$unit"
+            done
+            ;;
+        *)
+            log_warn "No user session bus; skipped systemctl --user $*"
+            ;;
+    esac
 }
 
 detect_keyboard_layout() {
@@ -64,11 +119,18 @@ configure_firewall() {
         return 0
     fi
 
-    echo "y" | sudo ufw reset > /dev/null
+    if ! echo "y" | sudo ufw reset > /dev/null; then
+        log_warn "ufw could not be configured. The desktop install will continue."
+        return 0
+    fi
     sudo ufw default deny incoming
     sudo ufw default allow outgoing
     sudo ufw limit ssh
-    echo "y" | sudo ufw enable > /dev/null
+    if ! echo "y" | sudo ufw enable > /dev/null; then
+        log_warn "ufw rules are loaded but the firewall is not enabled."
+        log_warn "Enable it later with: sudo ufw enable"
+        return 0
+    fi
 
     log_success "Firewall configured and enabled (Default: Deny Incoming, Allow Outgoing, Limit SSH)"
 }
@@ -104,8 +166,57 @@ stop_services() {
 
     revert_governor
     revert_overclock
+    revert_pi_firmware
+    revert_boot_services
+    revert_nm_applet
 
     log_success "Services stopped and Pi OS boot environment restored"
+}
+
+# configure_boot_services — leave NetworkManager-wait-online in its packaged
+# state. Remote /etc/fstab mounts are ordered after network-online.target,
+# and this unit is the NetworkManager wait in front of that target.
+configure_boot_services() {
+    log_info "Leaving NetworkManager-wait-online in its packaged state"
+}
+
+# revert_boot_services — unmask a unit a previous install masked.
+# Enabling is intentionally not done: that would start a unit that was
+# disabled before the mask. is-enabled still prints "masked" when systemctl
+# cat would fail on the /dev/null mask.
+revert_boot_services() {
+    local state
+    state=$(systemctl is-enabled NetworkManager-wait-online.service 2>/dev/null || true)
+    if [ "$state" = "masked" ]; then
+        sudo systemctl unmask NetworkManager-wait-online.service 2>/dev/null || true
+        log_success "Unmasked NetworkManager-wait-online without enabling it"
+    fi
+}
+
+# disable_nm_applet — Waybar draws the network icon. The GTK applet is the
+# session client that keeps Xwayland resident.
+disable_nm_applet() {
+    local autostart="$HOME/.config/autostart"
+    mkdir -p "$autostart"
+    cat > "$autostart/nm-applet.desktop" <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=nm-applet
+Hidden=true
+EOF
+    systemctl --user disable --now 'app-nm-applet@autostart.service' 2>/dev/null || true
+    systemctl --user mask 'app-nm-applet@autostart.service' 2>/dev/null || true
+    if pgrep -x nm-applet >/dev/null 2>&1; then
+        pkill -x nm-applet 2>/dev/null || true
+    fi
+    log_success "nm-applet will not start with the session"
+}
+
+# revert_nm_applet — allow the applet autostart again.
+revert_nm_applet() {
+    rm -f "$HOME/.config/autostart/nm-applet.desktop"
+    systemctl --user unmask 'app-nm-applet@autostart.service' 2>/dev/null || true
+    systemctl --user daemon-reload 2>/dev/null || true
 }
 
 # configure_swaybg / configure_waybar / configure_mako — systemd user services
@@ -135,8 +246,8 @@ RestartSec=1
 WantedBy=graphical-session.target
 EOF
 
-    systemctl --user daemon-reload
-    systemctl --user enable swaybg.service
+    user_systemctl daemon-reload
+    user_systemctl enable swaybg.service
 }
 
 configure_waybar() {
@@ -180,9 +291,9 @@ RestartSec=1
 WantedBy=waybar.service
 EOF
 
-    systemctl --user daemon-reload
-    systemctl --user enable waybar.service
-    systemctl --user enable pimarchy-workspace-watch.service
+    user_systemctl daemon-reload
+    user_systemctl enable waybar.service
+    user_systemctl enable pimarchy-workspace-watch.service
 }
 
 configure_mako() {
@@ -207,8 +318,8 @@ RestartSec=1
 WantedBy=graphical-session.target
 EOF
 
-    systemctl --user daemon-reload
-    systemctl --user enable mako.service
+    user_systemctl daemon-reload
+    user_systemctl enable mako.service
 }
 
 revert_swaybg() {

@@ -36,12 +36,17 @@ apt:gsettings-desktop-schemas
 apt:qt5ct
 
 # --- Desktop components ------------------------------------------------------
-apt:rofi
+# Trixie rofi 1.7 is X11 only. Xwayland is off, so the launcher is the
+# Wayland build from sid (rofi 2, layer-shell).
+sid:rofi
 apt:greetd
 apt:tuigreet
 apt:lxpolkit
 apt:pavucontrol
-apt:network-manager-gnome
+# NetworkManager and nmtui. The GTK applet (network-manager-gnome) stays
+# out: Waybar owns the network icon, and the applet is what keeps Xwayland
+# resident.
+apt:network-manager
 apt:bluez
 apt:bluez-tools
 # PipeWire Bluetooth audio. blueman is NOT listed: Trixie's package

@@ -1,5 +1,7 @@
 # First Boot
 
+The prebuilt Pimarchy image installs on the HDMI console. It does not ask you to log in while that install is running. When it finishes, the Pi reboots to the desktop login. The steps below are for a stock Pi OS Lite card, where you install Pimarchy yourself.
+
 After you flash your Pi OS Lite image, follow these steps to prepare your system for Pimarchy.
 
 ## 1. Login
@@ -13,20 +15,7 @@ sudo nmtui
 ```
 Navigate to **Activate a connection**, select your Wi-Fi, and enter the password.
 
-## 3. Full System Update
-Pimarchy relies on the latest packages and kernel features.
+## 3. Next Step
+You are ready to [Install Pimarchy](installation.md). The installer updates Pi OS before it adds the desktop. It links `/dev/root` to the real root disk first, so the initramfs rebuild during that upgrade can finish.
 
-```bash
-sudo apt update && sudo apt full-upgrade -y
-sudo reboot
-```
-
-## 4. Install Git
-Git is essential for cloning the Pimarchy repository.
-
-```bash
-sudo apt install -y git
-```
-
-## 5. Next Step
-You are now ready to [Install Pimarchy](installation.md).
+Git is installed by the installer. A separate `apt install git` step is not required.

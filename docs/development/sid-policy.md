@@ -46,5 +46,5 @@ The Hyprland stack currently pulls **Python 3.14** from sid as a dependency. Tri
 
 `uninstall.sh` removes `/etc/apt/sources.list.d/sid.list` and `/etc/apt/preferences.d/sid-pin`.
 
-!!! note "full-upgrade on first boot"
-    The install guide asks for `sudo apt full-upgrade -y` **before** installing Pimarchy — that resolves the stock Pi OS into a consistent state before the sid pin is introduced, which avoids resolver surprises.
+!!! note "full-upgrade before the sid pin"
+    `install.sh` runs `apt full-upgrade` on the stock repositories before it adds the sid pin. That keeps the first upgrade on Pi OS packages. The upgrade links `/dev/root` first so the kernel initramfs build can see the root disk.

@@ -1,0 +1,9 @@
+# Ravenwood palette for GPUI Kit apps (pifile, picalc, piwrite).
+# Generated from config/theme.conf. Do not edit in place — re-run install.sh.
+mode = "dark"
+background = "{{COLOR_BASE}}"
+foreground = "{{COLOR_TEXT}}"
+accent = "{{COLOR_PRIMARY}}"
+selection = "{{COLOR_SURFACE}}"
+lighter_background = "{{COLOR_SURFACE}}"
+muted = "{{COLOR_SUBTEXT}}"

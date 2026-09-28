@@ -57,16 +57,17 @@ In the Imager's advanced settings (click the gear icon) before flashing:
 - Enable SSH if you want to connect remotely
 - Configure your Wi-Fi credentials if needed
 
-### 2. First Boot — Update the OS
+### 2. First Boot
 
-Boot into Pi OS Lite (you will land at a TTY prompt). Log in and fully update the system:
+Boot into Pi OS Lite and log in at the TTY prompt. The Pimarchy installer updates the system itself. It links `/dev/root` at the real root disk before that upgrade, so the kernel's initramfs rebuild can finish and `dpkg` does not stop halfway.
+
+If you upgrade the kernel yourself before installing, point `/dev/root` at the real disk first. Pi OS names that disk `/dev/root` in `/proc/mounts`, and the initramfs build stops when the name is not a block device:
 
 ```bash
+part=$(sed -n 's/.*root=PARTUUID=\([^ ]*\).*/\1/p' /proc/cmdline)
+sudo ln -sfn "$(readlink -f "/dev/disk/by-partuuid/$part")" /dev/root
 sudo apt update && sudo apt full-upgrade -y
-sudo reboot
 ```
-
-> `full-upgrade` is required (not just `upgrade`) to allow Debian to resolve dependency changes correctly. This is important because Pimarchy adds the Debian Sid repository for Hyprland.
 
 ### 3. Install Pimarchy
 
@@ -80,7 +81,7 @@ curl -sL https://raw.githubusercontent.com/raythurman2386/pimarchy/main/netinsta
 The web installer accepts arguments by passing them at the end of the command:
 - `... | bash -s -- --dry-run`: Preview changes without installing.
 - `... | bash -s -- --performance`: Set CPU to 'performance' governor (safe).
-- `... | bash -s -- --overclock`: Governor + 2.6 GHz overclock (requires cooling).
+- `... | bash -s -- --overclock`: Governor + `arm_freq=2600` (stock is 2400 MHz; firmware scales voltage; requires cooling).
 
 ---
 
@@ -150,7 +151,7 @@ The installer will:
 5. **Configure Greetd** as the login manager, replacing the default console login
 6. **Prompt for CPU performance mode** (optional):
    - `g` — Governor only: keeps CPU at max clock, safe on all units, no reboot needed
-   - `o` — Overclock: `arm_freq=2600` (2.6 GHz, up from 2.4 GHz) — requires active cooling and a reboot
+   - `o` — Overclock: `arm_freq=2600` (stock is 2400 MHz). Firmware scales voltage. Requires active cooling and a reboot
    - `N` — Skip: leave CPU settings unchanged
 
 Upgrading from a pre-Quattro install? See the [migration note](docs/development/defaults.md#migration-for-pre-quattro-users) — your packages are preserved (behind `--legacy-packages`) and `pimarchy update` will not clobber files you've edited.
@@ -159,7 +160,7 @@ Or pass flags directly to skip the interactive prompt:
 
 ```bash
 bash install.sh --performance   # Governor only, no overclock
-bash install.sh --overclock     # Governor + arm_freq=2600 (requires cooling)
+bash install.sh --overclock     # Governor + arm_freq=2600 (firmware scales voltage; needs cooling)
 ```
 
 ### 7. Reboot

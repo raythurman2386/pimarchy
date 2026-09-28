@@ -16,6 +16,7 @@ user-configs/
 *.swo
 *~
 .DS_Store
+*.partial
 
 # Test outputs
 test-output/
@@ -35,10 +36,32 @@ Thumbs.db
 *.rpm
 *.pkg
 
-# Large binary files (Arch Linux ARM rootfs)
+# Large binary / image artifacts (Arch Linux ARM rootfs, SD flash leftovers)
 /img/
+/build/
+/out/
+.cache/
 *.tar.gz
 *.img
+*.img.xz
+*.xz
+*.iso
+*.qcow2
+
+# Credentials / secrets / keys (never commit)
+.env
+.env.*
+*.pem
+*.key
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+*credential*
+*credentials*
+*.secret
+secrets/
+.ssh/
 
 # Raven runtime state (cargo registry, sessions, caches, tmp)
 # The config template lives in config/raven/ and is tracked separately.
@@ -47,6 +70,13 @@ Thumbs.db
 # VM files for installing, testing, and tweaking in a local vm
 .vm/
 vm/.vm/
+
+# Flashable image build output (downloaded base, mounted trees, manifests)
+image/work/
+
+# Device serial leftovers / flash caches
+*.serial
+*.flash-cache
 
 # Don't ignore the example configs
 !config/**/*.conf

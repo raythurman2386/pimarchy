@@ -69,6 +69,8 @@ reset_gsettings
 # 4. Optionally remove packages
 # -------------------------------------------------------------
 echo ""
+remove_ollama_polkit_rule
+remove_dev_root_hook
 read -p "Remove packages installed by Pimarchy? (hyprland, waybar, rofi, mako, etc.) [y/N] " remove_pkgs || true
 if [ "$remove_pkgs" = "y" ] || [ "$remove_pkgs" = "Y" ]; then
     echo "[4/5] Removing packages..."

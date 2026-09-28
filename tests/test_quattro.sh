@@ -58,20 +58,26 @@ test_read_package_list_filters_comments() {
 test_list_apt_packages() {
     local pkgs
     pkgs=$(list_apt_packages core apt)
-    for expected in foot rofi chromium jq fonts-dejavu-core mesa-vulkan-drivers \
+    for expected in foot chromium jq fonts-dejavu-core mesa-vulkan-drivers \
                     libspa-0.2-bluetooth dconf-cli gsettings-desktop-schemas \
                     pipewire-pulse xdg-desktop-portal-gtk libnotify-bin qt5ct git; do
         echo "$pkgs" | grep -qx "$expected" || { fail "missing apt: package '$expected'"; return; }
     done
+    echo "$pkgs" | grep -qx "network-manager" \
+        || { fail "missing apt: package 'network-manager'"; return; }
     echo "$pkgs" | grep -qx "thunar" && { fail "thunar should not be in core apt"; return; }
     echo "$pkgs" | grep -qx "blueman" && { fail "blueman should not be in core apt"; return; }
+    echo "$pkgs" | grep -qx "network-manager-gnome" \
+        && { fail "network-manager-gnome should not be in core apt"; return; }
+    echo "$pkgs" | grep -qx "rofi" \
+        && { fail "trixie rofi is X11; launcher must come from sid"; return; }
     pass
 }
 
 test_list_sid_packages() {
     local pkgs
     pkgs=$(list_apt_packages core sid)
-    for expected in hyprland waybar mako-notifier uwsm; do
+    for expected in hyprland waybar mako-notifier uwsm rofi; do
         echo "$pkgs" | grep -qx "$expected" || { fail "missing sid: package '$expected'"; return; }
     done
     # apt entries must not leak into the sid set
@@ -363,11 +369,358 @@ test_hyprland_conf_sources_bindings() {
     pass
 }
 
+# fw_same <tmp> <label> — fail when config.txt or cmdline.txt differ from the
+# snapshots taken by fw_snap.
+fw_snap() {
+    FW_CFG="$(cat "$1/config.txt")"
+    FW_CMD="$(cat "$1/cmdline.txt")"
+}
+
+fw_same() {
+    local tmp="$1"
+    local label="$2"
+    local cfg cmd
+    cfg="$(cat "$tmp/config.txt")"
+    cmd="$(cat "$tmp/cmdline.txt")"
+    if [ "$cfg" != "$FW_CFG" ] || [ "$cmd" != "$FW_CMD" ]; then
+        fail "$label changed boot files"
+        echo "    config: [$cfg]"
+        echo "    cmdline: [$cmd]"
+        rm -rf "$tmp"
+        return 1
+    fi
+}
+
+fw_run() {
+    local tmp="$1"
+    shift
+    if ! bash "$PIMARCHY_DIR/lib/pi-firmware.sh" "$@" "$tmp"; then
+        fail "pi-firmware.sh $* failed"
+        rm -rf "$tmp"
+        return 1
+    fi
+}
+
+test_link_user_unit() {
+    # shellcheck disable=SC1091
+    source "$PIMARCHY_DIR/lib/functions.sh"
+    local dir="$HOME/.config/systemd/user"
+    mkdir -p "$dir"
+    cat > "$dir/swaybg.service" <<'EOF'
+[Install]
+WantedBy=graphical-session.target
+EOF
+    unset XDG_RUNTIME_DIR DBUS_SESSION_BUS_ADDRESS
+    link_user_unit swaybg.service
+    [ -L "$dir/graphical-session.target.wants/swaybg.service" ] \
+        || { fail "swaybg was not enabled"; return; }
+    [ "$(readlink "$dir/graphical-session.target.wants/swaybg.service")" = "../swaybg.service" ] \
+        || { fail "swaybg symlink target is wrong"; return; }
+    pass
+}
+
+test_wifi_country_cmdline() {
+    local tmp line
+    tmp=$(mktemp -d)
+    mkdir -p "$tmp/boot" "$tmp/root/var/lib/systemd/rfkill"
+    printf 'console=tty1 rootwait\n' > "$tmp/boot/cmdline.txt"
+    printf '1\n' > "$tmp/root/var/lib/systemd/rfkill/platform-test:wlan"
+    bash "$PIMARCHY_DIR/image/wifi-country.sh" --root "$tmp/root" \
+        --boot "$tmp/boot" us || { fail "wifi-country failed"; rm -rf "$tmp"; return; }
+    line=$(cat "$tmp/boot/cmdline.txt")
+    printf '%s' "$line" | grep -q 'cfg80211.ieee80211_regdom=US' \
+        || { fail "regdom missing ($line)"; rm -rf "$tmp"; return; }
+    [ "$(cat "$tmp/root/var/lib/systemd/rfkill/platform-test:wlan")" = "0" ] \
+        || { fail "wlan rfkill stayed blocked"; rm -rf "$tmp"; return; }
+    bash "$PIMARCHY_DIR/image/wifi-country.sh" --root "$tmp/root" \
+        --boot "$tmp/boot" GB || { fail "second country failed"; rm -rf "$tmp"; return; }
+    grep -q 'cfg80211.ieee80211_regdom=GB' "$tmp/boot/cmdline.txt" \
+        || { fail "regdom was not replaced"; rm -rf "$tmp"; return; }
+    rm -rf "$tmp"
+    pass
+}
+
+test_dev_root_resolve() {
+    local tmp spec
+    tmp=$(mktemp -d)
+    printf '/dev/nvme0n1p2 / ext4 rw 0 0\n' > "$tmp/mounts"
+    printf 'root=PARTUUID=abc console=tty1\n' > "$tmp/cmd"
+    spec=$(bash "$PIMARCHY_DIR/lib/ensure-dev-root.sh" --resolve \
+        "$tmp/mounts" "$tmp/cmd")
+    [ "$spec" = "/dev/nvme0n1p2" ] \
+        || { fail "kept real root device ($spec)"; rm -rf "$tmp"; return; }
+
+    printf '/dev/root / ext4 rw 0 0\n' > "$tmp/mounts"
+    spec=$(bash "$PIMARCHY_DIR/lib/ensure-dev-root.sh" --resolve \
+        "$tmp/mounts" "$tmp/cmd")
+    [ "$spec" = "/dev/disk/by-partuuid/abc" ] \
+        || { fail "PARTUUID ($spec)"; rm -rf "$tmp"; return; }
+
+    printf 'console=tty1 root=/dev/mmcblk0p2 rootwait\n' > "$tmp/cmd"
+    spec=$(bash "$PIMARCHY_DIR/lib/ensure-dev-root.sh" --resolve \
+        "$tmp/mounts" "$tmp/cmd")
+    [ "$spec" = "/dev/mmcblk0p2" ] \
+        || { fail "cmdline device ($spec)"; rm -rf "$tmp"; return; }
+
+    printf 'root=UUID=deadbeef rootwait\n' > "$tmp/cmd"
+    spec=$(bash "$PIMARCHY_DIR/lib/ensure-dev-root.sh" --resolve \
+        "$tmp/mounts" "$tmp/cmd")
+    [ "$spec" = "/dev/disk/by-uuid/deadbeef" ] \
+        || { fail "UUID ($spec)"; rm -rf "$tmp"; return; }
+
+    rm -rf "$tmp"
+    pass
+}
+
+test_pi_firmware_tuning() {
+    local tmp count
+    local oc_comment old_oc gen3_comment cam_comment
+    oc_comment="# Pimarchy: Pi 5 overclock arm_freq=2600 (stock 2400; firmware scales voltage)"
+    old_oc="# Pimarchy: Pi 5 mild overclock (2600 MHz, no extra voltage required)"
+    gen3_comment="# Pimarchy: NVMe at PCIe Gen 3 (drive trains at 8 GT/s)"
+    cam_comment="# Pimarchy: Pi 500 has no camera"
+    tmp=$(mktemp -d)
+
+    # Default path is a no-op, including a second run.
+    printf 'camera_auto_detect=1\n[all]\nuart_2ndstage=1\n' > "$tmp/config.txt"
+    printf 'console=tty1 rootwait\n' > "$tmp/cmdline.txt"
+    fw_snap "$tmp"
+    fw_run "$tmp" || return
+    fw_same "$tmp" "default apply" || return
+    fw_run "$tmp" || return
+    fw_same "$tmp" "second default apply" || return
+    grep -q 'dtparam=pciex1_gen' "$tmp/config.txt" \
+        && { fail "default path wrote a PCIe generation"; rm -rf "$tmp"; return; }
+    grep -q 'cma=' "$tmp/cmdline.txt" \
+        && { fail "default path wrote cma="; rm -rf "$tmp"; return; }
+
+    # Existing cma= and an explicit Gen 2 line stay on apply and revert.
+    printf 'camera_auto_detect=1\n[all]\ndtparam=pciex1_gen=2\n' > "$tmp/config.txt"
+    printf 'console=tty1 rootwait cma=256M\n' > "$tmp/cmdline.txt"
+    fw_snap "$tmp"
+    fw_run "$tmp" || return
+    fw_same "$tmp" "existing cma and gen2 apply" || return
+    fw_run "$tmp" --revert || return
+    fw_same "$tmp" "existing cma and gen2 revert" || return
+    printf 'console=tty1 rootwait cma=64M\n' > "$tmp/cmdline.txt"
+    fw_snap "$tmp"
+    fw_run "$tmp" --revert || return
+    fw_same "$tmp" "cma=64M revert" || return
+    printf 'console=tty1 rootwait cma=128M\n' > "$tmp/cmdline.txt"
+    fw_snap "$tmp"
+    fw_run "$tmp" --revert || return
+    fw_same "$tmp" "cma=128M revert" || return
+
+    # No exact [all] section: do not append one, and do not add Gen 3.
+    printf 'dtparam=uart0=1\ncamera_auto_detect=1\n' > "$tmp/config.txt"
+    printf 'console=tty1 rootwait\n' > "$tmp/cmdline.txt"
+    fw_snap "$tmp"
+    fw_run "$tmp" || return
+    fw_same "$tmp" "missing [all] apply" || return
+
+    # camera_auto_detect=0 with and without the old comment stays 0.
+    printf '%s\ncamera_auto_detect=0\n' "$cam_comment" > "$tmp/config.txt"
+    printf 'console=tty1 rootwait\n' > "$tmp/cmdline.txt"
+    fw_run "$tmp" || return
+    grep -qx 'camera_auto_detect=0' "$tmp/config.txt" \
+        || { fail "apply rewrote camera already 0"; rm -rf "$tmp"; return; }
+    fw_run "$tmp" --revert || return
+    grep -qx 'camera_auto_detect=0' "$tmp/config.txt" \
+        || { fail "revert forced camera_auto_detect=1"; rm -rf "$tmp"; return; }
+    grep -q 'Pi 500 has no camera' "$tmp/config.txt" \
+        && { fail "camera comment survived revert"; rm -rf "$tmp"; return; }
+
+    printf 'camera_auto_detect=0\n[all]\nuart_2ndstage=1\n' > "$tmp/config.txt"
+    printf 'console=tty1 rootwait\n' > "$tmp/cmdline.txt"
+    fw_snap "$tmp"
+    fw_run "$tmp" || return
+    fw_same "$tmp" "camera 0 without comment apply" || return
+    fw_run "$tmp" --revert || return
+    fw_same "$tmp" "camera 0 without comment revert" || return
+
+    # User-owned Gen 3, arm_freq, and a non-trailing cma=512M survive revert.
+    printf 'camera_auto_detect=0\n[all]\ndtparam=pciex1_gen=3\narm_freq=2400\narm_freq=2600\n' \
+        > "$tmp/config.txt"
+    printf 'cma=512M rootwait\ncma=256M\n' > "$tmp/cmdline.txt"
+    fw_snap "$tmp"
+    fw_run "$tmp" --revert || return
+    fw_same "$tmp" "user-owned boot lines" || return
+    fw_run "$tmp" --overclock || return
+    count=$(grep -c '^arm_freq=' "$tmp/config.txt")
+    [ "$count" = 2 ] \
+        || { fail "overclock edited a file that already set arm_freq"; rm -rf "$tmp"; return; }
+
+    # Owned Gen 3 inserted under an existing [all], plus a trailing cma=512M.
+    printf 'camera_auto_detect=1\n[all]\n%s\ndtparam=pciex1_gen=3\nuart_2ndstage=1\n' \
+        "$gen3_comment" > "$tmp/config.txt"
+    printf 'console=tty1 rootwait cma=512M\n' > "$tmp/cmdline.txt"
+    fw_run "$tmp" --revert || return
+    grep -q 'pciex1_gen' "$tmp/config.txt" \
+        && { fail "owned Gen 3 line survived revert"; rm -rf "$tmp"; return; }
+    grep -qx '\[all\]' "$tmp/config.txt" \
+        || { fail "existing [all] was dropped"; rm -rf "$tmp"; return; }
+    grep -qx 'uart_2ndstage=1' "$tmp/config.txt" \
+        || { fail "line under [all] was dropped"; rm -rf "$tmp"; return; }
+    grep -qx 'camera_auto_detect=1' "$tmp/config.txt" \
+        || { fail "camera_auto_detect=1 was rewritten"; rm -rf "$tmp"; return; }
+    grep -q 'cma=512M' "$tmp/cmdline.txt" \
+        && { fail "trailing cma=512M survived revert"; rm -rf "$tmp"; return; }
+    grep -qx 'console=tty1 rootwait' "$tmp/cmdline.txt" \
+        || { fail "cmdline suffix strip damaged the line"; rm -rf "$tmp"; return; }
+
+    # Owned Gen 3 that appended its own [all]: drop that header too.
+    printf 'uart_2ndstage=1\n\n[all]\n%s\ndtparam=pciex1_gen=3\n' \
+        "$gen3_comment" > "$tmp/config.txt"
+    printf 'cma=512M\n' > "$tmp/cmdline.txt"
+    fw_run "$tmp" --revert || return
+    grep -q '\[all\]' "$tmp/config.txt" \
+        && { fail "appended [all] survived revert"; rm -rf "$tmp"; return; }
+    grep -q 'pciex1_gen' "$tmp/config.txt" \
+        && { fail "appended Gen 3 survived revert"; rm -rf "$tmp"; return; }
+    grep -qx 'uart_2ndstage=1' "$tmp/config.txt" \
+        || { fail "pre-existing line was dropped with appended [all]"; rm -rf "$tmp"; return; }
+    grep -q 'cma=' "$tmp/cmdline.txt" \
+        && { fail "bare cma=512M line survived revert"; rm -rf "$tmp"; return; }
+
+    # A second revert is a no-op.
+    fw_snap "$tmp"
+    fw_run "$tmp" --revert || return
+    fw_same "$tmp" "second revert" || return
+
+    # Opt-in overclock under an existing [all], then revert keeps the section.
+    printf 'camera_auto_detect=1\n[all]\nuart_2ndstage=1\n' > "$tmp/config.txt"
+    printf 'console=tty1 rootwait cma=256M\n' > "$tmp/cmdline.txt"
+    fw_run "$tmp" --overclock || return
+    fw_run "$tmp" --overclock || return
+    count=$(grep -c '^arm_freq=2600$' "$tmp/config.txt")
+    [ "$count" = 1 ] || { fail "overclock arm_freq count is $count"; rm -rf "$tmp"; return; }
+    grep -qx "$oc_comment" "$tmp/config.txt" \
+        || { fail "overclock comment missing"; rm -rf "$tmp"; return; }
+    grep -q 'cma=256M' "$tmp/cmdline.txt" \
+        || { fail "overclock rewrote cma="; rm -rf "$tmp"; return; }
+    fw_run "$tmp" --revert || return
+    grep -q 'arm_freq=' "$tmp/config.txt" \
+        && { fail "owned arm_freq survived revert"; rm -rf "$tmp"; return; }
+    grep -q 'Pimarchy: Pi 5 overclock' "$tmp/config.txt" \
+        && { fail "overclock comment survived revert"; rm -rf "$tmp"; return; }
+    grep -qx '\[all\]' "$tmp/config.txt" \
+        || { fail "overclock revert dropped existing [all]"; rm -rf "$tmp"; return; }
+    grep -qx 'uart_2ndstage=1' "$tmp/config.txt" \
+        || { fail "overclock revert dropped uart line"; rm -rf "$tmp"; return; }
+    grep -q 'cma=256M' "$tmp/cmdline.txt" \
+        || { fail "overclock revert rewrote cma=256M"; rm -rf "$tmp"; return; }
+
+    # Opt-in overclock with no [all] appends the header, and revert removes it.
+    printf 'dtparam=uart0=1\n' > "$tmp/config.txt"
+    printf 'console=tty1 rootwait\n' > "$tmp/cmdline.txt"
+    fw_run "$tmp" --overclock || return
+    fw_run "$tmp" --revert || return
+    grep -q '\[all\]' "$tmp/config.txt" \
+        && { fail "overclock [all] survived revert"; rm -rf "$tmp"; return; }
+    grep -q 'arm_freq=' "$tmp/config.txt" \
+        && { fail "appended arm_freq survived revert"; rm -rf "$tmp"; return; }
+    grep -qx 'dtparam=uart0=1' "$tmp/config.txt" \
+        || { fail "uart0 line missing after overclock revert"; rm -rf "$tmp"; return; }
+
+    # Legacy voltage-free comment is still an owned block.
+    printf '%s\n[all]\narm_freq=2600\n' "$old_oc" > "$tmp/config.txt"
+    printf 'console=tty1 rootwait\n' > "$tmp/cmdline.txt"
+    fw_run "$tmp" --revert || return
+    grep -q 'arm_freq=' "$tmp/config.txt" \
+        && { fail "legacy arm_freq survived revert"; rm -rf "$tmp"; return; }
+    grep -q '\[all\]' "$tmp/config.txt" \
+        && { fail "legacy overclock [all] survived revert"; rm -rf "$tmp"; return; }
+    printf '[all]\n%s\narm_freq=2600\nuart_2ndstage=1\n' "$old_oc" > "$tmp/config.txt"
+    fw_run "$tmp" --revert || return
+    grep -q 'arm_freq=' "$tmp/config.txt" \
+        && { fail "legacy inserted arm_freq survived revert"; rm -rf "$tmp"; return; }
+    grep -qx '\[all\]' "$tmp/config.txt" \
+        || { fail "legacy revert dropped existing [all]"; rm -rf "$tmp"; return; }
+    grep -qx 'uart_2ndstage=1' "$tmp/config.txt" \
+        || { fail "legacy revert dropped uart line"; rm -rf "$tmp"; return; }
+
+    rm -rf "$tmp"
+    pass
+}
+
+test_imager_manifest() {
+    local tmp img
+    tmp=$(mktemp -d)
+    img="$tmp/sample.img"
+    printf 'pimarchy' > "$img"
+    bash "$PIMARCHY_DIR/image/write-imager-manifest.sh" "$img" \
+        "$tmp/sample.rpi-imager-manifest" \
+        || { fail "manifest writer failed"; rm -rf "$tmp"; return; }
+    if ! python3 - "$tmp/sample.rpi-imager-manifest" "$img" <<'PY'
+import json
+import pathlib
+import sys
+
+manifest, img = sys.argv[1:]
+data = json.load(open(manifest))
+entry = data["os_list"][0]
+image = pathlib.Path(img).resolve()
+if entry["init_format"] != "cloudinit-rpi":
+    raise SystemExit(f"init_format {entry['init_format']}")
+if entry["url"] != image.as_uri():
+    raise SystemExit(f"url {entry['url']}")
+if "pi5-64bit" not in entry["devices"]:
+    raise SystemExit("pi5 tag missing")
+if len(entry["extract_sha256"]) != 64:
+    raise SystemExit("sha256 missing")
+if data["imager"]["default_os"] != "Pimarchy":
+    raise SystemExit("default os")
+names = [device["name"] for device in data["imager"]["devices"]]
+if "Raspberry Pi 5" not in names or "No filtering" not in names:
+    raise SystemExit(f"devices {names}")
+PY
+    then
+        fail "manifest contents"
+        rm -rf "$tmp"
+        return
+    fi
+    rm -rf "$tmp"
+    pass
+}
+
 # ── Run ───────────────────────────────────────────────────────────────────────
 
 echo "Quattro tests (sandbox: $SANDBOX):"
 run_test "read_package_list filters comments"        test_read_package_list_filters_comments
 run_test "core apt list"                             test_list_apt_packages
+run_test "pi firmware tuning"                        test_pi_firmware_tuning
+run_test "root device resolution"                    test_dev_root_resolve
+test_firstboot_owns_console() {
+    local unit
+    unit=$(sed -n '/pimarchy-firstboot.service/,/^EOF$/p' \
+        "$PIMARCHY_DIR/image/build-image.sh")
+    printf '%s\n' "$unit" | grep -q 'TTYPath=/dev/tty1' \
+        || { fail "firstboot does not claim tty1"; return; }
+    printf '%s\n' "$unit" | grep -q 'Conflicts=getty@tty1.service' \
+        || { fail "firstboot does not conflict with getty"; return; }
+    printf '%s\n' "$unit" | grep -q 'After=network-online.target' \
+        && { fail "firstboot waits for network before claiming the console"; return; }
+    grep -q '/dev/null.*getty@tty1.service' \
+        "$PIMARCHY_DIR/image/build-image.sh" \
+        || { fail "image does not mask getty"; return; }
+    grep -q 'script -qaef' "$PIMARCHY_DIR/image/firstboot.sh" \
+        || { fail "install output is not a terminal session"; return; }
+    grep -q 'systemctl --no-block reboot' "$PIMARCHY_DIR/image/firstboot.sh" \
+        || { fail "finished install does not reboot"; return; }
+    grep -q 'systemctl reboot' "$PIMARCHY_DIR/image/firstboot.sh" \
+        && { fail "blocking reboot would stall the oneshot"; return; }
+    grep -q 'Log in with the user you set' "$PIMARCHY_DIR/image/build-image.sh" \
+        && { fail "issue still invites a login during install"; return; }
+    grep -q 'DEBIAN_FRONTEND DEBCONF_NONINTERACTIVE_SEEN' \
+        "$PIMARCHY_DIR/lib/packages.sh" \
+        || { fail "apt can drop noninteractive and stop on libc6"; return; }
+    pass
+}
+
+run_test "imager manifest"                           test_imager_manifest
+run_test "first boot owns the console"              test_firstboot_owns_console
+run_test "wifi country cmdline"                      test_wifi_country_cmdline
+run_test "user unit enable without a session"        test_link_user_unit
 run_test "core sid list"                             test_list_sid_packages
 run_test "core script labels"                        test_list_script_labels
 run_test "dev list contents (rustup/node/go/docker)" test_dev_list_contents

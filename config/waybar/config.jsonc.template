@@ -82,7 +82,7 @@
         "tooltip-format-wifi": "{essid} ({signalStrength}%)",
         "tooltip-format-ethernet": "{ipaddr}/{cidr}",
         "tooltip-format-disconnected": "Disconnected",
-        "on-click-right": "nm-connection-editor",
+        "on-click-right": "{{DEFAULT_TERMINAL}} --app-id nmtui -e nmtui",
         "interval": 5
     },
 
