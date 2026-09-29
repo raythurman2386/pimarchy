@@ -1,0 +1,12 @@
+# Pimarchy ai module — lazy module, installed via `pimarchy install ai`.
+#
+# Raven AI coding agent + Ollama inference backend. Kept out of core so a
+# lean Lite/firstboot install stays small; install when you want the agent.
+#
+# Also installed on demand by `pimarchy default agent raven` when the
+# binaries are missing.
+
+# Raven AI coding agent — ~/.cargo/bin/raven
+script:raven
+# Ollama inference backend for Raven — /usr/local/bin/ollama
+script:ollama

@@ -88,8 +88,13 @@ test_list_sid_packages() {
 test_list_script_labels() {
     local labels
     labels=$(list_script_labels core)
-    for expected in zed pifile raven ollama; do
-        echo "$labels" | grep -qx "$expected" || { fail "missing script: label '$expected'"; return; }
+    for expected in zed pifile; do
+        echo "$labels" | grep -qx "$expected" || { fail "missing core script: label '$expected'"; return; }
+    done
+    echo "$labels" | grep -qx "raven" && { fail "raven should be in ai module, not core"; return; }
+    labels=$(list_script_labels ai)
+    for expected in raven ollama; do
+        echo "$labels" | grep -qx "$expected" || { fail "missing ai script: label '$expected'"; return; }
     done
     pass
 }
@@ -722,7 +727,7 @@ run_test "first boot owns the console"              test_firstboot_owns_console
 run_test "wifi country cmdline"                      test_wifi_country_cmdline
 run_test "user unit enable without a session"        test_link_user_unit
 run_test "core sid list"                             test_list_sid_packages
-run_test "core script labels"                        test_list_script_labels
+run_test "core/ai script labels"                        test_list_script_labels
 run_test "dev list contents (rustup/node/go/docker)" test_dev_list_contents
 run_test "cargo config renders absolute home"        test_cargo_config_template_renders_absolute_home
 run_test "cargo config hook install + user-edit guard" test_cargo_config_hook_installs_and_preserves_user_edits

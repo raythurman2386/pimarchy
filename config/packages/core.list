@@ -115,7 +115,4 @@ sid:uwsm
 script:zed
 # Pifile file manager (default file manager) — ~/.local/bin/pifile
 script:pifile
-# Raven AI coding agent (pre-selected default agent) — ~/.cargo/bin/raven
-script:raven
-# Ollama inference backend for Raven — /usr/local/bin/ollama
-script:ollama
+# Raven + Ollama live in the lazy `ai` module (`pimarchy install ai`).

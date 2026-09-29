@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 # pimarchy-default-agent — set the default coding agent and lazy-install it.
 # Called as: pimarchy default agent <name>
+#
+# Installing Raven also pulls Ollama (the ai module) so the agent has a
+# local inference backend. Equivalent to `pimarchy install ai` for the
+# script hooks, then recording the default.
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 AGENT_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/pimarchy/defaults/agent"
 VALID_AGENTS=(raven)
@@ -21,10 +28,20 @@ case "$name" in
     raven)
         mkdir -p "$(dirname "$AGENT_FILE")"
         printf '# ~/.config/pimarchy/defaults/agent\n# Written by: pimarchy default agent <name>\n# Read by:    pimarchy agent\nagent=raven\n' > "$AGENT_FILE"
-        # Lazy install: only fetch the binary if missing
-        if ! command -v raven >/dev/null 2>&1; then
-            echo "Installing Raven..."
-            curl -fsSL https://raw.githubusercontent.com/raythurman2386/raven/master/install.sh | bash
+
+        # Prefer the shared install hooks when the repo is available (cloned
+        # install / image path). Fall back to the official Raven curl script
+        # when running from a PATH-only install without the package lists.
+        if [ -f "$REPO_ROOT/lib/functions.sh" ] && [ -f "$REPO_ROOT/config/packages/ai.list" ]; then
+            # shellcheck disable=SC1091
+            source "$REPO_ROOT/lib/functions.sh"
+            run_module_script_hooks ai
+        else
+            if ! command -v raven >/dev/null 2>&1; then
+                echo "Installing Raven..."
+                curl -fsSL https://raw.githubusercontent.com/raythurman2386/raven/master/install.sh | bash
+            fi
+            echo "Tip: run 'pimarchy install ai' from a full checkout to also install Ollama."
         fi
         echo "Default agent set to raven."
         ;;

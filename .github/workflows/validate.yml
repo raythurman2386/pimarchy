@@ -33,6 +33,7 @@ jobs:
         test -f config/theme.conf || (echo "theme.conf missing" && exit 1)
         test -f config/modules.conf || (echo "modules.conf missing" && exit 1)
         test -f config/packages/core.list || (echo "core.list missing" && exit 1)
+        test -f config/packages/ai.list || (echo "ai.list missing" && exit 1)
         test -f config/packages/dev.list || (echo "dev.list missing" && exit 1)
         test -f config/packages/office.list || (echo "office.list missing" && exit 1)
         test -f config/packages/retired.conf || (echo "retired.conf missing" && exit 1)

@@ -100,8 +100,8 @@ echo "[3/6] Checking package lists..."
 
 pkg_failures=()
 
-for list in core dev office; do
-    list_file="$PIMARCHY_ROOT/config/packages/$list.list"
+for list_file in "$PIMARCHY_ROOT"/config/packages/*.list; do
+    list="$(basename "$list_file" .list)"
     if [ -f "$list_file" ]; then
         # Every non-comment line must be tagged apt:, sid:, or script:
         bad_lines=$(read_package_list "$list" | grep -vE '^(apt|sid|script):' || true)
@@ -127,7 +127,7 @@ while IFS= read -r label; do
         echo "  ✗ Unknown script label: $label (no installer in run_module_script_hooks)"
         pkg_failures+=("unknown script label: $label")
     fi
-done < <(for list in core dev office; do list_script_labels "$list"; done)
+done < <(for list_file in "$PIMARCHY_ROOT"/config/packages/*.list; do list_script_labels "$(basename "$list_file" .list)"; done)
 
 if [ ${#pkg_failures[@]} -gt 0 ]; then
     echo ""

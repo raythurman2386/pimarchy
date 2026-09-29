@@ -10,9 +10,9 @@ Pimarchy is a living project. This page outlines our current goals, planned feat
 
 ## Phase 2: The Quattro Overhaul (Current)
 - [x] **Library split:** `lib/functions.sh` decomposed into focused modules; `install.sh` is a thin orchestrator.
-- [x] **Package lists as data:** `config/packages/{core,dev,office}.list` — core is the always-installed lean set; dev and office are lazy modules.
+- [x] **Package lists as data:** `config/packages/{core,ai,dev,office}.list` — core is the always-installed lean set; ai/dev/office are lazy modules.
 - [x] **Default app policy:** `pimarchy defaults`, `pimarchy default <agent|browser|editor|terminal|filemanager>` — Raven (agent), Zed (editor), Foot (terminal), Chromium (browser), Pifile (file manager).
-- [x] **Agent integration:** `pimarchy agent` launcher (Omarchy-style TUI window `org.pimarchy.agent`, `~/Work` when summoned from home, `a` alias) + Super+Shift+Ctrl+A; Raven installs lazily.
+- [x] **Agent integration:** `pimarchy agent` launcher (Omarchy-style TUI window `org.pimarchy.agent`, `~/Work` when summoned from home, `a` alias) + Super+Shift+Ctrl+A; Raven + Ollama install lazily via `pimarchy install ai`.
 - [x] **Safe upgrade model:** `pimarchy update` hashes shipped files — pristine ones refresh, user-modified ones are left untouched and reported; retired files are cleaned up.
 - [x] **De-cluttered default install:** VS Code, OpenCode, and LibreOffice dropped from the default path (LibreOffice moved to the office module).
 - [x] **Sid pin policy:** documented in [sid-policy.md](sid-policy.md).

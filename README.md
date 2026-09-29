@@ -108,6 +108,7 @@ pimarchy validate
 pimarchy install
 
 # Install lazy package modules
+pimarchy install ai       # Raven + Ollama
 pimarchy install dev      # Rust, Node.js, Go, Python, Docker
 pimarchy install office   # LibreOffice
 
@@ -153,7 +154,7 @@ The installer will:
 2. **Update the system** and add the required apt repositories:
    - Debian Sid (for the latest Hyprland — pinned; see the [sid policy](docs/development/sid-policy.md))
    - Official Docker CE repository (only used if you later install the dev module)
-3. **Install the core module** (data-driven from `config/packages/core.list`): the Hyprland session stack, Foot, Rofi, Mako, Greetd, Tuigreet, Starship, btop, Chromium, plus Zed, Pifile, Raven, and Ollama via their official install scripts
+3. **Install the core module** (data-driven from `config/packages/core.list`): the Hyprland session stack, Foot, Rofi, Mako, Greetd, Tuigreet, Starship, btop, Chromium, plus Zed and Pifile via their official install scripts. Raven + Ollama are the lazy `ai` module (`pimarchy install ai`)
 4. **Deploy all configuration files** using the Ravenwood theme, honoring the default app policy (`pimarchy default ...`)
 5. **Configure Greetd** as the login manager, replacing the default console login
 6. **Prompt for CPU performance mode** (optional):
@@ -312,6 +313,7 @@ Checks script syntax, template variables, and file existence. Run this before ev
 │   ├── packages/               # Package lists as data
 │   │   ├── core.list           #   always installed
 │   │   ├── dev.list            #   lazy: Rust/Node/Go/Python/Docker
+│   │   ├── ai.list             #   lazy: Raven + Ollama
 │   │   ├── office.list         #   lazy: LibreOffice
 │   │   └── retired.conf        #   files removed on upgrade
 │   ├── theme/                  # GPUI colors.toml + theme.conf templates

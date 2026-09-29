@@ -73,7 +73,7 @@ ensure_ollama() {
 case "$agent" in
     raven)
         if ! command -v raven >/dev/null 2>&1; then
-            echo "Raven not installed. Run: pimarchy default agent raven" >&2
+            echo "Raven not installed. Run: pimarchy install ai   # or: pimarchy default agent raven" >&2
             exit 1
         fi
         if [ -n "$prompt" ]; then
