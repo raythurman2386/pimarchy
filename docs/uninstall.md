@@ -9,14 +9,15 @@ The `uninstall.sh` script is the primary tool for removing Pimarchy. It handles 
 1.  **Backs up current configs:** Before making changes, it creates a final snapshot of your configuration.
 2.  **Restores original backups:** It looks for the `.original-backup` marker and restores your pre-Pimarchy configurations to `~/.config/`.
 3.  **Removes packages (Optional):** You will be prompted to choose whether to remove the packages installed by Pimarchy.
-4.  **Reverts Boot Settings:** It removes boot lines Pimarchy added in `/boot/firmware/config.txt` and `/boot/firmware/cmdline.txt`. Lines you wrote yourself stay in place.
+4.  **Reverts Boot Settings:** It removes boot lines Pimarchy added in `/boot/firmware/config.txt` and `/boot/firmware/cmdline.txt`. Lines you wrote yourself stay in place. GPUI theme state under `~/.local/state/{omarchy,pimarchy}/current/theme/` is removed.
 5.  **Disables Greetd:** It disables the login manager and reverts the system to a standard TTY console login.
 
 ## How to Uninstall
 
-1.  Navigate to your `pimarchy` directory:
+1.  Navigate to the install root (netinstall uses `~/.local/share/pimarchy`):
     ```bash
-    cd ~/pimarchy
+    cd ~/.local/share/pimarchy
+    # or: pimarchy uninstall
     ```
 2.  Run the uninstaller:
     ```bash
@@ -94,4 +95,4 @@ cp -r ~/.config/Pimarchy-backup/original/* ~/.config/
 
 ## Need a Fresh Start?
 
-If you want to completely wipe Pimarchy and start over, the fastest way is to **re-flash your MicroSD card** with a fresh copy of Pi OS Lite using the Raspberry Pi Imager.
+If you want to completely wipe Pimarchy and start over, the fastest way is to **re-flash your MicroSD card** with a fresh Pi OS Lite image, or rebuild/flash the [custom first-boot image](getting-started/installation.md#optional-flash-a-first-boot-image).

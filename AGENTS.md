@@ -93,49 +93,48 @@ Templates use `{{VARIABLE}}` syntax. Variables are defined in:
 ```
 ├── install.sh              # Thin orchestrator
 ├── uninstall.sh            # Uninstaller (restores backups)
-├── validate.sh             # Configuration validator
+├── validate.sh             # Configuration validator (includes image/*.sh syntax)
+├── netinstall.sh           # Curl | bash bootstrap → ~/.local/share/pimarchy
 ├── lib/
-│   ├── functions.sh        # Aggregator — sources all modules below
+│   ├── functions.sh        # Aggregator — sources modules below
 │   ├── common.sh           # Shared paths & constants
 │   ├── log.sh              # Logging
 │   ├── template.sh         # {{VARIABLE}} template engine
 │   ├── backup.sh           # Config backup/restore
 │   ├── repos.sh            # External apt repos (sid, Docker CE)
 │   ├── packages.sh         # List-driven package modules
-│   ├── services.sh         # systemd/greetd/firewall/keyboard
+│   ├── services.sh         # systemd/greetd/firewall/keyboard/nm-applet
 │   ├── pi-perf.sh          # Pi 5 governor/overclock
+│   ├── pi-firmware.sh      # Safe boot-firmware edits
+│   ├── ensure-dev-root.sh  # /dev/root for initramfs rebuilds
 │   ├── apps.sh             # App installs, gsettings, cleanup
 │   ├── defaults.sh         # Default app policy (Quattro)
 │   └── upgrade.sh          # Safe upgrade model (Quattro)
+├── image/                  # Custom SD-card image + first-boot pipeline
+│   ├── build-image.sh
+│   ├── write-imager-manifest.sh
+│   ├── firstboot.sh / firstboot-console.sh
+│   ├── wifi-country.sh / sync-clock.sh
+│   └── work/               # Build artifacts (gitignored)
 ├── bin/
 │   ├── pimarchy            # Main CLI (install/defaults/agent/update/...)
 │   ├── pimarchy-agent      # Default agent launcher
-│   ├── pimarchy-default-agent  # Default agent setter
+│   ├── pimarchy-default-agent
 │   ├── pimarchy-install    # Lazy module installer
 │   └── pimarchy-upgrade    # Safe upgrade applier
 ├── config/
 │   ├── theme.conf          # Theme configuration (Ravenwood/Everforest palette)
 │   ├── modules.conf        # Module registry (source → target mappings)
-│   ├── packages/           # Package lists as data
-│   │   ├── core.list       #   Always installed (lean; no heavy GUI apps)
-│   │   ├── dev.list        #   Lazy: rustup/node/go/python/docker
-│   │   ├── office.list     #   Lazy: LibreOffice
-│   │   └── retired.conf    #   Files removed on upgrade
-│   ├── hypr/               # Hyprland config, keybinds, wallpaper, screenshot helper
-│   ├── waybar/             # Waybar config + CSS
-│   ├── rofi/               # Launcher config, theme, power menu
-│   ├── mako/               # Notification daemon config
-│   ├── terminal/           # Foot config
-│   ├── shell/              # Bash aliases
-│   ├── starship/           # Starship prompt config
-│   ├── gtk/                # GTK2 / GTK3 theme settings
-│   ├── btop/               # btop.conf + ravenwood.theme
-│   ├── zed/                # zed/settings.json.template (editor config)
-│   └── raven/              # raven/config.toml (AI agent config)
+│   ├── packages/           # core.list / dev.list / office.list / retired.conf
+│   ├── theme/              # GPUI colors.toml + theme.conf templates
+│   ├── hypr/               # Hyprland Lua config, keybinds, wallpaper
+│   ├── waybar/ / rofi/ / mako/ / terminal/ / shell/ / starship/
+│   ├── gtk/ / btop/ / zed/ / raven/ / chromium/ / cargo/ / fontconfig / polkit
 ├── tests/                  # Functional tests (run by validate.sh)
 └── .github/workflows/      # CI/CD automation
 ```
 
+Open decisions (do not invent answers): Wi-Fi country default, Imager image hosting (`file://` today), Xwayland long-term policy, omarchy vs pimarchy GPUI theme path standardization — see `docs/development/architecture.md#open-decisions`.
 ## Configuration System
 
 1. **Load configs**: Use `load_config "path/to/file"` to source config files
@@ -180,6 +179,10 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 ## Platform Notes
 
 - Target: Raspberry Pi 5 / Pi 500 running Pi OS Lite (Debian Trixie, arm64)
+- Session: Wayland-only — Hyprland `xwayland.enabled = false`; launcher is sid rofi 2 (Trixie rofi is X11-only)
+- Custom image: `image/build-image.sh` + firstboot on tty1; Imager manifest uses `cloudinit-rpi` and a local `file://` image URL (hosting open)
+- Wi-Fi country default for the image path: `US` via `PIMARCHY_WIFI_COUNTRY` (open whether Imager locale should drive this)
+- GPUI theme state: write both `~/.local/state/omarchy/current/theme/` and `~/.local/state/pimarchy/current/theme/` until pisuite path standardization lands
 - Window Manager: Hyprland (Wayland, launched via UWSM as a systemd session; from Debian sid, pinned — see docs/development/sid-policy.md)
 - Status Bar: Waybar
 - App Launcher: Rofi

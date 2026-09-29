@@ -25,11 +25,13 @@ Priority 100 < 500 means: **sid packages are only installed when explicitly requ
 
 ## What Comes From Sid
 
-Only the compositor/session stack, all installed explicitly with `-t sid`:
+Installed explicitly with `-t sid` (see `sid:` lines in `config/packages/core.list`):
 
-hyprland, hyprland-guiutils, waybar, mako-notifier, swaybg, xdg-desktop-portal-hyprland, uwsm
+hyprland, hyprland-guiutils, waybar, mako-notifier, swaybg, xdg-desktop-portal-hyprland, uwsm, **rofi**
 
-Everything else — including Chromium, Foot, Rofi — comes from Trixie.
+**Why sid rofi?** Trixie ships rofi 1.7 (X11 only). Pimarchy keeps Xwayland off, so the launcher must be Wayland-capable — that is sid rofi 2 (layer-shell). Do not switch the package back to Trixie rofi.
+
+Everything else in core — Chromium, Foot, greetd, PipeWire, … — comes from Trixie / Raspberry Pi OS repos (or official install scripts for Zed / Raven / Ollama).
 
 The Hyprland stack currently pulls **Python 3.14** from sid as a dependency. Trixie `blueman` requires `python3 << 3.14`, so it cannot be installed. Sid `blueman` *would* install, but `-t sid` also upgrades NetworkManager and fontconfig off Pi OS — we do not do that. Waybar's Bluetooth click opens `bluetoothctl` instead.
 

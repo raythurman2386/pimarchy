@@ -21,7 +21,7 @@ Inspired by [Omarchy](https://github.com/basecamp/omarchy) by Basecamp, it focus
 |-------|-----------|-------------|
 | **Compositor** | Hyprland | Dynamic tiling Wayland compositor with live-tuned animations (workspace switching stays instant for Pi performance). |
 | **Status bar** | Waybar | Highly customizable CSS-themed status bar. |
-| **App launcher** | Rofi | Wayland-native launcher with custom Ravenwood theme. |
+| **App launcher** | Rofi | Wayland-native launcher (sid rofi 2; Trixie rofi is X11-only and unused). |
 | **Notifications** | Mako | Lightweight notification daemon. |
 | **Terminal** | Foot | Fast, lightweight Wayland-native terminal emulator (default terminal). |
 | **Login manager** | Greetd + Tuigreet | Sleek console-based login manager. |
@@ -37,9 +37,9 @@ Inspired by [Omarchy](https://github.com/basecamp/omarchy) by Basecamp, it focus
 
 ## Why Pimarchy?
 
--   **Performance First:** Built specifically for the Raspberry Pi 5 hardware.
+-   **Performance First:** Built specifically for the Raspberry Pi 5 hardware. Xwayland stays off; the session is Wayland-only.
 -   **Aesthetic & Modern:** Driven by the Ravenwood color palette (Everforest-inspired).
--   **Automated:** One script to provision everything from a clean install.
+-   **Automated:** One script (or a first-boot custom image) to provision everything from a clean install.
 -   **Safe & Reversible:** Comprehensive backup and uninstallation system.
 -   **Template-Driven:** Change one file (`theme.conf`) to re-theme the entire system.
 
@@ -47,13 +47,14 @@ Inspired by [Omarchy](https://github.com/basecamp/omarchy) by Basecamp, it focus
 
 ## Quick Installation
 
-```bash
-# 1. Update your Pi OS Lite
-sudo apt update && sudo apt full-upgrade -y && sudo reboot
+On a stock Pi OS Lite card (user and network already set in Raspberry Pi Imager):
 
-# 2. Install Pimarchy
+```bash
+# The installer updates Pi OS itself — no separate full-upgrade step required.
 curl -sL https://raw.githubusercontent.com/raythurman2386/pimarchy/main/netinstall.sh | bash
 ```
+
+Alternatively, build a [custom first-boot image](getting-started/installation.md#optional-flash-a-first-boot-image) that installs the desktop on the HDMI console without a login prompt.
 
 !!! success "Ready to go!"
     After installation, reboot and log in via Tuigreet to start your new Hyprland session.

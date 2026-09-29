@@ -22,6 +22,8 @@ Format:
 Example:
 `myapp|myapp/config.template|~/.config/myapp/config|My App Configuration`
 
+Targets may also live outside `~/.config/` (e.g. GPUI Kit under `~/.local/state/{omarchy,pimarchy}/current/theme/`, Chromium flags under `/etc/chromium.d/`). Source paths are relative to `config/` (`../bin/...` for helpers).
+
 ## 3. Define Variables (Optional)
 If your new module uses new variables, add them to `config/theme.conf`.
 

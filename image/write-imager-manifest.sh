@@ -8,6 +8,8 @@
 #
 # Then:
 #   rpi-imager --repo image/work/pimarchy.rpi-imager-manifest
+# The image url is a local file:// URI today. Hosting the .img over
+# HTTP(S) for remote Imager use is an open decision — do not invent one.
 set -eu
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

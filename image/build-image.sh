@@ -14,6 +14,8 @@
 # expands on its own. The first boot that has a login user and a
 # network installs Pimarchy with the performance governor and a US
 # keyboard unless Imager set another.
+# Open decisions (see docs/development/architecture.md): Wi-Fi country
+# default US, Imager file:// image URL, Xwayland off, dual GPUI theme paths.
 set -eu
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

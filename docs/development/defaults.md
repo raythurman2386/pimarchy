@@ -61,11 +61,11 @@ Packages are declared as data in `config/packages/*.list` with three tags:
 
 | Tag | Packages |
 |-----|----------|
-| apt | foot, starship, fonts-font-awesome, fonts-jetbrains-mono, fonts-liberation, fonts-dejavu-core, fonts-noto-color-emoji, gnome-themes-extra, yaru-theme-icon, papirus-icon-theme, fontconfig, dconf-cli, gsettings-desktop-schemas, qt5ct, rofi, greetd, tuigreet, lxpolkit, pavucontrol, network-manager, bluez, bluez-tools, libspa-0.2-bluetooth, alsa-utils, pipewire, pipewire-pulse, wireplumber, xdg-desktop-portal, xdg-desktop-portal-gtk, xdg-utils, xdg-user-dirs, libnotify-bin, grim, slurp, wl-clipboard, btop, ufw, sshfs, rpi-imager, jq, fd-find, ripgrep, unzip, wget, curl, ca-certificates, git, gh, libvulkan1, mesa-vulkan-drivers, chromium |
-| sid | hyprland, hyprland-guiutils, waybar, mako-notifier, swaybg, xdg-desktop-portal-hyprland, uwsm |
+| apt | foot, starship, fonts-font-awesome, fonts-jetbrains-mono, fonts-liberation, fonts-dejavu-core, fonts-noto-color-emoji, gnome-themes-extra, yaru-theme-icon, papirus-icon-theme, fontconfig, dconf-cli, gsettings-desktop-schemas, qt5ct, greetd, tuigreet, lxpolkit, pavucontrol, network-manager, bluez, bluez-tools, libspa-0.2-bluetooth, alsa-utils, pipewire, pipewire-pulse, wireplumber, xdg-desktop-portal, xdg-desktop-portal-gtk, xdg-utils, xdg-user-dirs, libnotify-bin, grim, slurp, wl-clipboard, btop, ufw, sshfs, rpi-imager, jq, fd-find, ripgrep, unzip, wget, curl, ca-certificates, git, gh, libvulkan1, mesa-vulkan-drivers, chromium |
+| sid | rofi (Wayland build; Trixie rofi is X11-only), hyprland, hyprland-guiutils, waybar, mako-notifier, swaybg, xdg-desktop-portal-hyprland, uwsm |
 | script | zed, pifile, raven, ollama |
 
-**Not in core** (deliberately): LibreOffice, VS Code, OpenCode, Node, Go, Rust, Python dev tools, Docker. Memory efficiency on a 4 GB Pi is the priority — no heavy GUI apps in the default path.
+**Not in core** (deliberately): LibreOffice, VS Code, OpenCode, Node, Go, Rust, Python dev tools, Docker, `network-manager-gnome` / nm-applet, blueman. Memory efficiency on a 4 GB Pi is the priority — no heavy GUI apps in the default path. nm-applet is also avoided because it keeps Xwayland resident; blueman conflicts with the sid Python pulled by Hyprland (see [sid policy](sid-policy.md)).
 
 ### dev.list — `pimarchy install dev`
 
@@ -118,7 +118,7 @@ If you installed Pimarchy before the Quattro overhaul:
 - Your packages are **not removed**. The old full set is preserved behind a flag: `bash install.sh --legacy-packages` reinstalls dev + office toolchains (Node, Go, Python, Docker, LibreOffice) if you want them.
 - Config files you never touched are refreshed; anything you edited is left alone and reported by `pimarchy update`.
 - Stale files from the VS Code / OpenCode era are retired automatically (backed up as `*.pimarchy-upgrade.bak`, then removed).
-- New keybinds live in `~/.config/hypr/bindings.conf` (sourced by `hyprland.conf`). If you customized keybinds before, your old `hyprland.conf` is user-modified — the update will skip it. Merge your binds into the new file at your leisure.
+- New keybinds live in `~/.config/hypr/bindings.lua` (required by `hyprland.lua`). Hyprland 0.55+ uses Lua; the legacy `.conf` format is gone. If you customized an older `hyprland.conf` / `bindings.conf`, that file is user-modified and `pimarchy update` will leave it alone — migrate binds into the Lua files at your leisure.
 
 ## Where Defaults Are Consumed
 

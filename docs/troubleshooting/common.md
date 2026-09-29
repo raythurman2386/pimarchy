@@ -2,6 +2,21 @@
 
 Common issues and how to solve them when using Pimarchy on your Raspberry Pi 5.
 
+## Custom-image first boot
+
+### Shell prompt instead of installer on tty1
+The image masks getty while `pimarchy-firstboot` owns the screen. A prompt means the install stopped (or never started). Check:
+
+```bash
+sudo tail -n 80 /var/log/pimarchy-firstboot.log
+systemctl status pimarchy-firstboot.service
+```
+
+Typical causes: no login user from Imager yet, no default route (Wi-Fi), or `install.sh` failed. Fix network/user, reboot; firstboot runs again until `/var/lib/pimarchy/firstboot.done` exists. If getty stayed masked after a failed run, `firstboot-console.sh` should have unmasked it — `sudo systemctl start getty@tty1` restores a login if needed.
+
+### Wi-Fi rfkill / "wireless country not set"
+Image build/firstboot set a regulatory country (default **US**). Override with `PIMARCHY_WIFI_COUNTRY=XX` when building, or run `/opt/pimarchy/image/wifi-country.sh XX` on the Pi, then reconnect.
+
 ## Installation Errors
 
 ### `apt` lock errors
@@ -10,10 +25,18 @@ If you see an error like `Could not get lock /var/lib/dpkg/lock-frontend`, anoth
 **Solution:** Wait 30 seconds and try again. If it persists, reboot your Pi.
 
 ### Missing packages
-Pimarchy uses the **Debian Sid** repository for Hyprland. If a package is not found:
+Pimarchy uses the **Debian Sid** repository for Hyprland (and Wayland rofi). If a package is not found:
 1.  Check your internet connection.
-2.  Ensure you ran `sudo apt update` before the installation.
-3.  Check if Debian Sid is correctly added to `/etc/apt/sources.list.d/debian-sid.list`.
+2.  Let the installer run its own `apt update` / full-upgrade (or run `sudo apt update` yourself).
+3.  Check if Debian Sid is correctly added under `/etc/apt/sources.list.d/` and pinned in `/etc/apt/preferences.d/sid-pin`.
+
+### `/dev/root` / initramfs rebuild failures
+Pi OS names the root disk `/dev/root` in `/proc/mounts`. The installer links the real block device before upgrading. If you upgrade the kernel yourself first:
+
+```bash
+part=$(sed -n 's/.*root=PARTUUID=\([^ ]*\).*/\1/p' /proc/cmdline)
+sudo ln -sfn "$(readlink -f "/dev/disk/by-partuuid/$part")" /dev/root
+```
 
 ## Display & Graphics
 
@@ -23,23 +46,29 @@ Hyprland on the Pi 5 uses the `vc4-kms-v3d` driver. If you experience flickering
 2.  Ensure your power supply is 5V 5A. Low power can cause GPU instability.
 
 ### Resolution is too high/low
-You can adjust the monitor configuration in `~/.config/hypr/hyprland.conf`:
+Edit `~/.config/hypr/hyprland.lua` (Lua is the supported format):
 
-```bash
-# Example: Lock resolution to 1080p at 60Hz
-monitor=HDMI-A-1, 1920x1080@60, 0x0, 1
+```lua
+hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60", position = "0x0", scale = 1 })
 ```
+
+### An X11-only app will not start
+Xwayland is **off** by design. Prefer Wayland builds (e.g. sid rofi). Re-enabling Xwayland is an [open decision](../development/architecture.md#open-decisions) — do not flip it casually without accepting the resident X server cost.
 
 ## Input Devices
 
 ### Keyboard layout is incorrect
-Pimarchy defaults to the US keyboard layout. To change it, edit `~/.config/hypr/hyprland.conf`:
+Pimarchy detects the system layout at install time and writes it into Hyprland. To change it, edit `~/.config/hypr/hyprland.lua`:
 
-```bash
-input {
-    kb_layout = gb  # Change 'us' to 'gb', 'de', etc.
-}
+```lua
+hl.config({
+    input = {
+        kb_layout = "gb",  -- change "us" to "gb", "de", etc.
+    },
+})
 ```
+
+Then reload Hyprland (or log out/in).
 
 ## Performance
 
@@ -63,8 +92,8 @@ Boot a rescue microSD, mount that FAT partition, and remove the comment and the 
 
 ### No sound output
 Pimarchy uses **PipeWire** for audio.
-1.  Open the volume control with **SUPER + V** (or click the volume icon in Waybar).
-2.  Check the output device settings in the `pavucontrol` mixer.
+1.  Open the volume control by clicking the Waybar volume icon (**pavucontrol**), or launch `pavucontrol` from Rofi.
+2.  Check the output device settings in the mixer.
 3.  Ensure your user is in the `audio` group: `sudo usermod -aG audio $USER`.
 
 ---
@@ -72,6 +101,6 @@ Pimarchy uses **PipeWire** for audio.
 ## Still having trouble?
 
 If your issue isn't listed here, please:
-1.  Check the installation logs: `tail -f ~/pimarchy_install.log` (if you redirected output).
-2.  Run the validation script: `bash validate.sh`.
+1.  Check install logs you captured (`tee ~/pimarchy_install.log`) or, on a custom image, `/var/log/pimarchy-firstboot.log`.
+2.  Run the validation script: `bash validate.sh` from the install root.
 3.  [Open an issue](https://github.com/raythurman2386/pimarchy/issues) on GitHub.

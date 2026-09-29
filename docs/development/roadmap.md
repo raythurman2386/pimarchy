@@ -16,7 +16,11 @@ Pimarchy is a living project. This page outlines our current goals, planned feat
 - [x] **Safe upgrade model:** `pimarchy update` hashes shipped files — pristine ones refresh, user-modified ones are left untouched and reported; retired files are cleaned up.
 - [x] **De-cluttered default install:** VS Code, OpenCode, and LibreOffice dropped from the default path (LibreOffice moved to the office module).
 - [x] **Sid pin policy:** documented in [sid-policy.md](sid-policy.md).
-- [ ] **Pi OS Lite Trixie test pass:** fresh-image + existing-install verification on real hardware.
+- [x] **Custom first-boot image:** `image/build-image.sh` + Imager `cloudinit-rpi` manifest; clean SD-card install on tty1 (verified 3/3 on PR #12).
+- [x] **Wayland-only session:** Xwayland off; sid rofi 2; nm-applet not installed.
+- [x] **GPUI theme state:** Ravenwood `colors.toml` / `theme.conf` written to both Omarchy-compatible and Pimarchy state paths.
+- [ ] **Pi OS Lite Trixie test pass:** continued fresh-image + existing-install verification on real hardware (beyond the SD-card 3/3 for #12).
+- [ ] **Open decisions:** Wi-Fi country default, Imager `file://` vs HTTP hosting, Xwayland policy long-term, omarchy vs pimarchy theme path standardization — see [Architecture](architecture.md#open-decisions).
 
 ## Phase 3: User Experience (Next)
 - [ ] **Quick Theme Switcher:** A script to switch between predefined color palettes (e.g., Gruvbox, Nord, Catppuccin) without a full re-install.
