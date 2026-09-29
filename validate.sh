@@ -251,6 +251,36 @@ if [ "$gdk_failures" -gt 0 ]; then
     exit 1
 fi
 
+echo ""
+echo "[5d/6] Checking GPUI theme path (omarchy-only)..."
+gpui_dests=$(awk -F'|' '$1 == "gpui" { print $3 }' "$PIMARCHY_ROOT/config/modules.conf")
+gpui_fail=0
+if [ -z "$gpui_dests" ]; then
+    echo "  ✗ modules.conf has no gpui entries"
+    gpui_fail=1
+else
+    if ! echo "$gpui_dests" | grep -q 'omarchy/current/theme'; then
+        echo "  ✗ modules.conf gpui missing omarchy theme path"
+        gpui_fail=1
+    fi
+    if echo "$gpui_dests" | grep -q 'pimarchy/current/theme'; then
+        echo "  ✗ modules.conf still dual-writes pimarchy theme path"
+        gpui_fail=1
+    fi
+    gpui_count=$(echo "$gpui_dests" | grep -c . || true)
+    if [ "$gpui_count" -ne 2 ]; then
+        echo "  ✗ expected 2 gpui destinations (colors.toml + theme.conf), got $gpui_count"
+        gpui_fail=1
+    fi
+fi
+if [ "$gpui_fail" -eq 0 ]; then
+    echo "  ✓ modules.conf gpui → omarchy theme path only"
+else
+    echo ""
+    echo "=== Validation FAILED (GPUI theme path) ==="
+    exit 1
+fi
+
 echo "[6/6] Running functional tests..."
 
 if bash "$PIMARCHY_ROOT/tests/test_template_loop.sh"; then
