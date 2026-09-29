@@ -64,7 +64,7 @@ check_syntax() {
     fi
 }
 
-for entry in install.sh uninstall.sh validate.sh netinstall.sh; do
+for entry in install.sh uninstall.sh validate.sh netinstall.sh enable-autologin.sh; do
     check_syntax "$PIMARCHY_ROOT/$entry"
 done
 

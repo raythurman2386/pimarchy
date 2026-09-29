@@ -235,6 +235,8 @@ Pimarchy automatically configures `ufw` (Uncomplicated Firewall) to secure your 
 - **Default Outgoing:** Allow
 - **SSH (Port 22):** Limited (rate-limited to prevent brute-force attacks)
 
+**Re-install / upgrade behavior:** if `ufw` is already **active**, Pimarchy skips the **entire** baseline (reset + default policies + SSH limit + enable), not only `ufw reset`. User-added rules are left alone. Force the baseline with `PIMARCHY_UFW_RESET=1`.
+
 To manage firewall rules, use standard ufw commands: `sudo ufw status`.
 
 ---

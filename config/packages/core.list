@@ -79,8 +79,7 @@ apt:btop
 apt:ufw
 # sshfs: mount network drives over SSH (user requirement)
 apt:sshfs
-# Flash SD/USB media with Pi OS (from archive.raspberrypi.com)
-apt:rpi-imager
+# rpi-imager moved to lazy extras (`pimarchy install extras`)
 apt:jq
 apt:fd-find
 apt:ripgrep

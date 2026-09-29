@@ -148,7 +148,7 @@ else
     if [ "$LEGACY_PACKAGES" = true ]; then
         log_info "Would also install dev + office modules (--legacy-packages)"
     fi
-    log_info "Would configure firewall (ufw): deny incoming, allow outgoing, limit ssh"
+    log_info "Would configure firewall (ufw): deny incoming, allow outgoing, limit ssh (skips reset if already active; PIMARCHY_UFW_RESET=1 to force)"
 fi
 
 # -------------------------------------------------------------
@@ -232,7 +232,7 @@ if [ "$DRY_RUN" = false ]; then
 
     # Apply gsettings
     apply_gsettings
-    configure_default_filemanager
+    configure_xdg_defaults
 
     # Ensure Pictures directory exists for screenshots
     mkdir -p ~/Pictures

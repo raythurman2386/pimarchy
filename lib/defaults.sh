@@ -85,6 +85,16 @@ defaults_set() {
 ${key}=${value}
 EOF
     log_success "Default $key set to $value"
+
+    case "$key" in
+        browser|editor|filemanager)
+            if declare -F configure_xdg_defaults >/dev/null 2>&1; then
+                configure_xdg_defaults
+            elif declare -F configure_default_filemanager >/dev/null 2>&1; then
+                configure_default_filemanager
+            fi
+            ;;
+    esac
 }
 
 # defaults_install_defaults — ship the pre-selected defaults on fresh installs
