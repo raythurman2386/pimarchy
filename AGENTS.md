@@ -125,7 +125,7 @@ Templates use `{{VARIABLE}}` syntax. Variables are defined in:
 ├── config/
 │   ├── theme.conf          # Theme configuration (Ravenwood/Everforest palette)
 │   ├── modules.conf        # Module registry (source → target mappings)
-│   ├── packages/           # core.list / dev.list / office.list / retired.conf
+│   ├── packages/           # core.list / ai.list / dev.list / office.list / retired.conf
 │   ├── theme/              # GPUI colors.toml + theme.conf templates
 │   ├── hypr/               # Hyprland Lua config, keybinds, wallpaper
 │   ├── waybar/ / rofi/ / mako/ / terminal/ / shell/ / starship/
@@ -195,8 +195,8 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 - CLI Tools: fd, ripgrep (Rust-based)
 - Rust builds (dev module): mold linker + shared target dir `~/.cache/cargo-target` via `~/.cargo/config.toml` (template `config/cargo/config.toml.template`, hook `script:cargo-config`); absolute paths only — cargo does not expand `~` in config files
 - System Monitor: btop (themed with Ravenwood palette via `config/btop/ravenwood.theme`)
-- AI Coding Agent: Raven (installed to `~/.cargo/bin/`, config at `~/.raven/config.toml`) + Ollama (local inference backend at `localhost:11434`) — default agent, launched via `pimarchy agent` (Super+Shift+Ctrl+A) in a Foot window class `org.pimarchy.agent`; `a` is `--inline`; installs lazily
+- AI Coding Agent: Raven (installed to `~/.cargo/bin/`, config at `~/.raven/config.toml`) + Ollama (inference at `localhost:11434`) — default agent policy, launched via `pimarchy agent` (Super+Shift+Ctrl+A) in a Foot window class `org.pimarchy.agent`; `a` is `--inline`; install with `pimarchy install ai` (lazy). Shipped default model is `glm-5.3-flash:cloud` via Ollama (no multi-GB local pull on firstboot)
 - File manager: Pifile (installed to `~/.local/bin/pifile`) — default file manager, Super+E; `inode/directory` MIME handler
 - Default app policy: `pimarchy defaults` / `pimarchy default <agent|browser|editor|terminal|filemanager> <name>` — files in `~/.config/pimarchy/defaults/`, values validated against an allowlist
-- Package modules: `config/packages/{core,dev,office}.list` — core is always installed; dev/office are lazy (`pimarchy install dev|office`); pre-Quattro full set behind `install.sh --legacy-packages`
+- Package modules: `config/packages/{core,ai,dev,office}.list` — core is always installed; ai/dev/office are lazy (`pimarchy install ai|dev|office`); pre-Quattro full set behind `install.sh --legacy-packages`
 - Safe upgrades: `pimarchy update` — sha256 manifest at `~/.config/pimarchy/manifest` gates refreshes (user-modified files are left untouched); retired files come from `config/packages/retired.conf`

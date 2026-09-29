@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 # pimarchy-default-agent — set the default coding agent and lazy-install it.
 # Called as: pimarchy default agent <name>
+#
+# From a full checkout / image install, Raven install runs the ai module
+# hooks (Raven + Ollama). A PATH-only copy of this script can only curl
+# Raven — that is incomplete without Ollama; prefer `pimarchy install ai`.
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 AGENT_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/pimarchy/defaults/agent"
 VALID_AGENTS=(raven)
@@ -21,10 +28,23 @@ case "$name" in
     raven)
         mkdir -p "$(dirname "$AGENT_FILE")"
         printf '# ~/.config/pimarchy/defaults/agent\n# Written by: pimarchy default agent <name>\n# Read by:    pimarchy agent\nagent=raven\n' > "$AGENT_FILE"
-        # Lazy install: only fetch the binary if missing
-        if ! command -v raven >/dev/null 2>&1; then
-            echo "Installing Raven..."
-            curl -fsSL https://raw.githubusercontent.com/raythurman2386/raven/master/install.sh | bash
+
+        # Prefer the shared install hooks when the repo is available (cloned
+        # install / image path). Fall back to the official Raven curl script
+        # when running from a PATH-only install without the package lists.
+        if [ -f "$REPO_ROOT/lib/functions.sh" ] && [ -f "$REPO_ROOT/config/packages/ai.list" ]; then
+            # shellcheck disable=SC1091
+            source "$REPO_ROOT/lib/functions.sh"
+            run_module_script_hooks ai
+        else
+            if ! command -v raven >/dev/null 2>&1; then
+                echo "Installing Raven..."
+                curl -fsSL https://raw.githubusercontent.com/raythurman2386/raven/master/install.sh | bash
+            fi
+            echo "WARNING: PATH-only install set the default agent and may have installed Raven," >&2
+            echo "but Ollama (inference) was NOT installed. Agent launches will be incomplete" >&2
+            echo "without a backend. From a full Pimarchy checkout run: pimarchy install ai" >&2
+            echo "(or re-run this command from ~/.local/share/pimarchy so ai.list hooks run)." >&2
         fi
         echo "Default agent set to raven."
         ;;

@@ -2,7 +2,15 @@
 
 Pimarchy includes built-in support for the **Raven AI agent**. Raven is a small, privacy-first coding-agent harness written in Rust for Ollama and any OpenAI-compatible endpoint. It runs a full agent loop — tools, plan mode, verification, and workspace isolation — against a model endpoint you control.
 
-Raven is the **pre-selected default coding agent** (`pimarchy default agent raven`) and installs as part of the core module. Pimarchy also installs **Ollama** by default as Raven's local inference backend; Raven talks to Ollama at `http://localhost:11434/v1`.
+Raven is the **pre-selected default coding agent** (`pimarchy default agent raven`) but is **not** part of the lean core install. Install it (and Ollama) lazily with:
+
+```bash
+pimarchy install ai
+# or on first selection:
+pimarchy default agent raven
+```
+
+Ollama is Raven's inference backend at `http://localhost:11434/v1`. The unit is installed disabled and starts on demand when you launch `pimarchy agent` (no multi-GB model pull on firstboot).
 
 ## Launching Raven
 
@@ -20,11 +28,14 @@ pimarchy agent "fix the failing test in lib/upgrade.sh"
 pimarchy agent --inline
 ```
 
-`pimarchy agent` runs `raven --yolo` (skipping confirmations), passing any arguments as the prompt via `-p`. Keybind/menu launches that start in `$HOME` `cd` into `~/Work` when that directory exists, so the agent can remember workspace trust. If the binary is missing, it points you at `pimarchy default agent raven`, which lazy-installs it via the official script.
+`pimarchy agent` runs `raven --yolo` (skipping confirmations), passing any arguments as the prompt via `-p`. Keybind/menu launches that start in `$HOME` `cd` into `~/Work` when that directory exists, so the agent can remember workspace trust. If the binary is missing, it points you at `pimarchy install ai` (or `pimarchy default agent raven`), which installs Raven + Ollama via the `ai` module hooks.
+
+> **PATH-only caveat:** `pimarchy default agent raven` from a PATH-only script install (no repo / no `ai.list`) can install Raven without Ollama. That is incomplete — run `pimarchy install ai` from a full checkout so the inference backend is present.
+
 
 ## Installation Details
 
-Raven is installed by piping the official install script from `github.com/raythurman2386/raven`, and Ollama from `ollama.com` (both as `script:` entries in `config/packages/core.list`).
+Raven is installed by piping the official install script from `github.com/raythurman2386/raven`, and Ollama from `ollama.com` (both as `script:` entries in `config/packages/ai.list`).
 - **Raven location:** `~/.cargo/bin/`
 - **Raven binary:** `~/.cargo/bin/raven`
 - **Raven config:** `~/.raven/config.toml`
@@ -41,7 +52,7 @@ raven --help
 
 ### Initial Configuration
 
-On first run, Raven walks you through provider and model selection. The Pimarchy default config (`config/raven/config.toml`) pre-configures the `ollama` provider and the `ravenwood` TUI theme.
+On first run, Raven walks you through provider and model selection if needed. The Pimarchy default config (`config/raven/config.toml`) pre-configures the `ollama` provider, the `ravenwood` TUI theme, and a default model of `glm-5.3-flash:cloud` (an Ollama **cloud** model served through the local Ollama endpoint). That keeps first-agent startup light on Pi RAM — no multi-GB local weight is pulled automatically. Switch to a fully offline local model by editing `default_model` under `[providers.ollama]` (and `ollama pull` that tag yourself).
 
 ```bash
 raven
@@ -49,8 +60,9 @@ raven
 
 ## Features
 
-- **Local First:** Runs against Ollama on your machine by default; dial in OpenRouter when a task needs a bigger model.
-- **No Telemetry:** No usage tracking, no phone-home, no cloud sync. All session state stays on disk, locally.
+- **Ollama-first endpoint:** Talks to a local Ollama daemon (`127.0.0.1:11434`) by default; dial in OpenRouter when you want a different provider.
+- **Shipped default model is cloud-via-Ollama:** `glm-5.3-flash:cloud` needs network/account for Ollama cloud; pick a local tag for fully offline use (see Installation / config above).
+- **No Telemetry:** No usage tracking, no phone-home, no extra cloud sync from Raven itself. All session state stays on disk, locally.
 - **Auditable:** A single binary (~23K lines of Rust) you can read end-to-end.
 - **Small Footprint:** Runs comfortably on a Raspberry Pi. No daemon, no background indexing.
 - **Production-Grade Safety:** Workspace confinement (Landlock + seccomp), shell command filters, git-worktree isolation, and a verify-before-done gate.

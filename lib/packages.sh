@@ -7,7 +7,7 @@
 #   sid:<pkg>        — install from the Debian sid repo (Hyprland set)
 #   script:<label>   — non-apt installer handled by a post-install hook
 #
-# core.list is always installed by install.sh. dev.list / office.list are
+# core.list is always installed by install.sh. ai.list / dev.list / office.list are
 # lazy modules installed via `pimarchy install <module>`.
 #
 
@@ -113,7 +113,7 @@ EOF
         sudo apt install -t sid -y "${sid_pkgs[@]}"
     fi
 
-    # Non-apt core apps declared in core.list (zed, pifile, raven, ollama)
+    # Non-apt core apps declared in core.list (zed, pifile)
     # via their official install scripts — all idempotent.
     run_module_script_hooks core
 
@@ -145,7 +145,7 @@ remove_replaced_apt_packages() {
     sudo apt remove --purge -y "${to_remove[@]}" 2>/dev/null || true
 }
 
-# install_module_packages <module> — install a lazy module (dev, office).
+# install_module_packages <module> — install a lazy module (ai, dev, office).
 # Idempotent: re-running only installs what is missing.
 install_module_packages() {
     local module="$1"
@@ -186,6 +186,10 @@ install_module_packages() {
 
     # Module-specific post-install messaging
     case "$module" in
+        ai)
+            log_info "Raven + Ollama ready. Launch with: pimarchy agent"
+            log_info "Ollama starts on demand when the agent launches (not at boot)."
+            ;;
         dev)
             if ! id -nG "$USER" | grep -qw docker 2>/dev/null; then
                 log_info "Docker installed. Add yourself with: sudo usermod -aG docker $USER"

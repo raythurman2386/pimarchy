@@ -47,7 +47,7 @@ pimarchy agent "fix the failing test in lib/upgrade.sh"
 pimarchy agent --inline                        # current terminal (alias: a)
 ```
 
-Raven installs lazily on first selection — if the binary is missing, `pimarchy default agent raven` fetches it via Raven's official install script.
+Raven + Ollama install lazily via the `ai` module — run `pimarchy install ai`, or `pimarchy default agent raven` (which runs the same `script:` hooks when the repo checkout is present).
 
 ## Package Modules
 
@@ -63,7 +63,7 @@ Packages are declared as data in `config/packages/*.list` with three tags:
 |-----|----------|
 | apt | foot, starship, fonts-font-awesome, fonts-jetbrains-mono, fonts-liberation, fonts-dejavu-core, fonts-noto-color-emoji, gnome-themes-extra, yaru-theme-icon, papirus-icon-theme, fontconfig, dconf-cli, gsettings-desktop-schemas, qt5ct, greetd, tuigreet, lxpolkit, pavucontrol, network-manager, bluez, bluez-tools, libspa-0.2-bluetooth, alsa-utils, pipewire, pipewire-pulse, wireplumber, xdg-desktop-portal, xdg-desktop-portal-gtk, xdg-utils, xdg-user-dirs, libnotify-bin, grim, slurp, wl-clipboard, btop, ufw, sshfs, rpi-imager, jq, fd-find, ripgrep, unzip, wget, curl, ca-certificates, git, gh, libvulkan1, mesa-vulkan-drivers, chromium |
 | sid | rofi (Wayland build; Trixie rofi is X11-only), hyprland, hyprland-guiutils, waybar, mako-notifier, swaybg, xdg-desktop-portal-hyprland, uwsm |
-| script | zed, pifile, raven, ollama |
+| script | zed, pifile |
 
 **Not in core** (deliberately): LibreOffice, VS Code, OpenCode, Node, Go, Rust, Python dev tools, Docker, `network-manager-gnome` / nm-applet, blueman. Memory efficiency on a 4 GB Pi is the priority — no heavy GUI apps in the default path. nm-applet is also avoided because it keeps Xwayland resident; blueman conflicts with the sid Python pulled by Hyprland (see [sid policy](sid-policy.md)).
 
@@ -85,6 +85,14 @@ Docker CE comes from the official download.docker.com repository (pinned 1001), 
 pimarchy install dev --with-docker-group
 # or manually: sudo usermod -aG docker $USER
 ```
+
+### ai.list — `pimarchy install ai`
+
+| Tag | Packages |
+|-----|----------|
+| script | raven, ollama |
+
+Lean-core path: Raven and Ollama stay out of firstboot. The default agent *policy* still records `agent=raven`; the binaries arrive when you install the module or run `pimarchy default agent raven`.
 
 ### office.list — `pimarchy install office`
 
