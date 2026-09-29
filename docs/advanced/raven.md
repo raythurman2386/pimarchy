@@ -30,6 +30,9 @@ pimarchy agent --inline
 
 `pimarchy agent` runs `raven --yolo` (skipping confirmations), passing any arguments as the prompt via `-p`. Keybind/menu launches that start in `$HOME` `cd` into `~/Work` when that directory exists, so the agent can remember workspace trust. If the binary is missing, it points you at `pimarchy install ai` (or `pimarchy default agent raven`), which installs Raven + Ollama via the `ai` module hooks.
 
+> **PATH-only caveat:** `pimarchy default agent raven` from a PATH-only script install (no repo / no `ai.list`) can install Raven without Ollama. That is incomplete — run `pimarchy install ai` from a full checkout so the inference backend is present.
+
+
 ## Installation Details
 
 Raven is installed by piping the official install script from `github.com/raythurman2386/raven`, and Ollama from `ollama.com` (both as `script:` entries in `config/packages/ai.list`).

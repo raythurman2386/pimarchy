@@ -56,7 +56,7 @@ The installer first detects the hardware and software environment. It adds the r
 The **core module** (always installed) provides the desktop via `apt`, the pinned sid repo, and official install scripts for apps that aren't in Debian (Zed, Pifile). AI (Raven + Ollama), dev, and office toolchains are **lazy modules** (`pimarchy install ai|dev|office`). Pimarchy uses **Hyprland** as the compositor.
 
 ### 3. Template Processing (The "Brain")
-The `process_template` function in `lib/template.sh` is the core of Pimarchy. It reads every file listed in `modules.conf`, replaces `{{VARIABLE}}` tags with values from `theme.conf` and the default-app policy, and deploys them to their final destination (usually under `~/.config/`, plus GPUI state under `~/.local/state/{omarchy,pimarchy}/current/theme/`).
+The `process_template` function in `lib/template.sh` is the core of Pimarchy. It reads every file listed in `modules.conf`, replaces `{{VARIABLE}}` tags with values from `theme.conf` and the default-app policy, and deploys them to their final destination (usually under `~/.config/`, plus GPUI theme state under `~/.local/state/` — see `modules.conf` and [Open decisions](#open-decisions); theme path canonicalization is tracked separately from the lazy `ai` module).
 
 ### 4. Service Orchestration
 Pimarchy configures and enables systemd services for:
