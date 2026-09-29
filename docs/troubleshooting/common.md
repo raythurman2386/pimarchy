@@ -46,7 +46,18 @@ input {
 ### System feels sluggish
 - **Power:** Ensure you are using the official 27W USB-C PSU.
 - **Cooling:** Check if your Pi is throttling due to heat (`vcgencmd get_throttled`).
-- **Overclocking:** If you are overclocked to 2.6 GHz, ensure your cooling is active.
+- **Overclocking:** If you set `arm_freq=2600`, keep cooling active. Cores throttle between 80°C and 85°C. Firmware scales voltage for that clock.
+
+## NVMe boot stops after an older install
+
+Pimarchy no longer writes a PCIe generation. An older install added this block to the NVMe FAT boot partition (`config.txt`, often `/boot/firmware/config.txt`):
+
+```ini
+# Pimarchy: NVMe at PCIe Gen 3 (drive trains at 8 GT/s)
+dtparam=pciex1_gen=3
+```
+
+Boot a rescue microSD, mount that FAT partition, and remove the comment and the `dtparam=pciex1_gen=3` line under it. Remove an `[all]` header only when that block is the whole section. When the drive still does not boot, also remove a `dtparam=pciex1_gen=3` line that has no Pimarchy comment. Leave `dtparam=pciex1_gen=2` in place. The same lines are listed in [Uninstallation & Recovery](../uninstall.md).
 
 ## Audio
 

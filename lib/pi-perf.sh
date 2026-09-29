@@ -46,15 +46,16 @@ EOF
 }
 
 # configure_overclock — arm_freq=2600 in /boot/firmware/config.txt.
-# Pi 5 / Pi 500 only. REQUIRES REBOOT. arm_freq=2600 is a mild overclock
-# (stock 2400 MHz) that needs no extra voltage; active cooling is strongly
-# recommended — sustained load without cooling throttles at 80°C.
+# Pi 5 / Pi 500 only. REQUIRES REBOOT. Stock arm_freq is 2400. Firmware
+# raises voltage to hold 2600. A hand-set over_voltage disables that
+# scaling. Active cooling is required. Cores throttle between 80°C and 85°C.
+# An existing arm_freq= line is left untouched.
 configure_overclock() {
     log_info "Configuring CPU overclock (arm_freq=2600)..."
 
     if ! is_pi5; then
         log_warn "Not running on a Raspberry Pi 5 / Pi 500 — skipping overclock"
-        log_warn "arm_freq=2600 is only validated for Pi 5 and may be unsafe on other boards"
+        log_warn "arm_freq=2600 is only applied on Pi 5 and Pi 500"
         return 0
     fi
 
@@ -70,42 +71,17 @@ configure_overclock() {
     fi
 
     log_info "Adding arm_freq=2600 to $config_txt"
-
-    if sudo grep -q "^\[all\]" "$config_txt"; then
-        # Insert after only the FIRST [all] line (sed would match every one)
-        local tmp
-        tmp=$(mktemp)
-        trap 'rm -f "$tmp"' RETURN
-        sudo awk '
-            /^\[all\]/ && !inserted {
-                print; print "arm_freq=2600"; inserted=1; next
-            }
-            { print }
-        ' "$config_txt" > "$tmp"
-        sudo cp "$tmp" "$config_txt"
-    else
-        printf '\n# Pimarchy: Pi 5 mild overclock (2600 MHz, no extra voltage required)\n[all]\narm_freq=2600\n' \
-            | sudo tee -a "$config_txt" > /dev/null
+    run_pi_firmware --overclock
+    if [ "${PI_BOOT_CHANGED:-0}" -eq 1 ]; then
+        log_success "arm_freq=2600 written to $config_txt"
+        log_warn "Firmware raises voltage to hold 2600 MHz. Active cooling is required."
+        log_warn "Cores throttle between 80°C and 85°C. A reboot is required."
     fi
-
-    log_success "arm_freq=2600 written to $config_txt"
-    log_warn "COOLING REQUIRED: ensure an active cooler or adequate ventilation before rebooting"
-    log_warn "A reboot is required for the overclock to take effect"
 }
 
-# revert_overclock — remove the arm_freq line written by configure_overclock.
+# revert_overclock — remove only the overclock block this install marked.
 revert_overclock() {
-    local config_txt="/boot/firmware/config.txt"
-    if [ ! -f "$config_txt" ]; then
-        return 0
-    fi
-
-    if sudo grep -q "^arm_freq=" "$config_txt"; then
-        log_info "Removing arm_freq from $config_txt..."
-        sudo sed -i '/^# Pimarchy: Pi 5 mild overclock.*/d' "$config_txt"
-        sudo sed -i '/^arm_freq=/d' "$config_txt"
-        log_success "arm_freq removed from $config_txt — reboot required to take effect"
-    fi
+    revert_pi_boot_lines
 }
 
 # revert_governor — remove the governor unit and reset to 'ondemand'.
@@ -121,4 +97,109 @@ revert_governor() {
 
     ls /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null 2>&1 && \
         echo ondemand | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor > /dev/null 2>/dev/null || true
+}
+
+# configure_pi_firmware — leave Pi firmware defaults in place.
+# PCIe stays at the 2712 Gen 2 default. camera_auto_detect is not rewritten.
+# cmdline cma= is not appended. A change from the editor is refused.
+configure_pi_firmware() {
+    local fw="/boot/firmware"
+
+    if ! is_pi5; then
+        log_info "Not a Pi 5 / Pi 500 — Pi firmware files are left unchanged"
+        return 0
+    fi
+    if [ ! -f "$fw/config.txt" ] || [ ! -f "$fw/cmdline.txt" ]; then
+        log_warn "$fw is missing config.txt or cmdline.txt — firmware files left unchanged"
+        return 0
+    fi
+
+    log_info "Leaving Pi firmware defaults (PCIe Gen 2, camera autodetect, no cma=)"
+    run_pi_firmware
+    log_success "Pi firmware defaults left unchanged"
+}
+
+# revert_pi_firmware — undo boot lines a previous Pimarchy install marked.
+revert_pi_firmware() {
+    revert_pi_boot_lines
+}
+
+# revert_pi_boot_lines — shared by the overclock and firmware reverts.
+revert_pi_boot_lines() {
+    if [ ! -f /boot/firmware/config.txt ]; then
+        return 0
+    fi
+    run_pi_firmware --revert
+    if [ "${PI_BOOT_CHANGED:-0}" -eq 1 ]; then
+        log_success "Removed Pimarchy-owned lines from /boot/firmware"
+        log_warn "A reboot is required for the boot-file revert to take effect"
+    fi
+}
+
+# run_pi_firmware [mode] — copy /boot/firmware, run lib/pi-firmware.sh, and
+# write back only when mode is --overclock or --revert and the copy changed.
+# The default mode must leave both files identical; a diff is an error and
+# is not installed. Sets PI_BOOT_CHANGED to 1 when a write-back happened.
+run_pi_firmware() {
+    local mode="${1:-}"
+    local fw="/boot/firmware"
+    local script="$PIMARCHY_ROOT/lib/pi-firmware.sh"
+    local tmp
+    local config_changed=0
+    local cmdline_changed=0
+
+    PI_BOOT_CHANGED=0
+
+    if [ ! -f "$script" ]; then
+        log_error "Missing $script"
+        return 1
+    fi
+    if [ ! -f "$fw/config.txt" ]; then
+        log_warn "$fw/config.txt not found — skipping boot-file edit"
+        return 0
+    fi
+
+    tmp=$(mktemp -d)
+    cp "$fw/config.txt" "$tmp/config.txt"
+    if [ -f "$fw/cmdline.txt" ]; then
+        cp "$fw/cmdline.txt" "$tmp/cmdline.txt"
+    elif [ -z "$mode" ]; then
+        rm -rf "$tmp"
+        log_warn "$fw/cmdline.txt not found — firmware files left unchanged"
+        return 0
+    fi
+
+    if [ -n "$mode" ]; then
+        bash "$script" "$mode" "$tmp"
+    else
+        bash "$script" "$tmp"
+    fi
+
+    if ! cmp -s "$tmp/config.txt" "$fw/config.txt"; then
+        config_changed=1
+    fi
+    if [ -f "$tmp/cmdline.txt" ] && [ -f "$fw/cmdline.txt" ] \
+        && ! cmp -s "$tmp/cmdline.txt" "$fw/cmdline.txt"; then
+        cmdline_changed=1
+    fi
+
+    if [ "$config_changed" -eq 0 ] && [ "$cmdline_changed" -eq 0 ]; then
+        rm -rf "$tmp"
+        return 0
+    fi
+
+    if [ -z "$mode" ]; then
+        rm -rf "$tmp"
+        log_error "Default firmware editor changed boot files; not written"
+        return 1
+    fi
+
+    if [ "$config_changed" -eq 1 ]; then
+        sudo cp "$tmp/config.txt" "$fw/config.txt"
+    fi
+    if [ "$cmdline_changed" -eq 1 ]; then
+        sudo cp "$tmp/cmdline.txt" "$fw/cmdline.txt"
+    fi
+    rm -rf "$tmp"
+    PI_BOOT_CHANGED=1
 }

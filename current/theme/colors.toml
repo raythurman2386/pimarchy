@@ -1,5 +1,5 @@
 # Pimarchy Ravenwood theme — generated from config/theme.conf
-# Consumed by picalc, piwrite, and pifile via ~/.local/state/omarchy/current/theme
+# Reference render only. Live installs write ~/.local/state/{omarchy,pimarchy}/current/theme/colors.toml from config/theme/colors.toml.template
 mode = "dark"
 
 accent = "#4ade80"

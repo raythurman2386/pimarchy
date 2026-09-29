@@ -37,19 +37,68 @@ list_script_labels() {
     read_package_list "$module" | sed -n "s/^script://p" | grep -vE '^[[:space:]]*$'
 }
 
+# install_dev_root_hook — keep /dev/root valid for later kernel upgrades.
+install_dev_root_hook() {
+    local helper="/usr/local/sbin/pimarchy-ensure-dev-root"
+    local hook="/etc/kernel/preinst.d/zz-pimarchy-dev-root"
+
+    sudo install -m 0755 "$PIMARCHY_ROOT/lib/ensure-dev-root.sh" "$helper"
+    sudo mkdir -p /etc/kernel/preinst.d
+    printf '%s\n' '#!/bin/sh' "$helper" | sudo tee "$hook" >/dev/null
+    sudo chmod 755 "$hook"
+    sudo "$helper" || true
+}
+
+# remove_dev_root_hook — drop the helper installed by install_dev_root_hook.
+remove_dev_root_hook() {
+    sudo rm -f \
+        /usr/local/sbin/pimarchy-ensure-dev-root \
+        /etc/kernel/preinst.d/zz-pimarchy-dev-root \
+        /etc/needrestart/conf.d/pimarchy.conf \
+        /etc/sudoers.d/pimarchy-apt
+}
+
 # install_packages — installs the core module (default path). Pre-Quattro
 # behavior (dev + office toolchains) is preserved behind --legacy-packages.
 install_packages() {
     log_info "Updating system and installing core packages..."
 
     export DEBIAN_FRONTEND=noninteractive
+    export DEBCONF_NONINTERACTIVE_SEEN=true
+    export NEEDRESTART_MODE=a
+    export APT_LISTCHANGES_FRONTEND=none
+    export APT_LISTBUGS_FRONTEND=none
+
+    # sudo drops those variables. First boot attaches apt to a terminal
+    # so progress is visible, and libc6 then waits on a blue dialog:
+    # "Restart services during package upgrades without asking?"
+    sudo tee /etc/sudoers.d/pimarchy-apt >/dev/null <<'EOF'
+Defaults env_keep += "DEBIAN_FRONTEND DEBCONF_NONINTERACTIVE_SEEN NEEDRESTART_MODE APT_LISTCHANGES_FRONTEND APT_LISTBUGS_FRONTEND"
+EOF
+    sudo chmod 440 /etc/sudoers.d/pimarchy-apt
 
     clean_stale_apt_sources
-    configure_sid_repo
-    configure_docker_repo
+    # A Pi boots with a stale clock. apt rejects signatures that are not
+    # live yet, so set the time before the first update.
+    if [ -x "$PIMARCHY_ROOT/image/sync-clock.sh" ]; then
+        sudo "$PIMARCHY_ROOT/image/sync-clock.sh" || true
+    fi
+    # Stock upgrade first, before the sid pin, and only after /dev/root
+    # exists. A kernel upgrade otherwise fails initramfs and dpkg.
+    install_dev_root_hook
+    sudo mkdir -p /etc/needrestart/conf.d
+    printf '%s\n' "\$nrconf{restart} = 'a';" \
+        | sudo tee /etc/needrestart/conf.d/pimarchy.conf >/dev/null
 
     sudo apt update
-    sudo apt upgrade -y
+    sudo dpkg --configure -a
+    sudo apt full-upgrade -y \
+        -o Dpkg::Options::=--force-confdef \
+        -o Dpkg::Options::=--force-confold
+
+    configure_sid_repo
+    configure_docker_repo
+    sudo apt update
 
     # Core module: stable repo packages, then sid Hyprland set
     local stable_pkgs
@@ -75,8 +124,11 @@ install_packages() {
 
 # remove_replaced_apt_packages — purge packages that used to be in core
 # and have been replaced (e.g. Thunar → Pifile). Safe if already absent.
+# network-manager-gnome is the transitional nm-applet package. The purge
+# is one-way: uninstall does not reinstall it. nmcli and nmtui stay with
+# network-manager, and Waybar draws the network icon.
 remove_replaced_apt_packages() {
-    local retired=(thunar thunar-volman thunar-data)
+    local retired=(thunar thunar-volman thunar-data network-manager-gnome)
     local pkg to_remove=()
 
     for pkg in "${retired[@]}"; do

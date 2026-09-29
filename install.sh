@@ -11,9 +11,10 @@
 # Options:
 #   --dry-run           Show what would be installed without making changes
 #   --performance       Set CPU governor to 'performance' (no overclock, safe default)
-#   --overclock         Set CPU governor AND apply arm_freq=2600 overclock (requires cooling)
+#   --overclock         Set CPU governor AND apply arm_freq=2600 (requires cooling)
 #   --legacy-packages   Also install the pre-Quattro full set (dev + office modules).
 #                       Retained so existing installs don't lose packages on upgrade.
+#   --yes               Do not prompt before installing
 #   -h, --help          Show this help message
 #
 
@@ -21,6 +22,7 @@ set -e
 
 # Parse arguments
 DRY_RUN=false
+ASSUME_YES=false
 PERF_MODE=""        # "governor", "overclock", or "" (prompt interactively)
 LEGACY_PACKAGES=false
 
@@ -42,6 +44,10 @@ while [[ $# -gt 0 ]]; do
             LEGACY_PACKAGES=true
             shift
             ;;
+        --yes|-y)
+            ASSUME_YES=true
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
             echo ""
@@ -50,12 +56,13 @@ while [[ $# -gt 0 ]]; do
             echo "  --performance      Set CPU governor to 'performance' (no overclock)"
             echo "                     Keeps the CPU at max clock without disabling DVFS."
             echo "                     Safe on all Pi 5 / Pi 500 units."
-            echo "  --overclock        Governor + arm_freq=2600 mild overclock (2.6 GHz)"
-            echo "                     Requires an active cooler or adequate ventilation."
-            echo "                     Only applies on Pi 5 / Pi 500 hardware."
+            echo "  --overclock        Governor + arm_freq=2600 (stock is 2400 MHz)"
+            echo "                     Firmware scales voltage. Requires active cooling."
+            echo "                     Reboot required. Only on Pi 5 / Pi 500 hardware."
             echo "  --legacy-packages  Also install the pre-Quattro full package set"
             echo "                     (dev + office modules). Existing installs upgrading"
             echo "                     to Quattro keep their packages this way."
+            echo "  --yes, -y          Install without the confirmation prompt"
             echo "  -h, --help         Show this help message"
             echo ""
             exit 0
@@ -100,6 +107,9 @@ if [ "$DRY_RUN" = true ]; then
     echo "=== Pimarchy Installer (DRY RUN) ==="
     echo ""
     echo "This is a dry run. No changes will be made."
+    echo ""
+elif [ "$ASSUME_YES" = true ]; then
+    echo "=== Pimarchy Installer ==="
     echo ""
 else
     echo "=== Pimarchy Installer ==="
@@ -266,8 +276,13 @@ EOF
     configure_swaybg
     configure_waybar
     configure_mako
+    disable_nm_applet
+    configure_boot_services
+    configure_pi_firmware
 else
     log_info "Would apply gsettings, configure .bashrc, keyboard, and services"
+    log_info "Would leave NetworkManager-wait-online enabled and stop nm-applet"
+    log_info "Would leave Pi firmware defaults (no PCIe Gen 3, no cma=, camera untouched)"
 fi
 
 # -------------------------------------------------------------
@@ -318,8 +333,8 @@ if [ "$DRY_RUN" = false ]; then
         echo "--- CPU Performance Mode ---"
         echo "  g) Governor only  — CPU stays at max clock, DVFS still manages voltage."
         echo "                      Safe on all Pi 5 / Pi 500 units. No reboot needed."
-        echo "  o) Overclock      — Governor + arm_freq=2600 (2.6 GHz, up from 2.4 GHz)."
-        echo "                      Requires an active cooler. Reboot required."
+        echo "  o) Overclock      — Governor + arm_freq=2600 (stock is 2400 MHz)."
+        echo "                      Firmware scales voltage. Needs cooling. Reboot required."
         echo "  N) Skip           — Leave CPU settings unchanged."
         echo ""
         read -p "Configure CPU performance? [g/o/N] " perf_choice </dev/tty || true

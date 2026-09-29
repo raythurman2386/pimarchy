@@ -22,7 +22,18 @@ hl.env("QT_QPA_PLATFORMTHEME", "qt5ct")
 hl.env("WLR_RENDERER", "gles2")
 hl.env("WLR_NO_HARDWARE_CURSORS", "1")
 hl.env("AQ_NO_HARDWARE_CURSORS", "1")
-hl.env("GDK_BACKEND", "wayland,x11")
+hl.env("GDK_BACKEND", "wayland")
+hl.env("QT_QPA_PLATFORM", "wayland")
+
+-- The session is Wayland. Xwayland stays off so the X server is not a
+-- resident ~90MB process. GTK and Qt clients use the variables above.
+-- The launcher is sid rofi 2, which speaks Wayland. Do not switch the
+-- package back to Trixie rofi 1.7; that build only opens on X11.
+hl.config({
+    xwayland = {
+        enabled = false,
+    },
+})
 
 -- ============================================================================
 -- Autostart
@@ -148,6 +159,8 @@ hl.window_rule({ match = { class = ".*(chromium|Chromium).*" }, opacity = "{{OPA
 hl.window_rule({ match = { class = "^btop$" }, float = true, size = { 900, 600 }, center = true })
 -- Floating bluetoothctl (Waybar bluetooth left-click)
 hl.window_rule({ match = { class = "^bluetoothctl$" }, float = true, size = { 700, 500 }, center = true })
+-- Floating nmtui (Waybar network right-click)
+hl.window_rule({ match = { class = "^nmtui$" }, float = true, size = { 700, 500 }, center = true })
 -- Floating terminal for pimarchy update (launched by waybar update widget)
 hl.window_rule({ match = { class = "^pimarchy-update$" }, float = true, size = { 800, 500 }, center = true })
 -- Coding agent — dedicated TUI class (pimarchy agent / Super+Shift+Ctrl+A)

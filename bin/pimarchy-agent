@@ -55,6 +55,21 @@ if [ -f "$AGENT_FILE" ]; then
     esac
 fi
 
+# Ollama is disabled at boot. Start it here, without a polkit password
+# prompt, when the rule from install time is in place.
+ensure_ollama() {
+    if ! systemctl cat ollama.service >/dev/null 2>&1; then
+        return 0
+    fi
+    if systemctl is-active --quiet ollama.service; then
+        return 0
+    fi
+    if ! systemctl --no-ask-password start ollama.service; then
+        echo "Ollama is installed but not running." >&2
+        echo "Start it with: systemctl start ollama" >&2
+    fi
+}
+
 case "$agent" in
     raven)
         if ! command -v raven >/dev/null 2>&1; then
@@ -66,6 +81,7 @@ case "$agent" in
         else
             command=(raven --yolo)
         fi
+        ensure_ollama
         ;;
     *)
         echo "Unknown agent: $agent" >&2

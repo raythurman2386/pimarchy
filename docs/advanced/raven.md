@@ -70,6 +70,10 @@ sudo systemctl stop ollama && sudo systemctl disable ollama
 sudo rm -f /usr/local/bin/ollama
 sudo rm -rf /usr/local/lib/ollama
 sudo userdel -r ollama
+
+# Passwordless start/restart rule for the sudo group. uninstall.sh removes
+# this even when you keep the Ollama packages.
+sudo rm -f /etc/polkit-1/rules.d/50-pimarchy-ollama.rules
 ```
 
 ## Troubleshooting Raven

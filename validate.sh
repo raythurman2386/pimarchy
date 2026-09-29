@@ -69,6 +69,14 @@ for entry in install.sh uninstall.sh validate.sh netinstall.sh; do
 done
 
 check_syntax "$PIMARCHY_ROOT/lib/functions.sh"
+check_syntax "$PIMARCHY_ROOT/lib/pi-firmware.sh"
+check_syntax "$PIMARCHY_ROOT/lib/ensure-dev-root.sh"
+check_syntax "$PIMARCHY_ROOT/image/firstboot.sh"
+check_syntax "$PIMARCHY_ROOT/image/firstboot-console.sh"
+check_syntax "$PIMARCHY_ROOT/image/wifi-country.sh"
+check_syntax "$PIMARCHY_ROOT/image/sync-clock.sh"
+check_syntax "$PIMARCHY_ROOT/image/build-image.sh"
+check_syntax "$PIMARCHY_ROOT/image/write-imager-manifest.sh"
 for lib in "${LIB_FILES[@]}"; do
     check_syntax "$PIMARCHY_ROOT/lib/$lib.sh"
 done

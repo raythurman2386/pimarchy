@@ -1,0 +1,18 @@
+// Let the desktop user start Ollama without a password prompt.
+// The unit stays disabled at boot. pimarchy-agent starts it on demand.
+polkit.addRule(function(action, subject) {
+    if (action.id !== "org.freedesktop.systemd1.manage-units") {
+        return polkit.Result.NOT_HANDLED;
+    }
+    if (action.lookup("unit") !== "ollama.service") {
+        return polkit.Result.NOT_HANDLED;
+    }
+    var verb = action.lookup("verb");
+    if (verb !== "start" && verb !== "restart") {
+        return polkit.Result.NOT_HANDLED;
+    }
+    if (subject.isInGroup("sudo")) {
+        return polkit.Result.YES;
+    }
+    return polkit.Result.NOT_HANDLED;
+});

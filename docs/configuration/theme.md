@@ -47,3 +47,14 @@ Format:
 
 Example:
 `waybar|waybar/style.css.template|~/.config/waybar/style.css|Waybar styling`
+
+## GPUI Kit apps (pifile, picalc, piwrite, …)
+
+Pisuite GPUI apps read the Ravenwood palette from:
+
+- `~/.local/state/omarchy/current/theme/colors.toml` (Omarchy-compatible; required by picalc/piwrite)
+- `~/.local/state/pimarchy/current/theme/colors.toml` (preferred by newer apps such as pisettings)
+
+`install.sh` renders `config/theme/colors.toml.template` (and a `theme.conf` fallback) into **both** paths from `config/theme.conf`. After changing colors, re-run the installer and restart the app (or rely on its file watcher).
+
+The checked-in `current/theme/` tree is a reference render only — live installs never read it from the repo.

@@ -131,30 +131,101 @@ remove_zed() {
     fi
 }
 
-# install_ollama — Ollama inference server via the official ollama.com script.
-# Raven's default model backend; listens on 127.0.0.1:11434.
+# install_ollama — Ollama inference server. The ollama.com shell script
+# probes with HTTP HEAD and then falls back to a .tgz that is no longer
+# published, so a failed probe aborts the install. Download the zst
+# archive directly. Raven uses it at 127.0.0.1:11434.
 install_ollama() {
+    local arch raw url unit
+
     if command -v ollama &>/dev/null; then
-        log_info "Ollama already installed ($(ollama --version 2>/dev/null || echo 'unknown version')) — skipping"
+        log_info "Ollama already installed ($(ollama --version 2>/dev/null || echo 'unknown version'))"
+        configure_ollama_ondemand
         return 0
     fi
+
+    raw="$(uname -m)"
+    case "$raw" in
+        aarch64|arm64) arch="arm64" ;;
+        x86_64|amd64) arch="amd64" ;;
+        *)
+            log_warn "No Ollama build for $raw — continuing without it"
+            return 0
+            ;;
+    esac
 
     log_info "Installing Ollama..."
-
-    if ! command -v curl &>/dev/null; then
-        sudo apt install -y curl
+    sudo apt-get install -y curl zstd ca-certificates
+    sudo install -d -m 0755 /usr/local/bin /usr/local/lib/ollama
+    url="https://ollama.com/download/ollama-linux-${arch}.tar.zst"
+    if ! curl -fL "$url" | zstd -d | sudo tar -xf - -C /usr/local; then
+        log_error "Ollama download failed — continuing without it"
+        return 0
     fi
-
-    if ! curl -fsSL https://ollama.com/install.sh | bash; then
-        log_error "Ollama installer failed — continuing without it"
+    if [ ! -x /usr/local/bin/ollama ]; then
+        log_warn "Ollama archive did not include /usr/local/bin/ollama"
         return 0
     fi
 
-    if command -v ollama &>/dev/null; then
-        log_success "Ollama installed successfully"
-    else
-        log_warn "Ollama installer ran but 'ollama' not found in PATH — may need to re-login or source ~/.bashrc"
+    if ! id ollama >/dev/null 2>&1; then
+        sudo useradd -r -s /bin/false -U -m -d /usr/share/ollama ollama
     fi
+    if [ -n "${USER:-}" ] && [ "$USER" != "root" ]; then
+        sudo usermod -aG ollama "$USER" 2>/dev/null || true
+    fi
+
+    unit="/etc/systemd/system/ollama.service"
+    if [ ! -f "$unit" ]; then
+        sudo tee "$unit" >/dev/null <<EOF
+[Unit]
+Description=Ollama Service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/ollama serve
+User=ollama
+Group=ollama
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    fi
+
+    log_success "Ollama installed successfully"
+    configure_ollama_ondemand
+}
+
+# configure_ollama_ondemand — the official installer enables ollama.service,
+# which starts a model server at boot. Leave the unit installed and disabled.
+# pimarchy-agent starts it. A polkit rule lets the sudo group do that
+# without a password prompt.
+configure_ollama_ondemand() {
+    local rule="$PIMARCHY_ROOT/config/polkit/50-pimarchy-ollama.rules"
+    local dest="/etc/polkit-1/rules.d/50-pimarchy-ollama.rules"
+
+    if ! systemctl cat ollama.service &>/dev/null; then
+        log_warn "ollama.service is not installed — skipping on-demand setup"
+        return 0
+    fi
+
+    sudo systemctl disable ollama.service 2>/dev/null || true
+
+    if [ ! -f "$rule" ]; then
+        log_error "Missing $rule"
+        return 1
+    fi
+    sudo install -m 0644 "$rule" "$dest"
+    log_success "Ollama starts when the agent launches, not at boot"
+}
+
+# remove_ollama_polkit_rule — drop the passwordless start/restart rule.
+# uninstall.sh calls this even when the user keeps installed packages.
+remove_ollama_polkit_rule() {
+    local dest="/etc/polkit-1/rules.d/50-pimarchy-ollama.rules"
+    sudo rm -f "$dest"
+    log_success "Cleared Ollama polkit rule ($dest)"
 }
 
 remove_ollama() {
@@ -174,6 +245,8 @@ remove_ollama() {
         sudo userdel -r ollama 2>/dev/null || true
         log_info "Removed ollama system user"
     fi
+
+    remove_ollama_polkit_rule
 }
 
 # install_raven — Raven AI coding agent via its official install script.
@@ -457,6 +530,10 @@ remove_pimarchy_files() {
 
     rm -f "$HOME/.config/btop/btop.conf"
     rm -f "$HOME/.config/btop/themes/ravenwood.theme"
+
+    # GPUI Kit theme state (Omarchy-compatible + Pimarchy paths)
+    rm -rf "$HOME/.local/state/omarchy/current/theme"
+    rm -rf "$HOME/.local/state/pimarchy/current/theme"
 
     rm -f "$HOME/.raven/config.toml"
 

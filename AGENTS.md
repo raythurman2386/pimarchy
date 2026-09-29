@@ -84,6 +84,7 @@ Use these prefixes consistently:
 
 Templates use `{{VARIABLE}}` syntax. Variables are defined in:
 - `config/theme.conf` - Theme colors, fonts, icons, Rofi settings
+- `config/theme/colors.toml.template` - GPUI Kit palette → `~/.local/state/{omarchy,pimarchy}/current/theme/`
 - Environment variables exported by `install.sh` (e.g., `PIMARCHY_ROOT`)
 - Derived variables (e.g., `COLOR_PRIMARY_HEX`)
 
