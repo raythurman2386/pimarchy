@@ -415,7 +415,7 @@ if [ "$DRY_RUN" = false ]; then
     echo "  Click update icon    Run pimarchy update (when available)"
     echo "  Click power icon     Power menu (shutdown/reboot/logout)"
     echo ""
-    echo "To customize keybinds:   Press SUPER+K or edit ~/.config/hypr/bindings.conf"
+    echo "To customize keybinds:   Press SUPER+K or edit ~/.config/hypr/bindings.lua"
     echo "To customize theme:      Edit config/theme.conf and run install.sh"
     echo "To set default apps:     pimarchy default <agent|browser|editor|terminal|filemanager> <name>"
     echo "To uninstall:            bash uninstall.sh"

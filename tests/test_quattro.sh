@@ -362,7 +362,7 @@ test_bindings_template_renders() {
     pass
 }
 
-test_hyprland_conf_sources_bindings() {
+test_hyprland_lua_requires_bindings() {
     defaults_export_vars
     local out="$SANDBOX/hyprland-rendered"
     process_template "$PIMARCHY_DIR/config/hypr/hyprland.lua.template" "$out" >/dev/null
@@ -372,6 +372,21 @@ test_hyprland_conf_sources_bindings() {
     grep -qF 'bluetoothctl' "$out" || { fail "bluetoothctl windowrule missing"; return; }
     # Lua format sanity: no hyprlang-only syntax leaked in
     grep -qE "^\s*(exec-once|source)\s*=" "$out" && { fail "hyprlang syntax found in Lua config"; return; }
+    # Wayland-only GDK: exact wayland, never wayland,x11
+    grep -qE 'hl\.env\("GDK_BACKEND", "wayland"\)' "$out" \
+        || { fail "hyprland.lua missing GDK_BACKEND=wayland"; return; }
+    grep -qE 'GDK_BACKEND.*,x11|wayland,x11' "$out" \
+        && { fail "hyprland.lua must not set GDK_BACKEND with ,x11"; return; }
+    pass
+}
+
+test_gdk_backend_wayland_only() {
+    # start-hyprland.sh and hyprland.lua must agree: GDK_BACKEND=wayland (no ,x11)
+    local start="$PIMARCHY_DIR/config/hypr/start-hyprland.sh.template"
+    grep -qE '^export GDK_BACKEND=wayland$' "$start" \
+        || { fail "start-hyprland.sh missing export GDK_BACKEND=wayland"; return; }
+    grep -qE 'GDK_BACKEND=wayland,|,x11' "$start" \
+        && { fail "start-hyprland.sh must not use GDK_BACKEND=wayland,x11"; return; }
     pass
 }
 
@@ -759,7 +774,8 @@ run_test "default-agent wrapper: validation"         test_default_agent_wrapper_
 run_test "default-agent wrapper: writes file"        test_default_agent_wrapper_writes_file
 run_test "pimarchy-install: usage errors"            test_pimarchy_install_usage
 run_test "bindings template renders defaults"        test_bindings_template_renders
-run_test "hyprland.conf sources bindings"            test_hyprland_conf_sources_bindings
+run_test "hyprland.lua requires bindings"             test_hyprland_lua_requires_bindings
+run_test "GDK_BACKEND wayland-only"                   test_gdk_backend_wayland_only
 
 echo ""
 if [ $FAILURES -gt 0 ]; then

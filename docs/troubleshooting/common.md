@@ -53,7 +53,7 @@ hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60", position = "0x0", scale
 ```
 
 ### An X11-only app will not start
-Xwayland is **off** by design. Prefer Wayland builds (e.g. sid rofi). Re-enabling Xwayland is an [open decision](../development/architecture.md#open-decisions) — do not flip it casually without accepting the resident X server cost.
+Xwayland is **off** by design (decided). Prefer Wayland builds (e.g. sid rofi). There is **no supported escape hatch** to turn it back on — editing `xwayland.enabled` locally is unsupported and brings back a resident ~90 MB X server. See [Architecture — open decisions](../development/architecture.md#open-decisions).
 
 ## Input Devices
 
