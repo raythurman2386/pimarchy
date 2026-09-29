@@ -34,6 +34,8 @@ pimarchy install office   # LibreOffice (Writer, Calc, Impress)
 
 All components are themed with the **Ravenwood** palette — a refined dark forest aesthetic based on Everforest.
 
+The Hyprland session is **Wayland-only** (Xwayland off). The launcher is sid rofi 2; Trixie rofi is X11-only and unused.
+
 ---
 
 ## Requirements
@@ -45,13 +47,18 @@ All components are themed with the **Ravenwood** palette — a refined dark fore
 
 ---
 
-## Step-by-Step Setup
+## Install paths
+
+1. **Stock Pi OS Lite + netinstall** (steps below) — flash Lite, log in, run the curl installer.
+2. **Custom first-boot image** — build with `sudo bash image/build-image.sh`, flash via `rpi-imager --repo image/work/pimarchy.rpi-imager-manifest`, choose **Pimarchy**. The desktop installs on tty1 without a login prompt. Full details and open decisions (Wi-Fi country, Imager `file://` hosting, Xwayland): [docs/getting-started/installation.md](docs/getting-started/installation.md#optional-flash-a-first-boot-image).
+
+## Step-by-Step Setup (stock Lite)
 
 ### 1. Flash Pi OS Lite
 
 Download and flash **Raspberry Pi OS Lite (64-bit)** using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
-In the Imager's advanced settings (click the gear icon) before flashing:
+In the Imager's advanced settings (gear icon / OS customisation) before flashing:
 - Set a hostname (e.g. `pimarchy`)
 - Create a user account (e.g. `ret`) with a password
 - Enable SSH if you want to connect remotely
@@ -71,7 +78,7 @@ sudo apt update && sudo apt full-upgrade -y
 
 ### 3. Install Pimarchy
 
-Run the web installer. This single command will configure Git (prompting for Name/Email if not set), download Pimarchy, and launch the installer.
+Run the web installer. This single command will configure Git (prompting for Name/Email if not set), download Pimarchy to `~/.local/share/pimarchy`, and launch the installer.
 
 ```bash
 curl -sL https://raw.githubusercontent.com/raythurman2386/pimarchy/main/netinstall.sh | bash
@@ -210,10 +217,9 @@ This configures `greetd` to skip the login prompt and automatically start the de
 | Action | Result |
 |--------|--------|
 | Click clock | Toggle date/time format |
-| Click workspaces | Cycle to next workspace |
-| Click update icon | Run system update (if available) |
-| Right-click workspaces | Cycle to previous workspace |
-| Right-click WiFi | Open network settings |
+| Click workspaces | Focus that workspace |
+| Click update icon | Run `pimarchy update` in a terminal (if available) |
+| Right-click WiFi | Open **nmtui** |
 | Click volume | Open audio mixer (pavucontrol) |
 | Scroll on volume | Adjust volume |
 | Click Memory | Open system monitor (btop) |
@@ -240,7 +246,7 @@ All theming is driven by a single file:
 config/theme.conf   # colours, fonts, icons, spacing
 ```
 
-Edit it and re-run `bash install.sh` to regenerate and apply every configuration file. Individual configs can also be edited directly under `~/.config/` after install.
+Edit it and re-run `bash install.sh` to regenerate and apply every configuration file (including GPUI Kit palettes under `~/.local/state/{omarchy,pimarchy}/current/theme/`). Individual configs can also be edited directly under `~/.config/` after install. Path standardization between those state trees is an [open decision](docs/development/architecture.md#open-decisions).
 
 ---
 
@@ -270,6 +276,8 @@ Checks script syntax, template variables, and file existence. Run this before ev
 ├── install.sh                  # Main provisioning script (thin orchestrator)
 ├── uninstall.sh                # Reverts everything
 ├── validate.sh                 # Pre-commit validator
+├── netinstall.sh               # Curl | bash bootstrap
+├── enable-autologin.sh         # Optional greetd autologin
 ├── lib/                        # Library modules (sourced via functions.sh)
 │   ├── functions.sh            #   aggregator — sources all modules below
 │   ├── common.sh               #   shared paths & constants
@@ -278,17 +286,26 @@ Checks script syntax, template variables, and file existence. Run this before ev
 │   ├── backup.sh               #   config backup/restore
 │   ├── repos.sh                #   apt repositories (sid, Docker CE)
 │   ├── packages.sh             #   list-driven package modules
-│   ├── services.sh             #   systemd/greetd/firewall/keyboard
+│   ├── services.sh             #   systemd/greetd/firewall/keyboard/nm-applet
 │   ├── pi-perf.sh              #   Pi 5 governor / overclock
+│   ├── pi-firmware.sh          #   safe boot-firmware edits
+│   ├── ensure-dev-root.sh      #   /dev/root for initramfs rebuilds
 │   ├── apps.sh                 #   app installs, gsettings, cleanup
 │   ├── defaults.sh             #   default app policy (Quattro)
 │   └── upgrade.sh              #   safe upgrade model (Quattro)
+├── image/                      # Custom SD-card image + first-boot pipeline
+│   ├── build-image.sh
+│   ├── write-imager-manifest.sh
+│   ├── firstboot.sh / firstboot-console.sh
+│   ├── wifi-country.sh / sync-clock.sh
+│   └── work/                   # build artifacts (gitignored)
 ├── bin/                        # CLI + wrapper scripts
 │   ├── pimarchy                #   main CLI (install/defaults/agent/update/...)
 │   ├── pimarchy-agent          #   default agent launcher
 │   ├── pimarchy-default-agent  #   default agent setter
 │   ├── pimarchy-install        #   lazy module installer
-│   └── pimarchy-upgrade        #   safe upgrade applier
+│   ├── pimarchy-upgrade        #   safe upgrade applier
+│   └── pimarchy-workspace / …  #   waybar helpers, keybindings viewer
 ├── config/
 │   ├── theme.conf              # Centralised theme variables
 │   ├── modules.conf            # Module registry (template → target)
@@ -297,7 +314,8 @@ Checks script syntax, template variables, and file existence. Run this before ev
 │   │   ├── dev.list            #   lazy: Rust/Node/Go/Python/Docker
 │   │   ├── office.list         #   lazy: LibreOffice
 │   │   └── retired.conf        #   files removed on upgrade
-│   ├── hypr/                   # Hyprland config, keybinds, wallpaper, screenshots
+│   ├── theme/                  # GPUI colors.toml + theme.conf templates
+│   ├── hypr/                   # Hyprland Lua config, keybinds, wallpaper
 │   ├── waybar/                 # Waybar config + CSS
 │   ├── rofi/                   # Rofi launcher + power menu
 │   ├── mako/                   # Mako notification daemon config
@@ -306,13 +324,10 @@ Checks script syntax, template variables, and file existence. Run this before ev
 │   ├── starship/               # Starship prompt
 │   ├── gtk/                    # GTK2 / GTK3 theme settings
 │   ├── btop/                   # btop config + Ravenwood colour theme
-│   └── raven/                  # Raven agent config
+│   ├── zed/ / raven/ / chromium/ / cargo/ / fontconfig / polkit
 ├── tests/                      # Functional tests (run by validate.sh)
 └── .github/workflows/          # CI — syntax + permission checks
 ```
-
----
-
 ## Backup System
 
 - First install backs up original configs to `~/.config/Pimarchy-backup/`

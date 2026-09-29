@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to Pimarchy! This document provides guidelines for contributing to the project.
 
+For the fuller docs-site version, see [docs/development/contributing.md](docs/development/contributing.md).
+
 ## Code of Conduct
 
 Be respectful and constructive in all interactions.
@@ -11,12 +13,12 @@ Be respectful and constructive in all interactions.
 ### Reporting Issues
 
 When reporting issues, please include:
-- Raspberry Pi model (e.g., Pi 5)
-- OS version (e.g., Arch Linux ARM)
-- What you were trying to do
+- Raspberry Pi model (e.g., Pi 5, Pi 500, Pi 500+)
+- OS version (Pi OS Lite, Debian Trixie, arm64)
+- What you were trying to do (netinstall vs custom image / firstboot)
 - What actually happened
 - Steps to reproduce
-- Any error messages
+- Relevant logs (`~/pimarchy_install.log`, `/var/log/pimarchy-firstboot.log`, `journalctl`)
 
 ### Suggesting Features
 
@@ -30,10 +32,10 @@ Feature suggestions are welcome! Please:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Test your changes thoroughly
+4. Run `bash validate.sh`
 5. Commit with clear messages
 6. Push to your fork
-7. Open a Pull Request
+7. Open a Pull Request (**do not merge** unless maintainers ask)
 
 ### Commit Message Format
 
@@ -43,31 +45,24 @@ type: Brief description
 Longer explanation if needed
 
 - Bullet points for details
-- More details
 ```
 
-Types:
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation changes
-- `style:` Formatting changes
-- `refactor:` Code refactoring
-- `test:` Adding tests
-- `chore:` Maintenance tasks
+Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 
 ## Development Setup
 
 1. Clone the repository
 2. Make changes to config files in `config/`
 3. Test with `bash install.sh --dry-run` first
-4. Test actual install on a test system or VM
+4. Test actual install on Pi OS Lite (or the custom image path) when touching install/image code
 
 ## Project Structure
 
-- `config/` - All configuration templates
-- `lib/` - Shared library functions
-- `install.sh` - Main installer
-- `uninstall.sh` - Uninstaller
+- `config/` — templates, `theme.conf`, `modules.conf`, package lists
+- `lib/` — shared library modules (aggregated by `lib/functions.sh`)
+- `image/` — custom SD-card image + first-boot pipeline
+- `bin/` — CLI entrypoints
+- `install.sh` / `uninstall.sh` / `validate.sh` / `netinstall.sh`
 
 ## Questions?
 

@@ -9,6 +9,8 @@ The `install.sh` script logs its output directly to your terminal. If you want t
 bash install.sh 2>&1 | tee ~/pimarchy_install.log
 ```
 
+On a **custom first-boot image**, progress is always appended to `/var/log/pimarchy-firstboot.log` (also mirrored on tty1).
+
 ## 2. Systemd Logs (Greetd & UWSM)
 Pimarchy runs as a systemd user session. You can view logs for the desktop environment:
 

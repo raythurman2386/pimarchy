@@ -5,6 +5,8 @@
 #
 #   wifi-country.sh [CC]
 #   wifi-country.sh --root ROOT --boot BOOT [CC]
+# Default CC is US (PIMARCHY_WIFI_COUNTRY). Whether Imager locale should
+# drive this automatically is an open decision — keep the override explicit.
 set -eu
 
 country="${PIMARCHY_WIFI_COUNTRY:-US}"

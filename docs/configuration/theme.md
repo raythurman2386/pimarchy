@@ -22,13 +22,13 @@ export FONT_MONO="JetBrainsMono Nerd Font" # Terminal and code font
 2.  **Templates:** Files ending in `.template` (e.g., `waybar/style.css.template`) use double curly braces `{{VARIABLE_NAME}}`.
 3.  **Processing:** When you run `bash install.sh`, the script:
     -   Reads the variables from `theme.conf`.
-    -   Replaces `{{VARIABLE_NAME}}` in every template.
+    -   Replaces `{{VARIABLE_NAME}}` in every template listed in `config/modules.conf`.
     -   Writes the final configuration to your system (e.g., `~/.config/waybar/style.css`).
 
 ## Applying Changes
 
 To update your theme:
-1.  Edit `config/theme.conf` in your `pimarchy` directory.
+1.  Edit `config/theme.conf` in your `pimarchy` directory (`~/.local/share/pimarchy` after a netinstall).
 2.  Run the installer again:
     ```bash
     bash install.sh
@@ -43,18 +43,23 @@ To update your theme:
 New modules can be added to the system by registering them in `config/modules.conf`.
 
 Format:
-`module_name|source_path|~/.config/target_path|Human description`
+`module_name|source_path|target_path|Human description`
 
 Example:
 `waybar|waybar/style.css.template|~/.config/waybar/style.css|Waybar styling`
 
-## GPUI Kit apps (pifile, picalc, piwrite, …)
+Non-template files (wallpapers, scripts, shipped confs) are copied as-is. Source paths are relative to `config/` (use `../bin/...` for helpers under `bin/`).
 
-Pisuite GPUI apps read the Ravenwood palette from:
+## GPUI Kit apps (pifile, picalc, piwrite, pisettings, …)
 
-- `~/.local/state/omarchy/current/theme/colors.toml` (Omarchy-compatible; required by picalc/piwrite)
+Pisuite GPUI apps read the Ravenwood palette from state paths under `~/.local/state/`:
+
+- `~/.local/state/omarchy/current/theme/colors.toml` (Omarchy-compatible; required today by picalc/piwrite)
 - `~/.local/state/pimarchy/current/theme/colors.toml` (preferred by newer apps such as pisettings)
 
-`install.sh` renders `config/theme/colors.toml.template` (and a `theme.conf` fallback) into **both** paths from `config/theme.conf`. After changing colors, re-run the installer and restart the app (or rely on its file watcher).
+`install.sh` (via `config/modules.conf`) renders `config/theme/colors.toml.template` and `config/theme/theme.conf.template` into **both** trees from `config/theme.conf`. After changing colors, re-run the installer and restart the app (or rely on its file watcher).
 
-The checked-in `current/theme/` tree is a reference render only — live installs never read it from the repo.
+The checked-in `current/theme/` tree in the repo is a **reference render only** — live installs never read it from the repo.
+
+!!! warning "Open decision: path standardization"
+    Shipping both `omarchy` and `pimarchy` state trees is intentional compatibility, not a final layout. Whether pisuite apps standardize on one path (and which) is still open. Until that lands, keep both registered in `modules.conf`. Do not remove the Omarchy-compatible path without coordinating app updates.
