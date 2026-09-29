@@ -49,6 +49,16 @@ pimarchy agent --inline                        # current terminal (alias: a)
 
 Raven + Ollama install lazily via the `ai` module — run `pimarchy install ai`, or `pimarchy default agent raven` (which runs the same `script:` hooks when the repo checkout is present).
 
+## XDG MIME / default handlers
+
+Setting `pimarchy default browser|editor|filemanager` (and the fresh-install defaults) also applies soft-fail xdg handlers when the matching `.desktop` exists:
+
+- file manager → `inode/directory` (`pifile.desktop`)
+- browser → `xdg-settings default-web-browser` + `text/html` / `http(s)`
+- editor → common text MIME types (`dev.zed.Zed.desktop`)
+
+Bind templates still need `install`/`update` to refresh Hyprland Lua.
+
 ## Package Modules
 
 Packages are declared as data in `config/packages/*.list` with three tags:
@@ -61,11 +71,11 @@ Packages are declared as data in `config/packages/*.list` with three tags:
 
 | Tag | Packages |
 |-----|----------|
-| apt | foot, starship, fonts-font-awesome, fonts-jetbrains-mono, fonts-liberation, fonts-dejavu-core, fonts-noto-color-emoji, gnome-themes-extra, yaru-theme-icon, papirus-icon-theme, fontconfig, dconf-cli, gsettings-desktop-schemas, qt5ct, greetd, tuigreet, lxpolkit, pavucontrol, network-manager, bluez, bluez-tools, libspa-0.2-bluetooth, alsa-utils, pipewire, pipewire-pulse, wireplumber, xdg-desktop-portal, xdg-desktop-portal-gtk, xdg-utils, xdg-user-dirs, libnotify-bin, grim, slurp, wl-clipboard, btop, ufw, sshfs, rpi-imager, jq, fd-find, ripgrep, unzip, wget, curl, ca-certificates, git, gh, libvulkan1, mesa-vulkan-drivers, chromium |
+| apt | foot, starship, fonts-font-awesome, fonts-jetbrains-mono, fonts-liberation, fonts-dejavu-core, fonts-noto-color-emoji, gnome-themes-extra, yaru-theme-icon, papirus-icon-theme, fontconfig, dconf-cli, gsettings-desktop-schemas, qt5ct, greetd, tuigreet, lxpolkit, pavucontrol, network-manager, bluez, bluez-tools, libspa-0.2-bluetooth, alsa-utils, pipewire, pipewire-pulse, wireplumber, xdg-desktop-portal, xdg-desktop-portal-gtk, xdg-utils, xdg-user-dirs, libnotify-bin, grim, slurp, wl-clipboard, btop, ufw, sshfs, jq, fd-find, ripgrep, unzip, wget, curl, ca-certificates, git, gh, libvulkan1, mesa-vulkan-drivers, chromium |
 | sid | rofi (Wayland build; Trixie rofi is X11-only), hyprland, hyprland-guiutils, waybar, mako-notifier, swaybg, xdg-desktop-portal-hyprland, uwsm |
 | script | zed, pifile, picalc |
 
-**Not in core** (deliberately): LibreOffice, VS Code, OpenCode, Node, Go, Rust, Python dev tools, Docker, `network-manager-gnome` / nm-applet, blueman. Memory efficiency on a 4 GB Pi is the priority — no heavy GUI apps in the default path. nm-applet is also avoided because it keeps Xwayland resident; blueman conflicts with the sid Python pulled by Hyprland (see [sid policy](sid-policy.md)).
+**Not in core** (deliberately): rpi-imager (lazy `extras`), LibreOffice, VS Code, OpenCode, Node, Go, Rust, Python dev tools, Docker, `network-manager-gnome` / nm-applet, blueman. Memory efficiency on a 4 GB Pi is the priority — no heavy GUI apps in the default path. nm-applet is also avoided because it keeps Xwayland resident; blueman conflicts with the sid Python pulled by Hyprland (see [sid policy](sid-policy.md)).
 
 ### dev.list — `pimarchy install dev`
 
@@ -94,11 +104,25 @@ pimarchy install dev --with-docker-group
 
 Lean-core path: Raven and Ollama stay out of firstboot. The default agent *policy* still records `agent=raven`; the binaries arrive when you install the module or run `pimarchy default agent raven`.
 
+### extras.list — `pimarchy install extras`
+
+| Tag | Packages |
+|-----|----------|
+| apt | rpi-imager |
+
+`gh` and `sshfs` stay in core (contributor CLI + user-required network mounts). `rpi-imager` is a full GUI and is opt-in.
+
 ### office.list — `pimarchy install office`
 
 | Tag | Packages |
 |-----|----------|
 | apt | libreoffice-writer, libreoffice-calc, libreoffice-impress, libreoffice-gtk3, libreoffice-help-en-us |
+
+## Firewall baseline (ufw)
+
+On a fresh install, `configure_firewall` applies the baseline: `ufw reset`, default deny incoming / allow outgoing, `ufw limit ssh`, then enable.
+
+If `ufw` is already **active** on a re-run, the **entire baseline is skipped** (not just the reset) so user-added rules survive. Set `PIMARCHY_UFW_RESET=1` to force reset + re-apply baseline.
 
 ## Safe Upgrade Policy
 
@@ -111,7 +135,9 @@ Lean-core path: Raven and Ollama stay out of firstboot. The default agent *polic
 
 Hashes live in `~/.config/pimarchy/manifest`. `pimarchy update` snapshots pristine hashes *before* `git pull` (with the old code checked out), so files unchanged since your last install are recognized as refreshable even if the manifest was missing entries.
 
-**Retired files** (previously shipped, now removed from the set — e.g. `~/.config/chromium-flags.conf`, OpenCode/VS Code leftovers) are renamed to `<file>.pimarchy-upgrade.bak` and then removed.
+**Retired files** (previously shipped, now removed from the set — e.g. `~/.config/chromium-flags.conf`, OpenCode/VS Code leftovers, Alacritty paths) are renamed to `<file>.pimarchy-upgrade.bak` and then removed.
+
+**Alacritty users:** Foot replaced Alacritty as the default terminal. `pimarchy update` retires `~/.config/alacritty.toml` (and logs `Retiring: …`). If you still run Alacritty outside Pimarchy and keep a customized `~/.config/alacritty/` tree, copy it aside before updating — retirement removes Pimarchy-listed paths; Foot is the supported terminal going forward.
 
 `bash install.sh` (and `pimarchy install`) intentionally **always overwrite** — that's the "re-apply my theme.conf" workflow — and record fresh hashes, so the next `pimarchy update` is gated against the new baseline. If you want install-time protection for a file, edit it *after* installing.
 
@@ -126,6 +152,7 @@ If you installed Pimarchy before the Quattro overhaul:
 - Your packages are **not removed**. The old full set is preserved behind a flag: `bash install.sh --legacy-packages` reinstalls dev + office toolchains (Node, Go, Python, Docker, LibreOffice) if you want them.
 - Config files you never touched are refreshed; anything you edited is left alone and reported by `pimarchy update`.
 - Stale files from the VS Code / OpenCode era are retired automatically (backed up as `*.pimarchy-upgrade.bak`, then removed).
+- Alacritty config paths (`~/.config/alacritty.toml`, `~/.config/alacritty`) are retired in favor of Foot — custom Alacritty users should back up before `pimarchy update`.
 - New keybinds live in `~/.config/hypr/bindings.lua` (required by `hyprland.lua`). Hyprland 0.55+ uses Lua; the legacy `.conf` format is gone. If you customized an older `hyprland.conf` / `bindings.conf`, that file is user-modified and `pimarchy update` will leave it alone — migrate binds into the Lua files at your leisure.
 
 ## Where Defaults Are Consumed

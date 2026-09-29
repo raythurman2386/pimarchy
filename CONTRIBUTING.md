@@ -32,7 +32,7 @@ Feature suggestions are welcome! Please:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run `bash validate.sh`
+4. Run `bash validate.sh` (includes `enable-autologin.sh` syntax). There is **no arm64 image-build in GitHub Actions** today — SD/`image/build-image.sh` remains manual/hardware.
 5. Commit with clear messages
 6. Push to your fork
 7. Open a Pull Request (**do not merge** unless maintainers ask)

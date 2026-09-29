@@ -160,6 +160,66 @@ configure_default_filemanager() {
     xdg-mime default pifile.desktop inode/directory 2>/dev/null || true
 }
 
+# _desktop_exists <name.desktop> — true if a desktop file is visible to xdg.
+_desktop_exists() {
+    local name="$1"
+    [ -f "/usr/share/applications/$name" ]         || [ -f "$HOME/.local/share/applications/$name" ]         || [ -f "/usr/local/share/applications/$name" ]
+}
+
+# configure_default_browser — align xdg-settings / HTML handlers with Quattro
+# browser default. Soft-fail when the .desktop is missing.
+configure_default_browser() {
+    local browser desktop
+    if ! command -v xdg-mime &>/dev/null; then
+        return 0
+    fi
+    browser="$(defaults_read browser 2>/dev/null || echo chromium)"
+    case "$browser" in
+        chromium)
+            for desktop in chromium.desktop chromium-browser.desktop; do
+                if _desktop_exists "$desktop"; then
+                    if command -v xdg-settings &>/dev/null; then
+                        xdg-settings set default-web-browser "$desktop" 2>/dev/null || true
+                    fi
+                    xdg-mime default "$desktop" text/html 2>/dev/null || true
+                    xdg-mime default "$desktop" x-scheme-handler/http 2>/dev/null || true
+                    xdg-mime default "$desktop" x-scheme-handler/https 2>/dev/null || true
+                    return 0
+                fi
+            done
+            ;;
+    esac
+}
+
+# configure_default_editor — point common text MIME types at the Quattro editor.
+configure_default_editor() {
+    local editor desktop
+    if ! command -v xdg-mime &>/dev/null; then
+        return 0
+    fi
+    editor="$(defaults_read editor 2>/dev/null || echo zed)"
+    case "$editor" in
+        zed)
+            for desktop in dev.zed.Zed.desktop zed.desktop; do
+                if _desktop_exists "$desktop"; then
+                    xdg-mime default "$desktop" text/plain 2>/dev/null || true
+                    xdg-mime default "$desktop" text/markdown 2>/dev/null || true
+                    xdg-mime default "$desktop" application/json 2>/dev/null || true
+                    xdg-mime default "$desktop" application/x-shellscript 2>/dev/null || true
+                    return 0
+                fi
+            done
+            ;;
+    esac
+}
+
+# configure_xdg_defaults — file manager + browser + editor MIME / xdg-settings.
+configure_xdg_defaults() {
+    configure_default_filemanager
+    configure_default_browser
+    configure_default_editor
+}
+
 remove_zed() {
     local zed_bin="$HOME/.local/bin/zed"
 

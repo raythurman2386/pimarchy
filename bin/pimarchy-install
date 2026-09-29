@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # pimarchy-install — install a package module from config/packages/*.list.
-# Called as: pimarchy install <core|ai|dev|office> [--with-docker-group]
+# Called as: pimarchy install <core|ai|dev|office|extras> [--with-docker-group]
 #
 # Delegates to lib/packages.sh so the list-parsing logic stays in the library
 # (testable, shared with install.sh).

@@ -56,6 +56,8 @@ user_systemctl() {
         return
     fi
 
+    # No session bus (image firstboot): mirror enable/mask/unmask/disable on
+    # the filesystem so units stick for the first graphical login.
     case "$1" in
         daemon-reload)
             return 0
@@ -64,7 +66,46 @@ user_systemctl() {
             shift
             local unit
             for unit in "$@"; do
+                case "$unit" in
+                    --*) continue ;;
+                esac
                 link_user_unit "$unit"
+            done
+            ;;
+        disable)
+            shift
+            local unit link
+            for unit in "$@"; do
+                case "$unit" in
+                    --*) continue ;;
+                esac
+                while IFS= read -r link; do
+                    [ -n "$link" ] && rm -f "$link"
+                done < <(find "$HOME/.config/systemd/user" -type l -name "$unit" 2>/dev/null)
+            done
+            ;;
+        mask)
+            shift
+            local unit
+            for unit in "$@"; do
+                case "$unit" in
+                    --*) continue ;;
+                esac
+                mkdir -p "$HOME/.config/systemd/user"
+                ln -sfn /dev/null "$HOME/.config/systemd/user/$unit"
+            done
+            ;;
+        unmask)
+            shift
+            local unit path
+            for unit in "$@"; do
+                case "$unit" in
+                    --*) continue ;;
+                esac
+                path="$HOME/.config/systemd/user/$unit"
+                if [ -L "$path" ] && [ "$(readlink "$path")" = "/dev/null" ]; then
+                    rm -f "$path"
+                fi
             done
             ;;
         *)
@@ -117,6 +158,16 @@ configure_firewall() {
     if ! command -v ufw &> /dev/null; then
         log_warn "ufw is not installed, skipping firewall configuration."
         return 0
+    fi
+
+    # Re-running install must not wipe user-added UFW rules. Skip the entire
+    # baseline (reset + policies + ssh limit + enable) when ufw is already
+    # active, unless explicitly forced.
+    if [ "${PIMARCHY_UFW_RESET:-0}" != "1" ]; then
+        if sudo ufw status 2>/dev/null | grep -qiE '^Status:[[:space:]]+active'; then
+            log_info "ufw already active — skipping entire baseline (reset + policies + ssh limit + enable); PIMARCHY_UFW_RESET=1 to force"
+            return 0
+        fi
     fi
 
     if ! echo "y" | sudo ufw reset > /dev/null; then
@@ -204,8 +255,9 @@ Type=Application
 Name=nm-applet
 Hidden=true
 EOF
-    systemctl --user disable --now 'app-nm-applet@autostart.service' 2>/dev/null || true
-    systemctl --user mask 'app-nm-applet@autostart.service' 2>/dev/null || true
+    # user_systemctl works without a session bus (image firstboot).
+    user_systemctl disable --now 'app-nm-applet@autostart.service' 2>/dev/null || true
+    user_systemctl mask 'app-nm-applet@autostart.service' 2>/dev/null || true
     if pgrep -x nm-applet >/dev/null 2>&1; then
         pkill -x nm-applet 2>/dev/null || true
     fi
@@ -215,8 +267,8 @@ EOF
 # revert_nm_applet — allow the applet autostart again.
 revert_nm_applet() {
     rm -f "$HOME/.config/autostart/nm-applet.desktop"
-    systemctl --user unmask 'app-nm-applet@autostart.service' 2>/dev/null || true
-    systemctl --user daemon-reload 2>/dev/null || true
+    user_systemctl unmask 'app-nm-applet@autostart.service' 2>/dev/null || true
+    user_systemctl daemon-reload 2>/dev/null || true
 }
 
 # configure_swaybg / configure_waybar / configure_mako — systemd user services

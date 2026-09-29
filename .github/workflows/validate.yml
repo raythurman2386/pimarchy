@@ -36,6 +36,7 @@ jobs:
         test -f config/packages/ai.list || (echo "ai.list missing" && exit 1)
         test -f config/packages/dev.list || (echo "dev.list missing" && exit 1)
         test -f config/packages/office.list || (echo "office.list missing" && exit 1)
+        test -f config/packages/extras.list || (echo "extras.list missing" && exit 1)
         test -f config/packages/retired.conf || (echo "retired.conf missing" && exit 1)
     
     - name: Check for template syntax errors

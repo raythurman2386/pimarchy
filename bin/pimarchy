@@ -27,7 +27,7 @@ show_help() {
     echo "Usage: pimarchy <command> [options]"
     echo ""
     echo "Commands:"
-    echo "  install [module] Run install.sh, or a lazy package module (core|ai|dev|office)."
+    echo "  install [module] Run install.sh, or a lazy package module (core|ai|dev|office|extras)."
     echo "               Module install accepts --with-docker-group (dev)."
     echo "  defaults     Show default agent, browser, editor, terminal, filemanager."
     echo "  default <what> [name]   Set a default: agent|browser|editor|terminal|filemanager."

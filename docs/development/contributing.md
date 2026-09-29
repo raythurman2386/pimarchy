@@ -49,3 +49,7 @@ Feature suggestions are welcome! Please:
 
 ## License
 By contributing, you agree that your contributions will be licensed under the MIT License.
+
+## CI limits
+
+GitHub Actions runs `validate.sh` on ubuntu-latest only. **No arm64 image-build** in CI today — SD/`image/build-image.sh` remains manual/hardware verification.

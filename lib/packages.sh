@@ -7,8 +7,8 @@
 #   sid:<pkg>        — install from the Debian sid repo (Hyprland set)
 #   script:<label>   — non-apt installer handled by a post-install hook
 #
-# core.list is always installed by install.sh. ai.list / dev.list / office.list are
-# lazy modules installed via `pimarchy install <module>`.
+# core.list is always installed by install.sh. ai.list / extras.list / dev.list /
+# office.list are lazy modules installed via `pimarchy install <module>`.
 #
 
 # read_package_list <module> — print non-comment, non-blank lines of the list.
@@ -145,7 +145,7 @@ remove_replaced_apt_packages() {
     sudo apt remove --purge -y "${to_remove[@]}" 2>/dev/null || true
 }
 
-# install_module_packages <module> — install a lazy module (ai, dev, office).
+# install_module_packages <module> — install a lazy module (ai, extras, dev, office).
 # Idempotent: re-running only installs what is missing.
 install_module_packages() {
     local module="$1"

@@ -179,6 +179,7 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 ## Platform Notes
 
 - Target: Raspberry Pi 5 / Pi 500 running Pi OS Lite (Debian Trixie, arm64)
+- CI: GitHub Actions runs `validate.sh` on ubuntu-latest only — **no arm64 image-build / SD artifact in GHA today** (manual/hardware verification)
 - Session: Wayland-only — Hyprland `xwayland.enabled = false`; launcher is sid rofi 2 (Trixie rofi is X11-only)
 - Custom image: `image/build-image.sh` + firstboot on tty1; Imager manifest uses `cloudinit-rpi` and a local `file://` image URL (hosting open)
 - Wi-Fi country default for the image path: `US` via `PIMARCHY_WIFI_COUNTRY` (open whether Imager locale should drive this)

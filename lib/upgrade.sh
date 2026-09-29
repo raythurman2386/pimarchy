@@ -228,13 +228,16 @@ remove_retired_files() {
     while IFS= read -r raw; do
         [[ -z "$raw" || "$raw" =~ ^[[:space:]]*# ]] && continue
         path="${raw/#\~/$HOME}"
-        if [ -f "$path" ] || [ -L "$path" ]; then
+        # Files, symlinks, and directories (e.g. ~/.config/alacritty).
+        if [ -e "$path" ] || [ -L "$path" ]; then
             bak="${path}.pimarchy-upgrade.bak"
-            log_info "Retiring: $path → ${bak}"
+            log_info "Retiring: $path → ${bak} (then removed; custom copies should be backed up first)"
             if upgrade_needs_sudo "$path"; then
-                sudo mv "$path" "$bak" && sudo rm -f "$bak"
+                sudo rm -rf "$bak" 2>/dev/null || true
+                sudo mv "$path" "$bak" && sudo rm -rf "$bak"
             else
-                mv "$path" "$bak" && rm -f "$bak"
+                rm -rf "$bak" 2>/dev/null || true
+                mv "$path" "$bak" && rm -rf "$bak"
             fi
         fi
     done < "$retired_file"

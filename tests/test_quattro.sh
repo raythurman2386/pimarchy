@@ -416,12 +416,25 @@ test_link_user_unit() {
 [Install]
 WantedBy=graphical-session.target
 EOF
-    unset XDG_RUNTIME_DIR DBUS_SESSION_BUS_ADDRESS
+    unset DBUS_SESSION_BUS_ADDRESS
+    # Point XDG_RUNTIME_DIR at a bus-less dir so user_systemctl cannot
+    # rediscover /run/user/$UID/bus and write outside the sandbox HOME.
+    export XDG_RUNTIME_DIR="$HOME/run"
+    mkdir -p "$XDG_RUNTIME_DIR"
     link_user_unit swaybg.service
     [ -L "$dir/graphical-session.target.wants/swaybg.service" ] \
         || { fail "swaybg was not enabled"; return; }
     [ "$(readlink "$dir/graphical-session.target.wants/swaybg.service")" = "../swaybg.service" ] \
         || { fail "swaybg symlink target is wrong"; return; }
+    # mask without a session bus (nm-applet firstboot path)
+    user_systemctl mask 'app-nm-applet@autostart.service'
+    [ -L "$dir/app-nm-applet@autostart.service" ] \
+        || { fail "nm-applet unit was not masked on disk"; return; }
+    [ "$(readlink "$dir/app-nm-applet@autostart.service")" = "/dev/null" ] \
+        || { fail "nm-applet mask is not /dev/null"; return; }
+    user_systemctl unmask 'app-nm-applet@autostart.service'
+    [ ! -e "$dir/app-nm-applet@autostart.service" ] \
+        || { fail "nm-applet mask symlink still present after unmask"; return; }
     pass
 }
 
@@ -726,7 +739,7 @@ test_firstboot_owns_console() {
 run_test "imager manifest"                           test_imager_manifest
 run_test "first boot owns the console"              test_firstboot_owns_console
 run_test "wifi country cmdline"                      test_wifi_country_cmdline
-run_test "user unit enable without a session"        test_link_user_unit
+run_test "user unit enable/mask without a session"  test_link_user_unit
 run_test "core sid list"                             test_list_sid_packages
 run_test "core/ai script labels"                        test_list_script_labels
 run_test "dev list contents (rustup/node/go/docker)" test_dev_list_contents

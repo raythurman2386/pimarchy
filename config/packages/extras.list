@@ -1,0 +1,7 @@
+# Pimarchy extras module — lazy module, installed via `pimarchy install extras`.
+#
+# Optional GUI/tools that are useful but not required for the lean desktop.
+# gh and sshfs stay in core (contributor CLI + user-required network mounts).
+
+# Flash SD/USB media with Pi OS (from archive.raspberrypi.com)
+apt:rpi-imager
