@@ -77,6 +77,7 @@ if [ "$remove_pkgs" = "y" ] || [ "$remove_pkgs" = "Y" ]; then
     remove_packages
     remove_zed
     remove_pifile
+    remove_picalc
     remove_ollama
     remove_raven
     echo "  Packages removed."

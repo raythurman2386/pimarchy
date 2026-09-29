@@ -197,6 +197,7 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 - System Monitor: btop (themed with Ravenwood palette via `config/btop/ravenwood.theme`)
 - AI Coding Agent: Raven (installed to `~/.cargo/bin/`, config at `~/.raven/config.toml`) + Ollama (inference at `localhost:11434`) — default agent policy, launched via `pimarchy agent` (Super+Shift+Ctrl+A) in a Foot window class `org.pimarchy.agent`; `a` is `--inline`; install with `pimarchy install ai` (lazy). Shipped default model is `glm-5.3-flash:cloud` via Ollama (no multi-GB local pull on firstboot)
 - File manager: Pifile (installed to `~/.local/bin/pifile`) — default file manager, Super+E; `inode/directory` MIME handler
+- Calculator: Picalc (installed to `~/.local/bin/picalc` via official netinstall) — Super+Ctrl+Q / XF86Calculator; Omarchy theme path
 - Default app policy: `pimarchy defaults` / `pimarchy default <agent|browser|editor|terminal|filemanager> <name>` — files in `~/.config/pimarchy/defaults/`, values validated against an allowlist
 - Package modules: `config/packages/{core,ai,dev,office}.list` — core is always installed; ai/dev/office are lazy (`pimarchy install ai|dev|office`); pre-Quattro full set behind `install.sh --legacy-packages`
 - Safe upgrades: `pimarchy update` — sha256 manifest at `~/.config/pimarchy/manifest` gates refreshes (user-modified files are left untouched); retired files come from `config/packages/retired.conf`

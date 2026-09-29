@@ -115,4 +115,6 @@ sid:uwsm
 script:zed
 # Pifile file manager (default file manager) — ~/.local/bin/pifile
 script:pifile
+# Picalc calculator (Super+Ctrl+Q / XF86Calculator) — ~/.local/bin/picalc
+script:picalc
 # Raven + Ollama live in the lazy `ai` module (`pimarchy install ai`).

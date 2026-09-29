@@ -120,7 +120,7 @@ for list_file in "$PIMARCHY_ROOT"/config/packages/*.list; do
 done
 
 # script: labels must be known to run_module_script_hooks
-KNOWN_SCRIPT_LABELS="zed pifile raven ollama rustup cargo-config node go python-dev docker-group"
+KNOWN_SCRIPT_LABELS="zed pifile picalc raven ollama rustup cargo-config node go python-dev docker-group"
 while IFS= read -r label; do
     [ -z "$label" ] && continue
     if ! grep -qw "$label" <<< "$KNOWN_SCRIPT_LABELS"; then
