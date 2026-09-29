@@ -224,6 +224,33 @@ else
 fi
 
 echo ""
+echo ""
+echo "[5c/6] Checking Wayland-only GDK_BACKEND..."
+gdk_failures=0
+if ! grep -qE '^export GDK_BACKEND=wayland$' "$PIMARCHY_ROOT/config/hypr/start-hyprland.sh.template"; then
+    echo "  ✗ start-hyprland.sh.template missing export GDK_BACKEND=wayland"
+    gdk_failures=$((gdk_failures + 1))
+elif grep -qE 'GDK_BACKEND=wayland,|,x11' "$PIMARCHY_ROOT/config/hypr/start-hyprland.sh.template"; then
+    echo "  ✗ start-hyprland.sh.template must not set GDK_BACKEND with ,x11"
+    gdk_failures=$((gdk_failures + 1))
+else
+    echo "  ✓ start-hyprland.sh GDK_BACKEND=wayland"
+fi
+if ! grep -qE 'hl\.env\("GDK_BACKEND", "wayland"\)' "$PIMARCHY_ROOT/config/hypr/hyprland.lua.template"; then
+    echo "  ✗ hyprland.lua.template missing hl.env GDK_BACKEND wayland"
+    gdk_failures=$((gdk_failures + 1))
+elif grep -qE 'wayland,x11|,x11' "$PIMARCHY_ROOT/config/hypr/hyprland.lua.template"; then
+    echo "  ✗ hyprland.lua.template must not set GDK_BACKEND with ,x11"
+    gdk_failures=$((gdk_failures + 1))
+else
+    echo "  ✓ hyprland.lua GDK_BACKEND=wayland"
+fi
+if [ "$gdk_failures" -gt 0 ]; then
+    echo ""
+    echo "=== Validation FAILED (GDK_BACKEND) ==="
+    exit 1
+fi
+
 echo "[6/6] Running functional tests..."
 
 if bash "$PIMARCHY_ROOT/tests/test_template_loop.sh"; then
