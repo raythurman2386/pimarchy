@@ -134,7 +134,7 @@ Templates use `{{VARIABLE}}` syntax. Variables are defined in:
 └── .github/workflows/      # CI/CD automation
 ```
 
-Open decisions (do not invent answers): Wi-Fi country default, Imager image hosting (`file://` today), omarchy vs pimarchy GPUI theme path standardization — see `docs/development/architecture.md#open-decisions`. Xwayland stays off (decided; no supported escape hatch).
+Open decisions: none currently open — see `docs/development/architecture.md#open-decisions` for decided rows (Xwayland off / no escape hatch; Wi-Fi US; Imager local `file://`; GPUI theme path = omarchy state tree).
 ## Configuration System
 
 1. **Load configs**: Use `load_config "path/to/file"` to source config files
@@ -181,9 +181,9 @@ Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 - Target: Raspberry Pi 5 / Pi 500 running Pi OS Lite (Debian Trixie, arm64)
 - CI: GitHub Actions runs `validate.sh` on ubuntu-latest only — **no arm64 image-build / SD artifact in GHA today** (manual/hardware verification)
 - Session: Wayland-only — Hyprland `xwayland.enabled = false`; launcher is sid rofi 2 (Trixie rofi is X11-only)
-- Custom image: `image/build-image.sh` + firstboot on tty1; Imager manifest uses `cloudinit-rpi` and a local `file://` image URL (hosting open)
-- Wi-Fi country default for the image path: `US` via `PIMARCHY_WIFI_COUNTRY` (open whether Imager locale should drive this)
-- GPUI theme state: write both `~/.local/state/omarchy/current/theme/` and `~/.local/state/pimarchy/current/theme/` until pisuite path standardization lands
+- Custom image: `image/build-image.sh` + firstboot on tty1; Imager manifest uses `cloudinit-rpi` and a local `file://` image URL (decided)
+- Wi-Fi country default for the image path: `US` via `PIMARCHY_WIFI_COUNTRY` (decided; override via that env var)
+- GPUI theme state: write `~/.local/state/omarchy/current/theme/` only (canonical; uninstall still clears legacy pimarchy dual-write)
 - Window Manager: Hyprland (Wayland, launched via UWSM as a systemd session; from Debian sid, pinned — see docs/development/sid-policy.md)
 - Status Bar: Waybar
 - App Launcher: Rofi

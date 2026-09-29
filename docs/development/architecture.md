@@ -56,7 +56,7 @@ The installer first detects the hardware and software environment. It adds the r
 The **core module** (always installed) provides the desktop via `apt`, the pinned sid repo, and official install scripts for apps that aren't in Debian (Zed, Pifile). AI (Raven + Ollama), dev, and office toolchains are **lazy modules** (`pimarchy install ai|dev|office`). Pimarchy uses **Hyprland** as the compositor.
 
 ### 3. Template Processing (The "Brain")
-The `process_template` function in `lib/template.sh` is the core of Pimarchy. It reads every file listed in `modules.conf`, replaces `{{VARIABLE}}` tags with values from `theme.conf` and the default-app policy, and deploys them to their final destination (usually under `~/.config/`, plus GPUI theme state under `~/.local/state/` — see `modules.conf` and [Open decisions](#open-decisions); theme path canonicalization is tracked separately from the lazy `ai` module).
+The `process_template` function in `lib/template.sh` is the core of Pimarchy. It reads every file listed in `modules.conf`, replaces `{{VARIABLE}}` tags with values from `theme.conf` and the default-app policy, and deploys them to their final destination (usually under `~/.config/`, plus GPUI theme state under the canonical Omarchy-compatible path `~/.local/state/omarchy/current/theme/`).
 
 ### 4. Service Orchestration
 Pimarchy configures and enables systemd services for:
@@ -92,7 +92,7 @@ Documented unknowns — do not invent answers in docs or code comments:
 
 | Topic | Current behavior | Status |
 |-------|------------------|--------|
-| **Wi-Fi regulatory country** | Default `US` (`PIMARCHY_WIFI_COUNTRY`) in image build + firstboot | Open — whether Imager locale should drive this automatically is undecided |
-| **Imager image hosting** | Manifest uses a local `file://` URI for the `.img` | Open — HTTP(S) hosting / release artifacts not decided |
+| **Wi-Fi regulatory country** | Default `US` (`PIMARCHY_WIFI_COUNTRY`) in image build + firstboot | **Decided:** keep US; override with `PIMARCHY_WIFI_COUNTRY` (Imager locale will not drive this) |
+| **Imager image hosting** | Manifest uses a local `file://` URI for the `.img` | **Decided:** keep local `file://` for now (HTTP(S) hosting deferred) |
 | **Xwayland** | Disabled in `hyprland.lua` (`xwayland.enabled = false`); sid rofi 2; no nm-applet; `GDK_BACKEND=wayland` in start-hyprland + hyprland.lua | **Decided:** stays off. No supported escape hatch — prefer Wayland builds. Editing `xwayland.enabled` locally is unsupported and costs ~90 MB resident X |
-| **GPUI theme paths** | Both `~/.local/state/omarchy/...` and `.../pimarchy/...` are written | Open — standardize on one path once pisuite apps agree |
+| **GPUI theme paths** | Write `~/.local/state/omarchy/current/theme/` only | **Decided:** omarchy path is canonical; drop dual-write. Uninstall still removes legacy `pimarchy/` theme tree |

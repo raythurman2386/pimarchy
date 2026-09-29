@@ -52,14 +52,13 @@ Non-template files (wallpapers, scripts, shipped confs) are copied as-is. Source
 
 ## GPUI Kit apps (pifile, picalc, piwrite, pisettings, …)
 
-Pisuite GPUI apps read the Ravenwood palette from state paths under `~/.local/state/`:
+Pisuite GPUI apps read the Ravenwood palette from the **canonical Omarchy-compatible** state path:
 
-- `~/.local/state/omarchy/current/theme/colors.toml` (Omarchy-compatible; required today by picalc/piwrite)
-- `~/.local/state/pimarchy/current/theme/colors.toml` (preferred by newer apps such as pisettings)
+- `~/.local/state/omarchy/current/theme/colors.toml`
+- `~/.local/state/omarchy/current/theme/theme.conf` (fallback)
 
-`install.sh` (via `config/modules.conf`) renders `config/theme/colors.toml.template` and `config/theme/theme.conf.template` into **both** trees from `config/theme.conf`. After changing colors, re-run the installer and restart the app (or rely on its file watcher).
+`install.sh` (via `config/modules.conf`) renders `config/theme/colors.toml.template` and `config/theme/theme.conf.template` into that tree from `config/theme.conf`. After changing colors, re-run the installer and restart the app (or rely on its file watcher).
+
+Older dual-write installs may still have `~/.local/state/pimarchy/current/theme/`; uninstall removes it, but new installs no longer write it.
 
 The checked-in `current/theme/` tree in the repo is a **reference render only** — live installs never read it from the repo.
-
-!!! warning "Open decision: path standardization"
-    Shipping both `omarchy` and `pimarchy` state trees is intentional compatibility, not a final layout. Whether pisuite apps standardize on one path (and which) is still open. Until that lands, keep both registered in `modules.conf`. Do not remove the Omarchy-compatible path without coordinating app updates.

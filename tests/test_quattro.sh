@@ -390,6 +390,22 @@ test_gdk_backend_wayland_only() {
     pass
 }
 
+test_gpui_theme_omarchy_only() {
+    # modules.conf must write omarchy GPUI theme path only (no pimarchy dual-write)
+    local conf="$PIMARCHY_DIR/config/modules.conf"
+    local gpui_dests
+    gpui_dests=$(awk -F'|' '$1 == "gpui" { print $3 }' "$conf")
+    [ -n "$gpui_dests" ] || { fail "modules.conf has no gpui entries"; return; }
+    echo "$gpui_dests" | grep -q 'omarchy/current/theme'         || { fail "modules.conf gpui missing omarchy theme path"; return; }
+    echo "$gpui_dests" | grep -q 'pimarchy/current/theme'         && { fail "modules.conf still dual-writes pimarchy theme path"; return; }
+    # Exactly two gpui rows (colors.toml + theme.conf) under omarchy
+    local count
+    count=$(echo "$gpui_dests" | grep -c . || true)
+    [ "$count" -eq 2 ] || { fail "expected 2 gpui destinations, got $count"; return; }
+    pass
+}
+
+
 # fw_same <tmp> <label> — fail when config.txt or cmdline.txt differ from the
 # snapshots taken by fw_snap.
 fw_snap() {
@@ -776,6 +792,7 @@ run_test "pimarchy-install: usage errors"            test_pimarchy_install_usage
 run_test "bindings template renders defaults"        test_bindings_template_renders
 run_test "hyprland.lua requires bindings"             test_hyprland_lua_requires_bindings
 run_test "GDK_BACKEND wayland-only"                   test_gdk_backend_wayland_only
+run_test "GPUI theme omarchy-only"                     test_gpui_theme_omarchy_only
 
 echo ""
 if [ $FAILURES -gt 0 ]; then

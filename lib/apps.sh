@@ -636,7 +636,7 @@ remove_pimarchy_files() {
     rm -f "$HOME/.config/btop/btop.conf"
     rm -f "$HOME/.config/btop/themes/ravenwood.theme"
 
-    # GPUI Kit theme state (Omarchy-compatible + Pimarchy paths)
+    # GPUI Kit theme state (canonical omarchy path + legacy pimarchy dual-write)
     rm -rf "$HOME/.local/state/omarchy/current/theme"
     rm -rf "$HOME/.local/state/pimarchy/current/theme"
 
