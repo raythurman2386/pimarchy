@@ -113,7 +113,7 @@ EOF
         sudo apt install -t sid -y "${sid_pkgs[@]}"
     fi
 
-    # Non-apt core apps declared in core.list (zed, pifile)
+    # Non-apt core apps declared in core.list (zed, pifile, picalc)
     # via their official install scripts — all idempotent.
     run_module_script_hooks core
 

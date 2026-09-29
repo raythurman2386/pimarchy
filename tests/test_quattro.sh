@@ -88,10 +88,11 @@ test_list_sid_packages() {
 test_list_script_labels() {
     local labels
     labels=$(list_script_labels core)
-    for expected in zed pifile; do
+    for expected in zed pifile picalc; do
         echo "$labels" | grep -qx "$expected" || { fail "missing core script: label '$expected'"; return; }
     done
     echo "$labels" | grep -qx "raven" && { fail "raven should be in ai module, not core"; return; }
+    echo "$labels" | grep -qx "ollama" && { fail "ollama should be in ai module, not core"; return; }
     labels=$(list_script_labels ai)
     for expected in raven ollama; do
         echo "$labels" | grep -qx "$expected" || { fail "missing ai script: label '$expected'"; return; }

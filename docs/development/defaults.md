@@ -63,7 +63,7 @@ Packages are declared as data in `config/packages/*.list` with three tags:
 |-----|----------|
 | apt | foot, starship, fonts-font-awesome, fonts-jetbrains-mono, fonts-liberation, fonts-dejavu-core, fonts-noto-color-emoji, gnome-themes-extra, yaru-theme-icon, papirus-icon-theme, fontconfig, dconf-cli, gsettings-desktop-schemas, qt5ct, greetd, tuigreet, lxpolkit, pavucontrol, network-manager, bluez, bluez-tools, libspa-0.2-bluetooth, alsa-utils, pipewire, pipewire-pulse, wireplumber, xdg-desktop-portal, xdg-desktop-portal-gtk, xdg-utils, xdg-user-dirs, libnotify-bin, grim, slurp, wl-clipboard, btop, ufw, sshfs, rpi-imager, jq, fd-find, ripgrep, unzip, wget, curl, ca-certificates, git, gh, libvulkan1, mesa-vulkan-drivers, chromium |
 | sid | rofi (Wayland build; Trixie rofi is X11-only), hyprland, hyprland-guiutils, waybar, mako-notifier, swaybg, xdg-desktop-portal-hyprland, uwsm |
-| script | zed, pifile |
+| script | zed, pifile, picalc |
 
 **Not in core** (deliberately): LibreOffice, VS Code, OpenCode, Node, Go, Rust, Python dev tools, Docker, `network-manager-gnome` / nm-applet, blueman. Memory efficiency on a 4 GB Pi is the priority — no heavy GUI apps in the default path. nm-applet is also avoided because it keeps Xwayland resident; blueman conflicts with the sid Python pulled by Hyprland (see [sid policy](sid-policy.md)).
 

@@ -15,7 +15,7 @@ Keybinds live in `~/.config/hypr/bindings.lua` (required by `hyprland.lua`) and 
 | **SUPER + M** | **System Monitor** | Open **btop** system monitor. |
 | **SUPER + SHIFT + B** | **Browser** | Launch the default browser (**Chromium**). |
 | **SUPER + SHIFT + CTRL + A** | **Coding Agent** | Launch the default coding agent (**Raven**, `pimarchy agent`) in a floating TUI window (`org.pimarchy.agent`). |
-| **SUPER + CTRL + Q** | **Calculator** | Open **Picalc** as a floating calculator window. |
+| **SUPER + CTRL + Q** | **Calculator** | Open **Picalc** as a floating calculator window (installed with the core module via `script:picalc`). |
 | **XF86Calculator** | **Calculator** | Same as Super+Ctrl+Q (calculator key, if present). |
 | **SUPER + K** | **Keybind Viewer** | View all active keybinds in **Rofi**. |
 

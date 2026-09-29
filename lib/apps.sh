@@ -12,15 +12,16 @@ run_module_script_hooks() {
     while IFS= read -r label; do
         [ -z "$label" ] && continue
         case "$label" in
-            zed)        install_zed ;;
-            pifile)     install_pifile ;;
-            raven)      install_raven ;;
-            ollama)     install_ollama ;;
-            rustup)     install_rustup ;;
-            cargo-config) configure_cargo_build_config ;;
-            node)       configure_nodejs ;;
-            go)         install_go ;;
-            python-dev) install_python_dev ;;
+            zed)        install_zed || return $? ;;
+            pifile)     install_pifile || return $? ;;
+            picalc)     install_picalc || return $? ;;
+            raven)      install_raven || return $? ;;
+            ollama)     install_ollama || return $? ;;
+            rustup)     install_rustup || return $? ;;
+            cargo-config) configure_cargo_build_config || return $? ;;
+            node)       configure_nodejs || return $? ;;
+            go)         install_go || return $? ;;
+            python-dev) install_python_dev || return $? ;;
             docker-group)
                 if ! id -nG "$USER" | grep -qw docker 2>/dev/null; then
                     sudo usermod -aG docker "$USER"
@@ -101,6 +102,50 @@ remove_pifile() {
     rm -f "$prefix/share/icons/hicolor/128x128/apps/pifile.png"
     rm -rf "$prefix/share/licenses/pifile"
     log_success "Pifile installation removed"
+}
+
+# install_picalc — desktop calculator via the official picalc netinstall
+# (Ed25519-verified GitHub release). Lands at ~/.local/bin/picalc.
+# Prefers pisuite picalc over omacalc: same interaction model, GPUI Kit,
+# Omarchy theme path, aarch64 release artifacts.
+install_picalc() {
+    export PATH="$HOME/.local/bin:$PATH"
+
+    if command -v picalc &>/dev/null; then
+        log_info "Picalc already installed — skipping"
+        return 0
+    fi
+
+    log_info "Installing Picalc calculator..."
+
+    if ! command -v curl &>/dev/null; then
+        sudo apt install -y curl
+    fi
+
+    if ! curl -fsSL https://raw.githubusercontent.com/raythurman2386/picalc/main/scripts/netinstall.sh | bash; then
+        log_error "Picalc installer failed (network or release problem)"
+        log_error "Super+Ctrl+Q / XF86Calculator would bind to a missing binary — aborting rather than leaving a dead keybind"
+        return 1
+    fi
+
+    if command -v picalc &>/dev/null; then
+        log_success "Picalc installed successfully"
+    else
+        log_error "Picalc installer ran but 'picalc' not found in PATH"
+        log_error "Refusing to leave Super+Ctrl+Q bound to a missing binary — fix PATH or re-run install"
+        return 1
+    fi
+}
+
+remove_picalc() {
+    local prefix="${HOME}/.local"
+
+    rm -f "$prefix/bin/picalc"
+    rm -f "$prefix/share/applications/picalc.desktop"
+    rm -f "$prefix/share/icons/hicolor/scalable/apps/picalc.svg"
+    rm -f "$prefix/share/icons/hicolor/128x128/apps/picalc.png"
+    rm -rf "$prefix/share/licenses/picalc"
+    log_success "Picalc installation removed"
 }
 
 # configure_default_filemanager — point inode/directory at Pifile so folder
