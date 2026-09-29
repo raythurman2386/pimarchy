@@ -759,7 +759,7 @@ run_test "default-agent wrapper: validation"         test_default_agent_wrapper_
 run_test "default-agent wrapper: writes file"        test_default_agent_wrapper_writes_file
 run_test "pimarchy-install: usage errors"            test_pimarchy_install_usage
 run_test "bindings template renders defaults"        test_bindings_template_renders
-run_test "hyprland.conf sources bindings"            test_hyprland_conf_sources_bindings
+run_test "hyprland.lua requires bindings"             test_hyprland_conf_sources_bindings
 
 echo ""
 if [ $FAILURES -gt 0 ]; then

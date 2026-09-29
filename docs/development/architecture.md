@@ -94,5 +94,5 @@ Documented unknowns — do not invent answers in docs or code comments:
 |-------|------------------|--------|
 | **Wi-Fi regulatory country** | Default `US` (`PIMARCHY_WIFI_COUNTRY`) in image build + firstboot | Open — whether Imager locale should drive this automatically is undecided |
 | **Imager image hosting** | Manifest uses a local `file://` URI for the `.img` | Open — HTTP(S) hosting / release artifacts not decided |
-| **Xwayland** | Disabled in `hyprland.lua` (`xwayland.enabled = false`); sid rofi 2; no nm-applet | Open — re-enable only with a deliberate app that needs X11 |
+| **Xwayland** | Disabled in `hyprland.lua` (`xwayland.enabled = false`); sid rofi 2; no nm-applet; `GDK_BACKEND=wayland` in start-hyprland + hyprland.lua | **Decided:** stays off. No supported escape hatch — prefer Wayland builds. Editing `xwayland.enabled` locally is unsupported and costs ~90 MB resident X |
 | **GPUI theme paths** | Both `~/.local/state/omarchy/...` and `.../pimarchy/...` are written | Open — standardize on one path once pisuite apps agree |

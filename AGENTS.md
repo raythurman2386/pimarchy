@@ -134,7 +134,7 @@ Templates use `{{VARIABLE}}` syntax. Variables are defined in:
 └── .github/workflows/      # CI/CD automation
 ```
 
-Open decisions (do not invent answers): Wi-Fi country default, Imager image hosting (`file://` today), Xwayland long-term policy, omarchy vs pimarchy GPUI theme path standardization — see `docs/development/architecture.md#open-decisions`.
+Open decisions (do not invent answers): Wi-Fi country default, Imager image hosting (`file://` today), omarchy vs pimarchy GPUI theme path standardization — see `docs/development/architecture.md#open-decisions`. Xwayland stays off (decided; no supported escape hatch).
 ## Configuration System
 
 1. **Load configs**: Use `load_config "path/to/file"` to source config files

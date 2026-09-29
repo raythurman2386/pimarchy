@@ -58,7 +58,7 @@ A Pi has no battery clock, so firstboot syncs time before apt trusts repository 
 
     - **Wi-Fi country:** build/firstboot default is `US` via `PIMARCHY_WIFI_COUNTRY`. Non-US builds must set that variable when building (or at first boot).
     - **Imager image URL:** `write-imager-manifest.sh` embeds a local `file://` URI for the `.img`. Hosting the image over HTTP(S) for remote Imager use is not decided yet.
-    - **Xwayland:** the installed session keeps Xwayland **off** (Wayland-only). See [Architecture — open decisions](../development/architecture.md#open-decisions).
+    - **Xwayland:** the installed session keeps Xwayland **off** (Wayland-only; decided — no supported escape hatch). See [Architecture — open decisions](../development/architecture.md#open-decisions).
 
 ## Step 2: Install Pimarchy (stock Lite path)
 

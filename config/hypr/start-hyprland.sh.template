@@ -24,7 +24,8 @@ DRM_CARD="$(detect_drm_card)"
 # Supports both wlroots (Hyprland <0.42) and Aquamarine (Hyprland >=0.42)
 export WLR_NO_HARDWARE_CURSORS=1
 export AQ_NO_HARDWARE_CURSORS=1
-export GDK_BACKEND=wayland,x11
+# Match hyprland.lua: Wayland-only. Xwayland is disabled; do not advertise x11.
+export GDK_BACKEND=wayland
 export QT_QPA_PLATFORMTHEME=qt5ct
 
 # Only set DRM devices if we found a specific card
