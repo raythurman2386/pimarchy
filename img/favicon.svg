@@ -1,0 +1,6 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simplified Shield -->
+  <path d="M16 2L5 6V16C5 23 10 29 16 31C22 29 27 23 27 16V6L16 2Z" fill="#7fbbb3"/>
+  <!-- Minimalist Pi Dot -->
+  <circle cx="16" cy="18" r="4" fill="#282e33"/>
+</svg>
